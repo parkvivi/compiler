@@ -1,6 +1,6 @@
 # Compilador `C-`
 
-Compilador desenvolvido para a linguagem `C-`, conforme especificado por Louden (2004), como trabalho final da disciplina de Compiladores, em 2025-2.
+Esta é uma continuação do projeto [Compiladores-Unifesp](https://github.com/parkvivi/Compiladores-Unifesp), que foi desenvolvido inicialmente em colaboração com [@souza-luiza](https://github.com/souza-luiza). O compilador para a linguagem `C-`, conforme especificada por Louden (2004), foi modificado para a geração de linguagem de máquina com base no projeto [ARM-32bit](https://github.com/parkvivi/ARM-32bit).
 
 ## Requisitos
 
