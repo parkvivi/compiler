@@ -592,13 +592,14 @@ Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria,
 }
 
 void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipoSimbolo, TipoVariavel tipo, int tamanhoVetor) {
-    if (!topo_escopo) {
-        fprintf(stderr, "ERRO INTERNO: nenhum escopo ativo ao declarar '%s'.\n", nome);
-        return;
-    }
     if (buscarSimboloEscopoAtual(nome, categoria, 1) != NULL) {
         // Erro de simbolo duplicada no escopo
         fprintf(stderr, "ERRO SEMANTICO: identificador \"%s\" em uso - LINHA: %d\n", nome, linha_atual);
+        return;
+    }
+    if (strcmp(nome, "output") == 0 || strcmp(nome, "input") == 0) {
+        // Erro de tentativa de declaração de função com nome reservado
+        fprintf(stderr, "ERRO SEMANTICO: nome \"%s\" reservado para funcao - LINHA: %d\n", nome, linha_atual);
         return;
     }
     Simbolo *s = (Simbolo*) malloc(sizeof(Simbolo));
