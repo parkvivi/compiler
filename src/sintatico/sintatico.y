@@ -155,7 +155,7 @@
 %token T_MAIOR T_MENOR T_IGUAL T_DIFERENTE T_MAIORIGUAL T_MENORIGUAL
 %token T_VIRGULA T_PONTOEVIRGULA
 %token T_APAR T_FPAR T_ACOLCHETE T_FCOLCHETE T_ACHAVE T_FCHAVE
-%token <id>  T_ID
+%token <id> T_ID
 %token <ival> T_NUM
 
 /* ORDEM DE PRECEDENCIA */
@@ -207,11 +207,20 @@
 
     declaracaoVariaveis:
         tipoEspecificador T_ID T_PONTOEVIRGULA
+            {
+                // declaracao de inteiro (void = erro)
+            }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
+            {
+                // declaracao de vetor de inteiros (void = erro)
+            }
         ;
 
     tipoEspecificador:
         T_INT
+            {
+                // TODO: mudar! nao retornar no, mas o tipo como string (int; e void no caso de baixo)
+            }
         | T_VOID
         ;
 
@@ -222,6 +231,9 @@
     parametros: 
         listaParametros
         | T_VOID
+            {
+                $$ = NULL;
+            }
         ;
 
     listaParametros:
