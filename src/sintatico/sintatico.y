@@ -20,13 +20,12 @@
         TipoListaDeclaracoes,
         TipoDeclaracao,
         TipoDeclaracaoVars,
-        TipoEspecifico,
         TipoDeclaracaoFunc,
         TipoParametros,
         TipoListaParametros,
         TipoParametro,
         TipoEscopo,
-        TipoDeclaracaoLocais,
+        TipoDeclaracoesLocais,
         TipoListaEscopo,
         TipoCorpo,
         TipoDeclaracaoExpressao,
@@ -35,8 +34,6 @@
         TipoDeclaracaoRetorno,
         TipoExpressao,
         TipoVar,
-        TipoExpressaoSimples,
-        TipoExpressaoSoma,
         TipoTermo,
         TipoFator,
         TipoChamadaFuncao,
@@ -62,6 +59,7 @@
     // Estrutura de um no da AST
     typedef struct AST {
         TipoNo tipo;
+        // TODO: adicionar tipo da variavel? depois conferir na analise semantica?
         union {
             char* nome; // nome de funções ou variáveis
             int valor;
@@ -171,14 +169,14 @@
 
 /* TIPOS RETORNADOS */
 %type <noAST> programa listaDeclaracoes declaracao declaracaoVariaveis declaracaoFuncao
-%type <noAST> tipoEspecificador parametros listaParametros parametro 
+%type <noAST> parametros listaParametros parametro 
 %type <noAST> escopo declaracoesLocais listaEscopo corpo 
 %type <noAST> declaracaoExpressao declaracaoSelecao declaracaoIteracao declaracaoRetorno 
 %type <noAST> expressao variavel expressaoSimples expressaoSoma 
 %type <noAST> termo fator 
 %type <noAST> chamadaFuncao argumentos listaArgumentos
 
-%type <id> soma mult relacional
+%type <id> tipoEspecificador soma mult relacional
 
 /* VARIAVEL DE INICIO */
 %start programa
@@ -218,24 +216,41 @@
     declaracaoVariaveis:
         tipoEspecificador T_ID T_PONTOEVIRGULA
             {
-                // declaracao de inteiro (void = erro)
+                // TODO: void = erro
+                // tipoEspecificador eh uma string
+                declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
-                // declaracao de vetor de inteiros (void = erro)
+                // TODO: void = erro
+                declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
             }
         ;
 
     tipoEspecificador:
         T_INT
             {
-                // TODO: mudar! nao retornar no, mas o tipo como string (int; e void no caso de baixo)
+                $$ = malloc(sizeof("int") + 1);
+                strcpy($$, "int");
             }
         | T_VOID
+            {
+                $$ = malloc(sizeof("void") + 1);
+                strcpy($$, "void");  
+            }
         ;
 
     declaracaoFuncao:
-        tipoEspecificador T_ID T_APAR parametros T_FPAR escopo
+        tipoEspecificador T_ID T_APAR { entrarEscopo(linha_atual); } parametros T_FPAR escopo
+            {
+                $$ = criarNo(TipoDeclaracaoFunc);
+
+                // TODO: o que fazer com o resto???????????
+                $$->filhos[0] = $6;
+
+                // TODO: refzer declaracao na tabela de simbolos
+                declararSimbolo($2, Funcao, tipoSimbolo, TipoInteiro, 0); // TipoVariavel e tamanhoVetor não são relevantes para funções
+            }
         ;
 
     parametros: 
@@ -258,11 +273,34 @@
 
     escopo:
         T_ACHAVE declaracoesLocais listaEscopo T_FCHAVE
+            {
+                sairEscopo();
+
+                if ($1 == NULL) {
+                    $$ = $2;
+                } else {
+                    $$ = criarNo(TipoEscopo);
+                    $$->filhos[0] = $1;
+                    $$->filhos[1] = $2;
+                }
+            }
         ;
 
     declaracoesLocais:
         declaracoesLocais declaracaoVariaveis
+            {
+                if ($1 == NULL) {
+                    $$ = $2;
+                } else {
+                    $$ = criarNo(TipoDeclaracoesLocais);
+                    $$->filhos[0] = $1;
+                    $$->filhos[1] = $2;
+                }
+            }
         |
+            {
+                $$ = NULL;
+            }
         ;
 
     listaEscopo:
@@ -287,9 +325,8 @@
             {
                 $$ = $1;
             }
-        | escopo
+        | { entrarEscopo(linha_atual); } escopo
             {
-                // TODO: rever isso aqui, talvez seja diferente para escopo
                 $$ = $1;
             }
         | declaracaoSelecao
@@ -369,7 +406,17 @@
 
     variavel:
         T_ID
+            {
+                $$ = criarNo(TipoVariavel);
+                $$->dado.nome = strdup($1);
+            }
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
+            {
+                $$ = criarNo(TipoVariavel);
+                $$->dado.nome = strdup($1);
+
+                $$->filhos[0] = $3
+            }
         ;
 
     expressaoSimples:
@@ -505,8 +552,15 @@
                 $$ = $2;
             }
         | variavel
+            {
+                $$ = $1;
+            }
         | chamadaFuncao
         | T_NUM
+            {
+                $$ = criarNo(TipoNum);
+                $$->dado.valor = $1;
+            }
         ;
 
     chamadaFuncao:
@@ -515,12 +569,26 @@
 
     argumentos:
         listaArgumentos
+            {
+                $$ = $1;
+            }
         |
+            {
+                $$ = NULL;
+            }
         ;
 
     listaArgumentos:
         listaArgumentos T_VIRGULA expressao
+            {
+                $$ = criarNo(TipoListaArgumentos);
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | expressao
+            {
+                $$ = $1;
+            }
         ;
 %%
 
@@ -954,7 +1022,7 @@ char* gerar_quads(AST* no){
         return NULL;
     }
 
-    else if(no->tipo == TipoEscopo || no->tipo == TipoListaEscopo || no->tipo == TipoDeclaracaoLocais) {
+    else if(no->tipo == TipoEscopo || no->tipo == TipoListaEscopo || no->tipo == TipoDeclaracoesLocais) {
         gerar_quads(no->filhos[0]);
         gerar_quads(no->filhos[1]);
         return NULL;
@@ -998,7 +1066,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoListaParametros:       return "listaParametros";
         case TipoParametro:             return "parametro";
         case TipoEscopo:                return "escopo";
-        case TipoDeclaracaoLocais:      return "declaracoesLocais";
+        case TipoDeclaracoesLocais:      return "declaracoesLocais";
         case TipoListaEscopo:           return "listaEscopo";
         case TipoDeclaracaoExpressao:   return "declaracaoExpressao";
         case TipoDeclaracaoSelecao:     return "if";
@@ -1007,17 +1075,24 @@ const char* nomeTipoNo(AST* no) {
         case TipoExpressao:             return "expressao";
         case TipoVar:                   return "variavel";
         case TipoExpressaoSimples:      return "expressaoSimples";
-        case TipoRelacional:            return no->dado.nome;
         case TipoExpressaoSoma:         return "expressaoSoma";
-        case TipoSoma:                  return no->dado.nome;
         case TipoTermo:                 return "termo";
-        case TipoMult:                  return no->dado.nome;
         case TipoFator:                 return "fator";
         case TipoChamadaFuncao:         return "chamadaFuncao";
         case TipoArgumentos:            return "argumentos";
         case TipoListaArgumentos:       return "listaArgumentos";
         case TipoCorpo:                 return "corpo";
         case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return buffer;
+        case TipoAtribuicao:            return "=";
+        case TipoMenorIgual:            return  "<=";
+        case TipoMenor:                 return  "<";
+        case TipoMaiorIgual:            return  ">=";
+        case TipoMaior:                 return  ">";
+        case TipoDiferente:             return  "!=";
+        case TipoMultiplicacao:         return  "*";
+        case TipoDivisao:               return  "/";
+        case TipoSoma:                  return  "+";
+        case TipoSubtracao:             return  "-";
         default:                        return "???";
     }
 }
