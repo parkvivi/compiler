@@ -108,6 +108,8 @@
 
     // Categoria do simbolo -> variavel ou funcao
     typedef enum { Variavel, Funcao } CategoriaSimbolo;
+
+    // TODO: apagar TipoSimbolo e TipoVariavel e manter essa analise so na AST
     // Tipo do simbolo -> void ou int
     typedef enum { TipoVoid, TipoInt } TipoSimbolo;
     // Tipo da variavel -> inteiro ou vetor
@@ -192,6 +194,7 @@
     listaDeclaracoes:
         listaDeclaracoes declaracao
             {
+                // TODO: pensar em mudar para arvore generica? filhos e irmaos
                 $$ = criarNo(TipoListaDeclaracoes);
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $2;
@@ -216,14 +219,24 @@
     declaracaoVariaveis:
         tipoEspecificador T_ID T_PONTOEVIRGULA
             {
-                // TODO: void = erro
-                // tipoEspecificador eh uma string
+                // TODO: incluir erro caso tipo for void na analise semantica
                 declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
+
+                $$ = criarNo(TipoVariavel);
+                $$->dado.nome = strdup($2);
+
+                free($1);
+                free($2);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
-                // TODO: void = erro
                 declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
+                
+                $$ = criarNo(TipoVariavel);
+                $$->dado.nome = strdup($2);
+                
+                free($1);
+                free($2);
             }
         ;
 
@@ -243,13 +256,14 @@
     declaracaoFuncao:
         tipoEspecificador T_ID T_APAR { entrarEscopo(linha_atual); } parametros T_FPAR escopo
             {
+                // TODO: repensar como fazer esse no aqui
                 $$ = criarNo(TipoDeclaracaoFunc);
 
-                // TODO: o que fazer com o resto???????????
                 $$->filhos[0] = $6;
 
-                // TODO: refzer declaracao na tabela de simbolos
                 declararSimbolo($2, Funcao, tipoSimbolo, TipoInteiro, 0); // TipoVariavel e tamanhoVetor não são relevantes para funções
+
+                free($1);
             }
         ;
 
@@ -268,7 +282,13 @@
 
     parametro:
         tipoEspecificador T_ID
+            {
+                free($1);
+            }
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
+            {
+                free($1);
+            }
         ;
 
     escopo:
@@ -409,11 +429,15 @@
             {
                 $$ = criarNo(TipoVariavel);
                 $$->dado.nome = strdup($1);
+
+                free($1);
             }
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
             {
                 $$ = criarNo(TipoVariavel);
                 $$->dado.nome = strdup($1);
+
+                free($1);
 
                 $$->filhos[0] = $3
             }
