@@ -36,17 +36,25 @@
         TipoExpressao,
         TipoVar,
         TipoExpressaoSimples,
-        TipoRelacional,
         TipoExpressaoSoma,
-        TipoSoma,
         TipoTermo,
-        TipoMult,
         TipoFator,
         TipoChamadaFuncao,
         TipoArgumentos,
         TipoListaArgumentos,
         TipoID,
-        TipoNum
+        TipoNum,
+        TipoAtribuicao, // Novos
+        TipoMenorIgual,
+        TipoMenor,
+        TipoMaiorIgual,
+        TipoMaior,
+        TipoIgual,
+        TipoDiferente,
+        TipoMultiplicacao,
+        TipoDivisao,
+        TipoSoma,
+        TipoSubtracao
     } TipoNo;
 
     #define MAXFILHOS 4
@@ -166,9 +174,11 @@
 %type <noAST> tipoEspecificador parametros listaParametros parametro 
 %type <noAST> escopo declaracoesLocais listaEscopo corpo 
 %type <noAST> declaracaoExpressao declaracaoSelecao declaracaoIteracao declaracaoRetorno 
-%type <noAST> expressao variavel expressaoSimples relacional expressaoSoma 
-%type <noAST> soma termo mult fator 
+%type <noAST> expressao variavel expressaoSimples expressaoSoma 
+%type <noAST> termo fator 
 %type <noAST> chamadaFuncao argumentos listaArgumentos
+
+%type <id> soma mult relacional
 
 /* VARIAVEL DE INICIO */
 %start programa
@@ -257,39 +267,104 @@
 
     listaEscopo:
         listaEscopo corpo
+            {
+                if ($1 == NULL) {
+                    $$ = $2;
+                } else {
+                    $$ = criarNo(TipoListaEscopo);
+                    $$->filhos[0] = $1;
+                    $$->filhos[1] = $2;
+                }
+            }
         |
+            {
+                $$ = NULL;
+            }
         ;
 
     corpo:  
         declaracaoExpressao
+            {
+                $$ = $1;
+            }
         | escopo
+            {
+                // TODO: rever isso aqui, talvez seja diferente para escopo
+                $$ = $1;
+            }
         | declaracaoSelecao
+            {
+                $$ = $1;
+            }
         | declaracaoIteracao
+            {
+                $$ = $1;
+            }
         | declaracaoRetorno
+            {
+                $$ = $1;
+            }
         ;
 
     declaracaoExpressao:   
         expressao T_PONTOEVIRGULA
+            {
+                $$ = $1;
+            }
         | T_PONTOEVIRGULA
+            {
+                $$ = NULL;
+            }
         ;
 
     declaracaoSelecao:
         T_IF T_APAR expressao T_FPAR corpo
+            {
+                $$ = criarNo(TipoDeclaracaoSelecao);
+                $$->filhos[0] = $3;
+                $$->filhos[1] = $5;
+            }
         | T_IF T_APAR expressao T_FPAR corpo T_ELSE corpo
+            {
+                $$ = criarNo(TipoDeclaracaoSelecao);
+                $$->filhos[0] = $3;
+                $$->filhos[1] = $5;
+                $$->filhos[2] = $7;
+            }
         ;
 
     declaracaoIteracao:
         T_WHILE T_APAR expressao T_FPAR corpo
+            {
+                $$ = criarNo(TipoDeclaracaoIteracao);
+                $$->filhos[0] = $3;
+                $$->filhos[1] = $5;
+            }
         ;
 
     declaracaoRetorno:
         T_RETURN T_PONTOEVIRGULA
+            {
+                $$ = criarNo(TipoDeclaracaoRetorno);
+            }
         | T_RETURN expressao T_PONTOEVIRGULA
+            {
+                $$ = criarNo(TipoDeclaracaoRetorno);
+                $$->filhos[0] = $2;
+            }
         ;
 
     expressao:
         variavel T_ATRIBUICAO expressao
+            {
+                $$ = criarNo(TipoAtribuicao);
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | expressaoSimples
+            {
+                $$ = $1;
+            }
         ;
 
     variavel:
@@ -299,40 +374,136 @@
 
     expressaoSimples:
         expressaoSoma relacional expressaoSoma
+            {
+                if (strcmp($2, "<=") == 0) {
+                    $$ = criarNo(TipoMenorIgual);
+                } else if (strcmp($2, "<") == 0) {
+                    $$ = criarNo(TipoMenor);
+                } else if (strcmp($2, ">=") == 0) {
+                    $$ = criarNo(TipoMaiorIgual);
+                } else if (strcmp($2, ">") == 0) {
+                    $$ = criarNo(TipoMaior);
+                } else if (strcmp($2, "==") == 0) {
+                    $$ = criarNo(TipoIgual);
+                } else if (strcmp($2, "!=") == 0) {
+                    $$ = criarNo(TipoDiferente);
+                } // TODO: else erro?
+
+                free($2);
+
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | expressaoSoma
+            {
+                $$ = $1;
+            }
         ;
 
     relacional: 
-        T_MENORIGUAL 
+        T_MENORIGUAL
+            {
+                $$ = malloc(strlen("<=") + 1);
+                strcpy($$, "<=");
+            }
         | T_MENOR
+            {
+                $$ = malloc(strlen("<") + 1);
+                strcpy($$, "<");
+            }
         | T_MAIOR
+            {
+                $$ = malloc(strlen(">") + 1);
+                strcpy($$, ">");
+            }
         | T_MAIORIGUAL
+            {
+                $$ = malloc(strlen(">=") + 1);
+                strcpy($$, ">=");
+            }
         | T_IGUAL
+            {
+                $$ = malloc(strlen("==") + 1);
+                strcpy($$, "==");
+            }
         | T_DIFERENTE
+            {
+                $$ = malloc(strlen("!=") + 1);
+                strcpy($$, "!=");
+            }
         ;
 
     expressaoSoma:
         expressaoSoma soma termo
+            {
+                if (strcmp($2, "+") == 0) {
+                    $$ = criarNo(TipoSoma);
+                } else if (strcmp($2, "-") == 0) {
+                    $$ = criarNo(TipoSubtracao);
+                }  // TODO: else erro?
+
+                free($2);
+
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | termo
+            {
+                $$ = $1;
+            }
         ;
 
     soma:
         T_MAIS
+            {
+                $$ = malloc(strlen("+") + 1);
+                strcpy($$, "+");
+            }
         | T_MENOS
+            {
+                $$ = malloc(strlen("-") + 1);
+                strcpy($$, "-");
+            }
         ;
 
     termo:
         termo mult fator
+            {
+                if (strcmp($2, "*") == 0) {
+                    $$ = criarNo(TipoMultiplicacao);
+                } else if (strcmp($2, "/") == 0) {
+                    $$ = criarNo(TipoDivisao);
+                }  // TODO: else erro?
+
+                free($2);
+
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | fator
+            {
+                $$ = $1;
+            }
         ;
 
     mult:
         T_MULT
+            {
+                $$ = malloc(strlen("*") + 1);
+                strcpy($$, "*");
+            }
         | T_DIV
+            {
+                $$ = malloc(strlen("/") + 1);
+                strcpy($$, "/");
+            }
         ;
 
     fator:
         T_APAR expressao T_FPAR
+            {
+                $$ = $2;
+            }
         | variavel
         | chamadaFuncao
         | T_NUM
