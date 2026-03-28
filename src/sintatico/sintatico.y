@@ -1056,6 +1056,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoMenor:                 return  "<";
         case TipoMaiorIgual:            return  ">=";
         case TipoMaior:                 return  ">";
+        case TipoIgual:                 return  "==";
         case TipoDiferente:             return  "!=";
         case TipoMultiplicacao:         return  "*";
         case TipoDivisao:               return  "/";
@@ -1087,21 +1088,47 @@ void imprimirNoDOT(AST* no, FILE* file) {
 
         atual = no;
         while (atual->irmao) {
-            fprintf(file, "  node%p -> node%p;\n", (void*)atual, (void*)atual->irmao);
+            fprintf(file, "  node%p -> node%p [color=\"#189d37\", weight=100, dir=none];\n", (void*)atual, (void*)atual->irmao);
             atual = atual->irmao;
         }
     }
 
     atual = no;
     while (atual) {
+        AST** ordemFilhos = NULL;
+        int qtdFilhos = 0;
+
         for (int i = 0; i < MAXFILHOS; i++) {
             AST* filho = atual->filhos[i];
             if (filho) {
+                AST* it = filho;
+                while (it) {
+                    ordemFilhos = realloc(ordemFilhos, sizeof(AST*) * (qtdFilhos + 1));
+                    ordemFilhos[qtdFilhos++] = it;
+                    it = it->irmao;
+                }
+
                 fprintf(file, "  node%p -> node%p;\n", (void*)atual, (void*)filho);
                 imprimirNoDOT(filho, file);
             }
         }
-        
+
+        if (qtdFilhos > 1) {
+            fprintf(file, "  { rank=same; ");
+            for (int i = 0; i < qtdFilhos; i++) {
+                fprintf(file, "node%p; ", (void*)ordemFilhos[i]);
+            }
+            fprintf(file, "}\n");
+
+            // Arestas invisiveis para fixar ordem esquerda->direita dos filhos.
+            for (int i = 0; i < qtdFilhos - 1; i++) {
+                fprintf(file, "  node%p -> node%p [style=invis, weight=100];\n",
+                        (void*)ordemFilhos[i], (void*)ordemFilhos[i + 1]);
+            }
+        }
+
+        free(ordemFilhos);
+
         atual = atual->irmao;
     }
 }
@@ -1115,6 +1142,7 @@ void gerarDOT(AST* raiz) {
     }
     
     fprintf(file, "digraph AST {\n");
+    fprintf(file, "  ordering=out;\n");
 
     imprimirNoDOT(raiz, file);
 
