@@ -10,8 +10,8 @@
     extern int linha_atual;
 
     void yyerror(const char* s);
-
-
+    int contErros = 0;
+    
     /* ========== ESTRUTURAS E PROTOTIPOS DA ARVORE ========== */
 
     // Tipos de nos da AST
@@ -92,23 +92,15 @@
 
     /* ========== ESTRUTURAS E PROTOTIPOS DA TABELA DE SIMBOLOS COM ESCOPO ========== */
 
-    // Categoria do simbolo -> variavel ou funcao
-    typedef enum { Variavel, Funcao } CategoriaSimbolo;
+    typedef enum { Variavel, Funcao } CategoriaSimbolo;     // Categoria do simbolo -> variavel ou funcao
+    typedef enum { TipoVoid, TipoInt } TipoSimbolo;         // Tipo do simbolo -> void ou int
+    typedef enum { TipoInteiro, TipoVetor } TipoVariavel;   // Tipo da variavel -> inteiro ou vetor
 
-    // TODO: apagar TipoSimbolo e TipoVariavel e manter essa analise so na AST
-    // Tipo do simbolo -> void ou int
-    typedef enum { TipoVoid, TipoInt } TipoSimbolo;
-    // Tipo da variavel -> inteiro ou vetor
-    typedef enum { TipoInteiro, TipoVetor } TipoVariavel;
-
-    // No da tabela de simbolos
     typedef struct Simbolo {
         char *nome;
         CategoriaSimbolo categoria;
         struct Simbolo *prox;
         TipoSimbolo tipoSimbolo;
-
-        // categoria eh Variavel
         TipoVariavel tipo;
         int tamanho;
         union {
@@ -128,8 +120,8 @@
     // Prototipos das funcoes para tratar da tabela de simbolos
     void entrarEscopo(int linhaInicio);
     void sairEscopo();
-    Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, int verificarTipos);
-    Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria, int verificarTipos);
+    Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipo, int verificarTipos);
+    Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipo, int verificarTipos);
     void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipoSimbolo, TipoVariavel tipo, int tamanhoVetor);
     void atribuirValorAVariavel(const char *nome, int valorAtribuido, int indiceVetor);
     int buscarValorDeVariavel(const char *nome, int indiceVetor);
@@ -203,7 +195,11 @@
     declaracaoVariaveis:
         tipoEspecificador T_ID T_PONTOEVIRGULA
             {
-                // TODO: incluir erro caso tipo for void na analise semantica
+                if (strcmp($1->dado.nome, "void") == 0) {
+                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" declarada com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    contErros++;
+                }
+
                 declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
 
                 $$ = criarNo(TipoDeclaracaoVariavel);
@@ -215,6 +211,11 @@
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
+                if (strcmp($1->dado.nome, "void") == 0) {
+                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" declarada com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    contErros++;
+                }
+
                 declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
                 
                 $$ = criarNo(TipoDeclaracaoVariavel);
@@ -286,7 +287,14 @@
 
     parametro:
         tipoEspecificador T_ID
-            {
+            {   
+                if (strcmp($1->dado.nome, "void") == 0) {
+                    fprintf(stderr, "ERRO SEMANTICO: parametro \"%s\" declarado com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    contErros++;
+                }
+
+                declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
+
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
@@ -295,12 +303,18 @@
                 free($2);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
-            {
+            {   
+                if (strcmp($1->dado.nome, "void") == 0) {
+                    fprintf(stderr, "ERRO SEMANTICO: parametro \"%s\" declarado com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    contErros++;
+                }
+
+                declararSimbolo($2, Variavel, TipoInt, TipoVetor, 100); // tamanho maximo de vetor definido como 100
+
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
-                $$->filhos[0] = $1;
-                // mais alguma coisa para vetor?
+                $$->filhos[0] = $1; // mais alguma coisa para vetor?
 
                 free($2);
             }
@@ -439,7 +453,12 @@
 
     variavel:
         T_ID
-            {
+            {   
+                if (buscarSimboloTodosEscopos($1, Variavel, TipoInteiro, 1) == NULL) {
+                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", $1, linha_atual);
+                    contErros++;
+                }
+
                 $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
@@ -447,6 +466,11 @@
             }
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
             {
+                if (buscarSimboloTodosEscopos($1, Variavel, TipoVetor, 1) == NULL) {
+                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", $1, linha_atual);
+                    contErros++;
+                }
+
                 $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
@@ -524,7 +548,7 @@
                     $$ = criarNo(TipoSoma);
                 } else if (strcmp($2, "-") == 0) {
                     $$ = criarNo(TipoSubtracao);
-                }  // TODO: else erro?
+                }
 
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
@@ -557,7 +581,7 @@
                     $$ = criarNo(TipoMultiplicacao);
                 } else if (strcmp($2, "/") == 0) {
                     $$ = criarNo(TipoDivisao);
-                }  // TODO: else erro?
+                }
 
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
@@ -654,6 +678,7 @@ AST* criarNo(TipoNo tipo) {
 }
 
 AST* anexarIrmao(AST* lista, AST* novoNo) {
+
     if (lista == NULL) return novoNo;
 
     AST* atual = lista;
@@ -683,11 +708,14 @@ void liberaAST(AST* no) {
 }
 
 /* ========== FUNCOES PARA TRATAR DA TABELA DE SIMBOLOS ========== */
-void entrarEscopo(int linhaInicio) { // push
+void entrarEscopo(int linhaInicio) {
+
     Escopo *e = (Escopo*) malloc(sizeof(Escopo));
+
     e->simbolos = NULL;
     e->linhaInicio = linhaInicio;
     e->prox = topo_escopo;
+
     topo_escopo = e;
 }
 
@@ -695,10 +723,10 @@ void sairEscopo() { // pop
     if (topo_escopo == NULL) return;
 
     Simbolo *s = topo_escopo->simbolos;
-
     if (topo_escopo->prox == NULL && strcmp(topo_escopo->simbolos->nome, "main") != 0) {
         // main() não foi declarada como último elemento do escopo global 
         fprintf(stderr, "ERRO SEMANTICO: funcao \"main\" nao declarada ou declarada incorretamente");
+        contErros++;
         return;
     }
 
@@ -714,9 +742,9 @@ void sairEscopo() { // pop
         
         Simbolo *tmp = s;
         s = s->prox;
-        // Libera nome do símbolo
+        
         free(tmp->nome);
-        // Libera vetor caso seja variável e vetor
+        
         if (tmp->categoria == Variavel && tmp->tipo == TipoVetor) {
             free(tmp->valor.vetor);
         }
@@ -728,12 +756,14 @@ void sairEscopo() { // pop
     free(tmpE);
 }
 
-Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, int verificarTipos) {
+Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipoVar, int verificarTipos) {
+
     if (!topo_escopo) return NULL;
+
     Simbolo *s = topo_escopo->simbolos;
     while (s) {
         if (strcmp(s->nome, nome) == 0) {
-            if (verificarTipos == 1 && s->categoria != categoria) {
+            if (verificarTipos == 1 && s->categoria != categoria && (categoria == Variavel && s->tipo != tipoVar)) {
                 s = s->prox;
                 continue;
             }
@@ -744,13 +774,14 @@ Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, 
     return NULL;
 }
 
-Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria, int verificarTipos) {
+Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipoVar, int verificarTipos) {
+
     Escopo *e = topo_escopo;
     while (e) {
         Simbolo *s = e->simbolos;
         while (s) {
             if (strcmp(s->nome, nome) == 0) {
-                if (verificarTipos == 1 && s->categoria != categoria) {
+                if (verificarTipos == 1 && s->categoria != categoria && (categoria == Variavel && s->tipo != tipoVar)) {
                     s = s->prox;
                     continue;
                 }
@@ -760,21 +791,28 @@ Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria,
         }
         e = e->prox;
     }
+
     return NULL;
 }
 
 void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipoSimbolo, TipoVariavel tipo, int tamanhoVetor) {
-    if (buscarSimboloEscopoAtual(nome, categoria, 1) != NULL) {
+
+    if (buscarSimboloEscopoAtual(nome, categoria, tipo, 1) != NULL) {
         // Erro de simbolo duplicada no escopo
         fprintf(stderr, "ERRO SEMANTICO: identificador \"%s\" em uso - LINHA: %d\n", nome, linha_atual);
+        contErros++;
         return;
     }
+
     if (strcmp(nome, "output") == 0 || strcmp(nome, "input") == 0) {
         // Erro de tentativa de declaração de função com nome reservado
         fprintf(stderr, "ERRO SEMANTICO: nome \"%s\" reservado para funcao - LINHA: %d\n", nome, linha_atual);
+        contErros++;
         return;
     }
+
     Simbolo *s = (Simbolo*) malloc(sizeof(Simbolo));
+
     s->nome = strdup(nome);
     s->categoria = categoria;
     s->tipoSimbolo = tipoSimbolo;
@@ -785,10 +823,8 @@ void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo t
         return;
     }
     
-    // Continua somente se simbolo for variavel
     s->tipo = tipo;
 
-    // Inicialização e Alocação
     if (tipo == TipoInteiro) {
         s->tamanho = 1;
         s->valor.inteiro = 0; 
@@ -796,63 +832,6 @@ void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo t
         s->tamanho = tamanhoVetor;
         s->valor.vetor = (int*) calloc(tamanhoVetor, sizeof(int));
     }
-}
-
-void atribuirValorAVariavel(const char *nome, int valorAtribuido, int indiceVetor) {
-    Simbolo *s = buscarSimboloTodosEscopos(nome, Variavel, 1);
-    if (!s) {
-        // Erro de variavel nao declarada
-        fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", nome, linha_atual);
-        return;
-    }
-
-    if (s->categoria != Variavel) {
-        // Erro de tentativa de atribuição a algo que não é variável
-        fprintf(stderr, "ERRO SEMANTICO: identificador \"%s\" nao eh variavel - LINHA: %d\n", nome, linha_atual);
-        return;
-    }
-
-    // Se é vetor...
-    if (s->tipo == TipoVetor) {
-        if (indiceVetor >= s->tamanho || indiceVetor < 0) {
-            // Erro de tentativa de acesso do vetor em campo não existente
-            fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\", índice de acesso fora do intervalo - LINHA: %d\n", nome, linha_atual);
-            return;
-        }
-        s->valor.vetor[indiceVetor] = valorAtribuido;
-        return;
-    }
-
-    // Se é inteiro simples...
-    s->valor.inteiro = valorAtribuido;
-}
-
-int buscarValorDeVariavel(const char *nome, int indiceVetor) {
-    Simbolo *s = buscarSimboloTodosEscopos(nome, Variavel, 1);
-    if (!s) {
-        // Erro de variavel nao declarada
-        fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", nome, linha_atual);
-        return 0;
-    }
-
-    if (s->categoria != Variavel) {
-        // Erro de tentativa de acesso a algo que não é variável
-        fprintf(stderr, "ERRO SEMANTICO: identificador \"%s\" nao eh variavel - LINHA: %d\n", nome, linha_atual);
-        return 0;
-    }
-
-    // Se é vetor...
-    if (s->tipo == TipoVetor) {
-        if (indiceVetor >= s->tamanho) {
-            // Erro de tentativa de acesso do vetor em campo não existente
-            fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\", índice de acesso fora do intervalo - LINHA: %d\n", nome, linha_atual);
-            return 0;
-        }
-        return s->valor.vetor[indiceVetor];
-    }
-
-    // Se é inteiro simples...
-    return s->valor.inteiro;
 }
 
 /* ========== FUNCOES PARA TRATAR DAS QUADRUPLAS ========== */
@@ -1045,12 +1024,12 @@ const char* nomeTipoNo(AST* no) {
         case TipoDeclaracaoFuncao:      return no->dado.nome;
         case TipoTipoEspecificador:     return no->dado.nome;
         case TipoParametro:             return no->dado.nome;
-        case TipoDeclaracaoSelecao:     return "IF";
-        case TipoDeclaracaoIteracao:    return "WHILE";
-        case TipoDeclaracaoRetorno:     return "RETURN";
         case TipoVar:                   return no->dado.nome;
         case TipoChamadaFuncao:         return no->dado.nome;
         case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return buffer;
+        case TipoDeclaracaoSelecao:     return "IF";
+        case TipoDeclaracaoIteracao:    return "WHILE";
+        case TipoDeclaracaoRetorno:     return "RETURN";
         case TipoAtribuicao:            return "=";
         case TipoMenorIgual:            return  "<=";
         case TipoMenor:                 return  "<";
@@ -1167,17 +1146,15 @@ int main(int argc, char **argv){
         }
     }
 
-    /* cria escopo global */
     entrarEscopo(linha_atual);
-
-    // TODO: TIRAR DECLARACAO DE INPUT/OUTPUT? NAO PRECISA DISSO AQUI
-    /* declararSimbolo("input", Funcao, TipoInt, TipoInteiro, 0);
-    declararSimbolo("output", Funcao, TipoVoid, TipoInteiro, 0); */
-
     yyparse();
-
-    /* sai do escopo global e libera memória */
     sairEscopo();
+
+    if (contErros != 0) {
+        liberaAST(raizAST);
+        fclose(yyin);
+        exit(1);
+    }
 
     /* Geração de quádruplas a partir da AST */
     /*gerar_quads(raizAST);
@@ -1189,7 +1166,6 @@ int main(int argc, char **argv){
     gerarDOT(raizAST);
 
     liberaAST(raizAST);
-
     fclose(yyin);
 
     return 0;

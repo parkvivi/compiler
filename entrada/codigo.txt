@@ -1,12 +1,22 @@
-int gcd(int u, int v)
+int func(void)
 {
-    if (v == 0) return u;
-    else return gcd(v, u-u/v*v);
+    int x[10];
+    int i; int soma;
+    i = 0; soma = 0;
+
+    i[0] = 8;   /* PROBLEMAAAAAA!!!!!!!!!!!! */
+
+    while(i < 10)
+    {
+        x[i] = i;
+        soma = soma + i;
+    }
+
+    return soma;
 }
 
 void main(void)
 {
-    int x; int y;
-    x = input(); y = input();
-    output(gcd(x, y));
+    int y;
+    y = func();
 }
