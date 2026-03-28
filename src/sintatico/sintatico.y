@@ -19,8 +19,6 @@
         TipoPrograma,
         TipoListaDeclaracoes,
         TipoDeclaracao,
-        TipoDeclaracaoVars,
-        TipoDeclaracaoFuncao,
         TipoParametros,
         TipoListaParametros,
         TipoParametro,
@@ -29,19 +27,23 @@
         TipoListaEscopo,
         TipoCorpo,
         TipoDeclaracaoExpressao,
-        TipoDeclaracaoSelecao,
-        TipoDeclaracaoIteracao,
-        TipoDeclaracaoRetorno,
         TipoExpressao,
-        TipoVar,
         TipoTermo,
         TipoFator,
-        TipoChamadaFuncao,
         TipoArgumentos,
         TipoListaArgumentos,
         TipoID,
+        TipoChamadaFuncao,
+        // USADOS!!!!
+        TipoDeclaracaoFuncao,
+        TipoDeclaracaoVariavel,
+        TipoTipoEspecificador,
         TipoNum,
-        TipoAtribuicao, // Novos
+        TipoVar,
+        TipoDeclaracaoSelecao,
+        TipoDeclaracaoIteracao,
+        TipoDeclaracaoRetorno,
+        TipoAtribuicao,
         TipoMenorIgual,
         TipoMenor,
         TipoMaiorIgual,
@@ -54,14 +56,13 @@
         TipoSubtracao
     } TipoNo;
 
-    #define MAXFILHOS 4
+    #define MAXFILHOS 3
 
     // Estrutura de um no da AST
     typedef struct AST {
         TipoNo tipo;
-        // TODO: adicionar tipo da variavel? depois conferir na analise semantica?
         union {
-            char* nome; // nome de funções ou variáveis
+            char* nome;
             int valor;
         } dado;
         struct AST* filhos[MAXFILHOS];
@@ -171,14 +172,14 @@
 
 /* TIPOS RETORNADOS */
 %type <noAST> programa listaDeclaracoes declaracao declaracaoVariaveis declaracaoFuncao
-%type <noAST> parametros listaParametros parametro 
+%type <noAST> tipoEspecificador parametros listaParametros parametro 
 %type <noAST> escopo declaracoesLocais listaEscopo corpo 
 %type <noAST> declaracaoExpressao declaracaoSelecao declaracaoIteracao declaracaoRetorno 
 %type <noAST> expressao variavel expressaoSimples expressaoSoma 
 %type <noAST> termo fator 
 %type <noAST> chamadaFuncao argumentos listaArgumentos
 
-%type <id> tipoEspecificador soma mult relacional
+%type <id> soma mult relacional
 
 /* VARIAVEL DE INICIO */
 %start programa
@@ -195,7 +196,7 @@
     listaDeclaracoes:
         listaDeclaracoes declaracao
             {
-                $$ = criarNo(TipoListaDeclaracoes);
+                $$ = criarNo(TipoListaDeclaracoes); // TODO: redundante, trocar para irmaos
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $2;
             }
@@ -222,22 +223,26 @@
                 // TODO: incluir erro caso tipo for void na analise semantica
                 declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
 
-                $$ = criarNo(TipoVar);
+                $$ = criarNo(TipoDeclaracaoVariavel);
                 $$->dado.nome = strdup($2);
 
-                free($1);
+                $$->filhos[0] = $1;
+
                 free($2);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
                 declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
                 
-                $$ = criarNo(TipoVar);
+                $$ = criarNo(TipoDeclaracaoVariavel);
                 $$->dado.nome = strdup($2);
-
-                // TODO: guardar tamanho do vetor em algum lugar
                 
-                free($1);
+                AST* tamanho = criarNo(TipoNum);
+                tamanho->dado.valor = $4;
+
+                $$->filhos[0] = $1;
+                $$->filhos[1] = tamanho;
+
                 free($2);
             }
         ;
@@ -245,32 +250,32 @@
     tipoEspecificador:
         T_INT
             {
-                $$ = malloc(sizeof("int") + 1);
-                strcpy($$, "int");
+                $$ = criarNo(TipoTipoEspecificador);
+                $$->dado.nome = malloc(sizeof("int") + 1);
+                strcpy($$->dado.nome, "int");
             }
         | T_VOID
             {
-                $$ = malloc(sizeof("void") + 1);
-                strcpy($$, "void");  
+                $$ = criarNo(TipoTipoEspecificador);
+                $$->dado.nome = malloc(sizeof("void") + 1);
+                strcpy($$->dado.nome, "void"); 
             }
         ;
 
     declaracaoFuncao:
         tipoEspecificador T_ID T_APAR { entrarEscopo(linha_atual); } parametros T_FPAR escopo
             {
-                TipoSimbolo tipoFuncao = (strcmp($1, "int") == 0) ? TipoInt : TipoVoid;
+                TipoSimbolo tipoFuncao = (strcmp($1->dado.nome, "int") == 0) ? TipoInt : TipoVoid;
+                declararSimbolo($2, Funcao, tipoFuncao, TipoInteiro, 0);
 
                 $$ = criarNo(TipoDeclaracaoFuncao);
                 $$->dado.nome = strdup($2);
-                // TODO: guardar tipo da funcao em algum lugar na AST
 
-                $$->filhos[0] = $5;
-                $$->filhos[1] = $7;
-
-                declararSimbolo($2, Funcao, tipoFuncao, TipoInteiro, 0);
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $5;
+                $$->filhos[2] = $7;
 
                 free($2);
-                free($1);
             }
         ;
 
@@ -288,7 +293,7 @@
     listaParametros:
         listaParametros T_VIRGULA parametro
             {
-                $$ = criarNo(TipoListaParametros);
+                $$ = criarNo(TipoListaParametros); // TODO: redundante, trocar para irmaos
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
             }
@@ -304,20 +309,19 @@
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
-                free($2);
+                $$->filhos[0] = $1;
 
-                // TODO: inserir tipo do no da AST
-                free($1);
+                free($2);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
             {
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
+                $$->filhos[0] = $1;
+                // mais alguma coisa para vetor?
+
                 free($2);
-                
-                // TODO: inserir tipo do no da AST
-                free($1);
             }
         ;
 
@@ -326,14 +330,12 @@
             {
                 sairEscopo();
 
-                // TODO: nao criar no para escopo, mas listar tudo dentro dele como irmao
-
                 if ($2 == NULL) {
                     $$ = $3;
                 } else if ($3 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoEscopo);
+                    $$ = criarNo(TipoEscopo); // TODO: redundante, trocar para irmaos
                     $$->filhos[0] = $2;
                     $$->filhos[1] = $3;
                 }
@@ -346,7 +348,7 @@
                 if ($1 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoDeclaracoesLocais);
+                    $$ = criarNo(TipoDeclaracoesLocais); // TODO: redundante, trocar para irmaos
                     $$->filhos[0] = $1;
                     $$->filhos[1] = $2;
                 }
@@ -363,7 +365,7 @@
                 if ($1 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoListaEscopo);
+                    $$ = criarNo(TipoListaEscopo); // TODO: redundante, trocar para irmaos
                     $$->filhos[0] = $1;
                     $$->filhos[1] = $2;
                 }
@@ -471,9 +473,9 @@
                 $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
-                free($1);
+                $$->filhos[0] = $3;
 
-                $$->filhos[0] = $3; // se filhos[0] eh NULL, variavel nao eh vetor
+                free($1);
             }
         ;
 
@@ -547,10 +549,10 @@
                     $$ = criarNo(TipoSubtracao);
                 }  // TODO: else erro?
 
-                free($2);
-
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
+
+                free($2);
             }
         | termo
             {
@@ -580,10 +582,10 @@
                     $$ = criarNo(TipoDivisao);
                 }  // TODO: else erro?
 
-                free($2);
-
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
+
+                free($2);
             }
         | fator
             {
@@ -630,9 +632,9 @@
                 $$ = criarNo(TipoChamadaFuncao);
                 $$->dado.nome = strdup($1);
 
-                free($1);
-
                 $$->filhos[0] = $3;
+
+                free($1);
             }
         ;
 
@@ -650,7 +652,7 @@
     listaArgumentos:
         listaArgumentos T_VIRGULA expressao
             {
-                $$ = criarNo(TipoListaArgumentos);
+                $$ = criarNo(TipoListaArgumentos); // TODO: redundante, trocar para irmaos
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $3;
             }
@@ -682,7 +684,7 @@ void liberaAST(AST* no) {
         liberaAST(no->filhos[i]);
     }
 
-    if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao) {
+    if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao || no->tipo == TipoTipoEspecificador) {
         free(no->dado.nome);
     }
 
@@ -905,7 +907,7 @@ void limpa_quads() {
 char* gerar_quads(AST* no){
     if(!no) return NULL;
 
-    if((no->tipo == TipoDeclaracaoVars)) { // declaracao de variaveis
+    if((no->tipo == TipoDeclaracaoVariavel)) { // declaracao de variaveis
         char* tipo = no->filhos[0]->dado.nome; 
         char *nome = no->filhos[1]->dado.nome;
 
@@ -1105,9 +1107,9 @@ const char* nomeTipoNo(AST* no) {
         case TipoPrograma:              return "programa";
         case TipoListaDeclaracoes:      return "listaDeclaracoes";
         case TipoDeclaracao:            return "declaracao";
-        case TipoDeclaracaoVars:        return "declaracaoVariaveis";
+        case TipoDeclaracaoVariavel:    return no->dado.nome;
         case TipoDeclaracaoFuncao:      return no->dado.nome;
-        case TipoID:                    return no->dado.nome;
+        case TipoTipoEspecificador:     return no->dado.nome;
         case TipoParametros:            return "parametros";
         case TipoListaParametros:       return "listaParametros";
         case TipoParametro:             return "parametro";
@@ -1115,9 +1117,9 @@ const char* nomeTipoNo(AST* no) {
         case TipoDeclaracoesLocais:     return "declaracoesLocais";
         case TipoListaEscopo:           return "listaEscopo";
         case TipoDeclaracaoExpressao:   return "declaracaoExpressao";
-        case TipoDeclaracaoSelecao:     return "if";
-        case TipoDeclaracaoIteracao:    return "while";
-        case TipoDeclaracaoRetorno:     return "return";
+        case TipoDeclaracaoSelecao:     return "IF";
+        case TipoDeclaracaoIteracao:    return "WHILE";
+        case TipoDeclaracaoRetorno:     return "RETURN";
         case TipoExpressao:             return "expressao";
         case TipoVar:                   return no->dado.nome;
         case TipoTermo:                 return "termo";
