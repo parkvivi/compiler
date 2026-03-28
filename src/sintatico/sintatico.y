@@ -20,7 +20,7 @@
         TipoListaDeclaracoes,
         TipoDeclaracao,
         TipoDeclaracaoVars,
-        TipoDeclaracaoFunc,
+        TipoDeclaracaoFuncao,
         TipoParametros,
         TipoListaParametros,
         TipoParametro,
@@ -152,7 +152,7 @@
 %union {
     int                 ival;
     char*               id;
-    AST*                noAST;
+    struct AST*         noAST;
 }
 
 %error-verbose
@@ -188,13 +188,13 @@
         listaDeclaracoes
             {
                 $$ = $1;
+                raizAST = $$;
             }
         ;
 
     listaDeclaracoes:
         listaDeclaracoes declaracao
             {
-                // TODO: pensar em mudar para arvore generica? filhos e irmaos
                 $$ = criarNo(TipoListaDeclaracoes);
                 $$->filhos[0] = $1;
                 $$->filhos[1] = $2;
@@ -222,7 +222,7 @@
                 // TODO: incluir erro caso tipo for void na analise semantica
                 declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
 
-                $$ = criarNo(TipoVariavel);
+                $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($2);
 
                 free($1);
@@ -232,8 +232,10 @@
             {
                 declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
                 
-                $$ = criarNo(TipoVariavel);
+                $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($2);
+
+                // TODO: guardar tamanho do vetor em algum lugar
                 
                 free($1);
                 free($2);
@@ -256,19 +258,27 @@
     declaracaoFuncao:
         tipoEspecificador T_ID T_APAR { entrarEscopo(linha_atual); } parametros T_FPAR escopo
             {
-                // TODO: repensar como fazer esse no aqui
-                $$ = criarNo(TipoDeclaracaoFunc);
+                TipoSimbolo tipoFuncao = (strcmp($1, "int") == 0) ? TipoInt : TipoVoid;
 
-                $$->filhos[0] = $6;
+                $$ = criarNo(TipoDeclaracaoFuncao);
+                $$->dado.nome = strdup($2);
+                // TODO: guardar tipo da funcao em algum lugar na AST
 
-                declararSimbolo($2, Funcao, tipoSimbolo, TipoInteiro, 0); // TipoVariavel e tamanhoVetor não são relevantes para funções
+                $$->filhos[0] = $5;
+                $$->filhos[1] = $7;
 
+                declararSimbolo($2, Funcao, tipoFuncao, TipoInteiro, 0);
+
+                free($2);
                 free($1);
             }
         ;
 
     parametros: 
         listaParametros
+            {
+                $$ = $1;
+            }
         | T_VOID
             {
                 $$ = NULL;
@@ -277,16 +287,36 @@
 
     listaParametros:
         listaParametros T_VIRGULA parametro
+            {
+                $$ = criarNo(TipoListaParametros);
+                $$->filhos[0] = $1;
+                $$->filhos[1] = $3;
+            }
         | parametro
+            {
+                $$ = $1;
+            }
         ;
 
     parametro:
         tipoEspecificador T_ID
             {
+                $$ = criarNo(TipoParametro);
+                $$->dado.nome = strdup($2);
+
+                free($2);
+
+                // TODO: inserir tipo do no da AST
                 free($1);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
             {
+                $$ = criarNo(TipoParametro);
+                $$->dado.nome = strdup($2);
+
+                free($2);
+                
+                // TODO: inserir tipo do no da AST
                 free($1);
             }
         ;
@@ -296,12 +326,16 @@
             {
                 sairEscopo();
 
-                if ($1 == NULL) {
+                // TODO: nao criar no para escopo, mas listar tudo dentro dele como irmao
+
+                if ($2 == NULL) {
+                    $$ = $3;
+                } else if ($3 == NULL) {
                     $$ = $2;
                 } else {
                     $$ = criarNo(TipoEscopo);
-                    $$->filhos[0] = $1;
-                    $$->filhos[1] = $2;
+                    $$->filhos[0] = $2;
+                    $$->filhos[1] = $3;
                 }
             }
         ;
@@ -347,7 +381,7 @@
             }
         | { entrarEscopo(linha_atual); } escopo
             {
-                $$ = $1;
+                $$ = $2;
             }
         | declaracaoSelecao
             {
@@ -427,19 +461,19 @@
     variavel:
         T_ID
             {
-                $$ = criarNo(TipoVariavel);
+                $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
                 free($1);
             }
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
             {
-                $$ = criarNo(TipoVariavel);
+                $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
                 free($1);
 
-                $$->filhos[0] = $3
+                $$->filhos[0] = $3; // se filhos[0] eh NULL, variavel nao eh vetor
             }
         ;
 
@@ -580,6 +614,9 @@
                 $$ = $1;
             }
         | chamadaFuncao
+            {
+                $$ = $1;
+            }
         | T_NUM
             {
                 $$ = criarNo(TipoNum);
@@ -589,6 +626,14 @@
 
     chamadaFuncao:
         T_ID T_APAR argumentos T_FPAR
+            {
+                $$ = criarNo(TipoChamadaFuncao);
+                $$->dado.nome = strdup($1);
+
+                free($1);
+
+                $$->filhos[0] = $3;
+            }
         ;
 
     argumentos:
@@ -637,7 +682,7 @@ void liberaAST(AST* no) {
         liberaAST(no->filhos[i]);
     }
 
-    if(no->tipo == TipoID || no->tipo == TipoEspecifico || no->tipo == TipoRelacional || no->tipo == TipoSoma || no->tipo == TipoMult) {
+    if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao) {
         free(no->dado.nome);
     }
 
@@ -875,23 +920,12 @@ char* gerar_quads(AST* no){
         return NULL;
     }
 
-    else if((no->tipo == TipoDeclaracaoFunc)) { // funcoes
+    else if((no->tipo == TipoDeclaracaoFuncao)) { // funcoes
         funcao_atual = no->filhos[1]->dado.nome;
         emitir_quads("FUNCAO", no->filhos[0]->dado.nome, no->filhos[1]->dado.nome, "-");
         gerar_quads(no->filhos[2]); // parametros
         gerar_quads(no->filhos[3]); // escopo
         return NULL;
-    }
-
-    else if(no->tipo == TipoExpressaoSimples) { // expressao simples
-        if(no->filhos[1] == NULL) return gerar_quads(no->filhos[0]);
-
-        char* op = no->filhos[1]->dado.nome;
-        char* arg1 = gerar_quads(no->filhos[0]);
-        char* arg2 = gerar_quads(no->filhos[2]);
-        char* temp = novoTemp();
-        emitir_quads(op, arg1, arg2, temp);
-        return temp;
     }
 
     else if(no->tipo == TipoExpressao) { // expressao 
@@ -901,17 +935,6 @@ char* gerar_quads(AST* no){
         char* var = no->filhos[0]->filhos[0]->dado.nome;
         emitir_quads("=", arg1, "-", var);
         return var;
-    }
-
-    else if(no->tipo == TipoExpressaoSoma) { // expressaoSoma
-        if(no->filhos[1] == NULL) return gerar_quads(no->filhos[0]);
-
-        char* op = no->filhos[1]->dado.nome;
-        char* arg1 = gerar_quads(no->filhos[0]);
-        char* arg2 = gerar_quads(no->filhos[2]);
-        char* temp = novoTemp();
-        emitir_quads(op, arg1, arg2, temp);
-        return temp;
     }
 
     else if(no->tipo == TipoTermo) { // termo
@@ -1083,26 +1106,23 @@ const char* nomeTipoNo(AST* no) {
         case TipoListaDeclaracoes:      return "listaDeclaracoes";
         case TipoDeclaracao:            return "declaracao";
         case TipoDeclaracaoVars:        return "declaracaoVariaveis";
-        case TipoEspecifico:            return no->dado.nome;
-        case TipoDeclaracaoFunc:        return "declaracaoFuncao";
+        case TipoDeclaracaoFuncao:      return no->dado.nome;
         case TipoID:                    return no->dado.nome;
         case TipoParametros:            return "parametros";
         case TipoListaParametros:       return "listaParametros";
         case TipoParametro:             return "parametro";
         case TipoEscopo:                return "escopo";
-        case TipoDeclaracoesLocais:      return "declaracoesLocais";
+        case TipoDeclaracoesLocais:     return "declaracoesLocais";
         case TipoListaEscopo:           return "listaEscopo";
         case TipoDeclaracaoExpressao:   return "declaracaoExpressao";
         case TipoDeclaracaoSelecao:     return "if";
         case TipoDeclaracaoIteracao:    return "while";
         case TipoDeclaracaoRetorno:     return "return";
         case TipoExpressao:             return "expressao";
-        case TipoVar:                   return "variavel";
-        case TipoExpressaoSimples:      return "expressaoSimples";
-        case TipoExpressaoSoma:         return "expressaoSoma";
+        case TipoVar:                   return no->dado.nome;
         case TipoTermo:                 return "termo";
         case TipoFator:                 return "fator";
-        case TipoChamadaFuncao:         return "chamadaFuncao";
+        case TipoChamadaFuncao:         return no->dado.nome;
         case TipoArgumentos:            return "argumentos";
         case TipoListaArgumentos:       return "listaArgumentos";
         case TipoCorpo:                 return "corpo";
@@ -1175,7 +1195,7 @@ int main(int argc, char **argv){
     }
 
     /* cria escopo global */
-    //entrarEscopo(linha_atual);
+    entrarEscopo(linha_atual);
 
     // TODO: TIRAR DECLARACAO DE INPUT/OUTPUT? NAO PRECISA DISSO AQUI
     /* declararSimbolo("input", Funcao, TipoInt, TipoInteiro, 0);
@@ -1184,18 +1204,18 @@ int main(int argc, char **argv){
     yyparse();
 
     /* sai do escopo global e libera memória */
-    //sairEscopo();
+    sairEscopo();
 
     /* Geração de quádruplas a partir da AST */
     /*gerar_quads(raizAST);
     printf("\nQuadruplas geradas:\n");
     print_quads(stdout);
     printf("---------------------\n> ");
-    limpa_quads();
+    limpa_quads();*/
 
     gerarDOT(raizAST);
 
-    liberaAST(raizAST);*/
+    liberaAST(raizAST);
 
     fclose(yyin);
 

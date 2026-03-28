@@ -1,7 +1,14 @@
+int y;
+
+int func(void) {
+    y = 2;
+}
+
 void main(void) {
-    int x;
-    x = 0;
-    while(x < 10) {
-        x = x + 1;
+    int u;
+    u = 0;
+    while(u < 10) {
+        int k;
+        u = u + 1;
     }
 }
