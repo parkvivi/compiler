@@ -16,25 +16,6 @@
 
     // Tipos de nos da AST
     typedef enum {
-        TipoPrograma,
-        TipoListaDeclaracoes,
-        TipoDeclaracao,
-        TipoParametros,
-        TipoListaParametros,
-        TipoParametro,
-        TipoEscopo,
-        TipoDeclaracoesLocais,
-        TipoListaEscopo,
-        TipoCorpo,
-        TipoDeclaracaoExpressao,
-        TipoExpressao,
-        TipoTermo,
-        TipoFator,
-        TipoArgumentos,
-        TipoListaArgumentos,
-        TipoID,
-        TipoChamadaFuncao,
-        // USADOS!!!!
         TipoDeclaracaoFuncao,
         TipoDeclaracaoVariavel,
         TipoTipoEspecificador,
@@ -43,6 +24,8 @@
         TipoDeclaracaoSelecao,
         TipoDeclaracaoIteracao,
         TipoDeclaracaoRetorno,
+        TipoChamadaFuncao,
+        TipoParametro,
         TipoAtribuicao,
         TipoMenorIgual,
         TipoMenor,
@@ -65,6 +48,7 @@
             char* nome;
             int valor;
         } dado;
+        struct AST* irmao;
         struct AST* filhos[MAXFILHOS];
     } AST;
 
@@ -73,6 +57,7 @@
 
     // Prototipos das funcoes para tratar da AST
     AST* criarNo(TipoNo tipo);
+    AST* anexarIrmao(AST* lista, AST* novoNo);
     void liberaAST(AST* no);
 
     // Prototipos das funcoes para gerar arquivo .dot
@@ -196,9 +181,7 @@
     listaDeclaracoes:
         listaDeclaracoes declaracao
             {
-                $$ = criarNo(TipoListaDeclaracoes); // TODO: redundante, trocar para irmaos
-                $$->filhos[0] = $1;
-                $$->filhos[1] = $2;
+                $$ = anexarIrmao($1, $2);
             }
         | declaracao
             {
@@ -293,9 +276,7 @@
     listaParametros:
         listaParametros T_VIRGULA parametro
             {
-                $$ = criarNo(TipoListaParametros); // TODO: redundante, trocar para irmaos
-                $$->filhos[0] = $1;
-                $$->filhos[1] = $3;
+                $$ = anexarIrmao($1, $3);
             }
         | parametro
             {
@@ -330,14 +311,14 @@
             {
                 sairEscopo();
 
-                if ($2 == NULL) {
+                if ($2 == NULL && $3 == NULL) {
+                    $$ = NULL;
+                } else if ($2 == NULL) {
                     $$ = $3;
                 } else if ($3 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoEscopo); // TODO: redundante, trocar para irmaos
-                    $$->filhos[0] = $2;
-                    $$->filhos[1] = $3;
+                    $$ = anexarIrmao($2, $3);
                 }
             }
         ;
@@ -348,9 +329,7 @@
                 if ($1 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoDeclaracoesLocais); // TODO: redundante, trocar para irmaos
-                    $$->filhos[0] = $1;
-                    $$->filhos[1] = $2;
+                    $$ = anexarIrmao($1, $2);
                 }
             }
         |
@@ -365,9 +344,7 @@
                 if ($1 == NULL) {
                     $$ = $2;
                 } else {
-                    $$ = criarNo(TipoListaEscopo); // TODO: redundante, trocar para irmaos
-                    $$->filhos[0] = $1;
-                    $$->filhos[1] = $2;
+                    $$ = anexarIrmao($1, $2);
                 }
             }
         |
@@ -652,9 +629,7 @@
     listaArgumentos:
         listaArgumentos T_VIRGULA expressao
             {
-                $$ = criarNo(TipoListaArgumentos); // TODO: redundante, trocar para irmaos
-                $$->filhos[0] = $1;
-                $$->filhos[1] = $3;
+                $$ = anexarIrmao($1, $3);
             }
         | expressao
             {
@@ -669,11 +644,25 @@ AST* criarNo(TipoNo tipo) {
     AST* no = malloc(sizeof(AST));
     no->tipo = tipo;
 
+    no->irmao = NULL;
+
     for (int i=0; i<MAXFILHOS; i++) {
         no->filhos[i] = NULL;
     }
     
     return no;
+}
+
+AST* anexarIrmao(AST* lista, AST* novoNo) {
+    if (lista == NULL) return novoNo;
+
+    AST* atual = lista;
+    while (atual->irmao != NULL) {
+        atual = atual->irmao;
+    }
+
+    atual->irmao = novoNo;
+    return lista;
 }
 
 void liberaAST(AST* no) {
@@ -687,6 +676,8 @@ void liberaAST(AST* no) {
     if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao || no->tipo == TipoTipoEspecificador) {
         free(no->dado.nome);
     }
+
+    liberaAST(no->irmao);
 
     free(no);
 }
@@ -930,30 +921,6 @@ char* gerar_quads(AST* no){
         return NULL;
     }
 
-    else if(no->tipo == TipoExpressao) { // expressao 
-        if(no->filhos[1] == NULL) return gerar_quads(no->filhos[0]);
-
-        char* arg1 = gerar_quads(no->filhos[2]);
-        char* var = no->filhos[0]->filhos[0]->dado.nome;
-        emitir_quads("=", arg1, "-", var);
-        return var;
-    }
-
-    else if(no->tipo == TipoTermo) { // termo
-        if(no->filhos[1] == NULL) return gerar_quads(no->filhos[0]);
-
-        char* op = no->filhos[1]->dado.nome;
-        char* arg1 = gerar_quads(no->filhos[0]);
-        char* arg2 = gerar_quads(no->filhos[2]);
-        char* temp = novoTemp();
-        emitir_quads(op, arg1, arg2, temp);
-        return temp;
-    }
-
-    else if(no->tipo == TipoFator) { // fator
-        return gerar_quads(no->filhos[0]);
-    }
-
     else if(no->tipo == TipoVar) { // variavel
         if(no->filhos[1] == NULL) // inteiro
             return no->filhos[0]->dado.nome;
@@ -971,14 +938,6 @@ char* gerar_quads(AST* no){
         char* buffer = malloc(sizeof(char)*64);
         sprintf(buffer, "%d", no->dado.valor);
         return buffer;
-    }
-
-    else if(no->tipo == TipoID) { //id
-        return no->dado.nome;
-    }
-
-    else if(no->tipo == TipoListaArgumentos) {
-        return gerar_quads(no->filhos[0]);
     }
 
     else if(no->tipo == TipoChamadaFuncao) {
@@ -1038,17 +997,6 @@ char* gerar_quads(AST* no){
         return NULL;
     }
 
-    else if(no->tipo == TipoParametros) {
-        gerar_quads(no->filhos[0]);
-        return NULL;
-    }
-
-    else if(no->tipo == TipoListaParametros) {
-        gerar_quads(no->filhos[0]);
-        gerar_quads(no->filhos[1]);
-        return NULL;
-    }
-
     else if(no->tipo == TipoParametro) {
         char *tipo = no->filhos[0]->dado.nome;
         char *nome = no->filhos[1]->dado.nome;
@@ -1068,17 +1016,6 @@ char* gerar_quads(AST* no){
         } else {
             emitir_quads("RETURN", "-", "-", "-");
         }
-        return NULL;
-    }
-
-    else if(no->tipo == TipoEscopo || no->tipo == TipoListaEscopo || no->tipo == TipoDeclaracoesLocais) {
-        gerar_quads(no->filhos[0]);
-        gerar_quads(no->filhos[1]);
-        return NULL;
-    }
-
-    else if (no->tipo == TipoCorpo) {
-        gerar_quads(no->filhos[0]);
         return NULL;
     }
 
@@ -1104,30 +1041,15 @@ void print_quads(FILE *out){
 const char* nomeTipoNo(AST* no) {
     static char buffer[50];
     switch (no->tipo) {
-        case TipoPrograma:              return "programa";
-        case TipoListaDeclaracoes:      return "listaDeclaracoes";
-        case TipoDeclaracao:            return "declaracao";
         case TipoDeclaracaoVariavel:    return no->dado.nome;
         case TipoDeclaracaoFuncao:      return no->dado.nome;
         case TipoTipoEspecificador:     return no->dado.nome;
-        case TipoParametros:            return "parametros";
-        case TipoListaParametros:       return "listaParametros";
-        case TipoParametro:             return "parametro";
-        case TipoEscopo:                return "escopo";
-        case TipoDeclaracoesLocais:     return "declaracoesLocais";
-        case TipoListaEscopo:           return "listaEscopo";
-        case TipoDeclaracaoExpressao:   return "declaracaoExpressao";
+        case TipoParametro:             return no->dado.nome;
         case TipoDeclaracaoSelecao:     return "IF";
         case TipoDeclaracaoIteracao:    return "WHILE";
         case TipoDeclaracaoRetorno:     return "RETURN";
-        case TipoExpressao:             return "expressao";
         case TipoVar:                   return no->dado.nome;
-        case TipoTermo:                 return "termo";
-        case TipoFator:                 return "fator";
         case TipoChamadaFuncao:         return no->dado.nome;
-        case TipoArgumentos:            return "argumentos";
-        case TipoListaArgumentos:       return "listaArgumentos";
-        case TipoCorpo:                 return "corpo";
         case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return buffer;
         case TipoAtribuicao:            return "=";
         case TipoMenorIgual:            return  "<=";
@@ -1146,20 +1068,41 @@ const char* nomeTipoNo(AST* no) {
 void imprimirNoDOT(AST* no, FILE* file) {
     if (!no) return;
 
-    char nomeDoNo[30];
+    AST* atual = no;
+    while (atual) {
+        fprintf(file, "  node%p[label=\"%s\"];\n", (void*)atual, nomeTipoNo(atual));
+        atual = atual->irmao;
+    }
 
-    strcpy(nomeDoNo, nomeTipoNo(no));
+    if (no->irmao) {
+        fprintf(file, "  { rank=same; ");
 
-    for(int i=0; i<MAXFILHOS; i++) {
-        AST* filho = no->filhos[i];
-        if(filho) {
-            char nomeFilho[50];
-            strcpy(nomeFilho, nomeTipoNo(filho));
-            fprintf(file, "  node%p[label=\"%s\"];\n", (void*)no, nomeDoNo);
-            fprintf(file, "  node%p[label=\"%s\"];\n", (void*)filho, nomeFilho);
-            fprintf(file, "  node%p -> node%p;\n", (void*)no, (void*)filho);
-            imprimirNoDOT(filho, file);
+        atual = no;
+        while (atual) {
+            fprintf(file, "node%p; ", (void*)atual);
+            atual = atual->irmao;
         }
+
+        fprintf(file, "}\n");
+
+        atual = no;
+        while (atual->irmao) {
+            fprintf(file, "  node%p -> node%p;\n", (void*)atual, (void*)atual->irmao);
+            atual = atual->irmao;
+        }
+    }
+
+    atual = no;
+    while (atual) {
+        for (int i = 0; i < MAXFILHOS; i++) {
+            AST* filho = atual->filhos[i];
+            if (filho) {
+                fprintf(file, "  node%p -> node%p;\n", (void*)atual, (void*)filho);
+                imprimirNoDOT(filho, file);
+            }
+        }
+        
+        atual = atual->irmao;
     }
 }
 
