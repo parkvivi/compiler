@@ -196,7 +196,7 @@
         tipoEspecificador T_ID T_PONTOEVIRGULA
             {
                 if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" declarada com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" declarada com tipo \"void\"\n", linha_atual, $2);
                     contErros++;
                 }
 
@@ -212,7 +212,7 @@
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
                 if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" declarada com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" declarada com tipo \"void\"\n", linha_atual, $2);
                     contErros++;
                 }
 
@@ -289,7 +289,7 @@
         tipoEspecificador T_ID
             {   
                 if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "ERRO SEMANTICO: parametro \"%s\" declarado com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: parametro \"%s\" declarado com tipo \"void\"\n", linha_atual, $2);
                     contErros++;
                 }
 
@@ -305,7 +305,7 @@
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
             {   
                 if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "ERRO SEMANTICO: parametro \"%s\" declarado com tipo \"void\" - LINHA: %d\n", $2, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: parametro \"%s\" declarado com tipo \"void\"\n", linha_atual, $2);
                     contErros++;
                 }
 
@@ -455,7 +455,7 @@
         T_ID
             {   
                 if (buscarSimboloTodosEscopos($1, Variavel, TipoInteiro, 1) == NULL) {
-                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", $1, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" nao declarada\n", linha_atual, $1);
                     contErros++;
                 }
 
@@ -467,7 +467,7 @@
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
             {
                 if (buscarSimboloTodosEscopos($1, Variavel, TipoVetor, 1) == NULL) {
-                    fprintf(stderr, "ERRO SEMANTICO: variavel \"%s\" nao declarada - LINHA: %d\n", $1, linha_atual);
+                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" nao declarada\n", linha_atual, $1);
                     contErros++;
                 }
 
@@ -495,7 +495,7 @@
                     $$ = criarNo(TipoIgual);
                 } else if (strcmp($2, "!=") == 0) {
                     $$ = criarNo(TipoDiferente);
-                } // TODO: else erro?
+                }
 
                 free($2);
 
@@ -665,29 +665,27 @@
 /* ========== FUNCOES PARA TRATAR DA AST ========== */
 AST* criarNo(TipoNo tipo) {
 
-    AST* no = malloc(sizeof(AST));
-    no->tipo = tipo;
+    AST* novoNo = malloc(sizeof(AST));
+    novoNo->tipo = tipo;
 
-    no->irmao = NULL;
+    novoNo->irmao = NULL;
 
     for (int i=0; i<MAXFILHOS; i++) {
-        no->filhos[i] = NULL;
+        novoNo->filhos[i] = NULL;
     }
     
-    return no;
+    return novoNo;
 }
 
-AST* anexarIrmao(AST* lista, AST* novoNo) {
+AST* anexarIrmao(AST* listaIrmaos, AST* novoIrmao) {
 
-    if (lista == NULL) return novoNo;
+    if (listaIrmaos == NULL) return novoIrmao;
 
-    AST* atual = lista;
-    while (atual->irmao != NULL) {
-        atual = atual->irmao;
-    }
+    AST* atual;
+    for (atual=listaIrmaos; atual->irmao!=NULL; atual=atual->irmao);
+    atual->irmao = novoIrmao;
 
-    atual->irmao = novoNo;
-    return lista;
+    return listaIrmaos;
 }
 
 void liberaAST(AST* no) {
@@ -703,20 +701,19 @@ void liberaAST(AST* no) {
     }
 
     liberaAST(no->irmao);
-
     free(no);
 }
 
 /* ========== FUNCOES PARA TRATAR DA TABELA DE SIMBOLOS ========== */
 void entrarEscopo(int linhaInicio) {
 
-    Escopo *e = (Escopo*) malloc(sizeof(Escopo));
+    Escopo *novoEscopo = (Escopo*) malloc(sizeof(Escopo));
 
-    e->simbolos = NULL;
-    e->linhaInicio = linhaInicio;
-    e->prox = topo_escopo;
+    novoEscopo->simbolos = NULL;
+    novoEscopo->linhaInicio = linhaInicio;
+    novoEscopo->prox = topo_escopo;
 
-    topo_escopo = e;
+    topo_escopo = novoEscopo;
 }
 
 void sairEscopo() { // pop
@@ -725,7 +722,7 @@ void sairEscopo() { // pop
     Simbolo *s = topo_escopo->simbolos;
     if (topo_escopo->prox == NULL && strcmp(topo_escopo->simbolos->nome, "main") != 0) {
         // main() não foi declarada como último elemento do escopo global 
-        fprintf(stderr, "ERRO SEMANTICO: funcao \"main\" nao declarada ou declarada incorretamente");
+        fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
         contErros++;
         return;
     }
@@ -799,14 +796,14 @@ void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo t
 
     if (buscarSimboloEscopoAtual(nome, categoria, tipo, 1) != NULL) {
         // Erro de simbolo duplicada no escopo
-        fprintf(stderr, "ERRO SEMANTICO: identificador \"%s\" em uso - LINHA: %d\n", nome, linha_atual);
+        fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: identificador \"%s\" em uso\n", linha_atual, nome);
         contErros++;
         return;
     }
 
     if (strcmp(nome, "output") == 0 || strcmp(nome, "input") == 0) {
         // Erro de tentativa de declaração de função com nome reservado
-        fprintf(stderr, "ERRO SEMANTICO: nome \"%s\" reservado para funcao - LINHA: %d\n", nome, linha_atual);
+        fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: nome \"%s\" reservado para funcao\n", linha_atual, nome);
         contErros++;
         return;
     }
@@ -1172,6 +1169,6 @@ int main(int argc, char **argv){
 }
 
 void yyerror(const char* msg) {
-	fprintf(stderr, "ERRO SINTATICO: \"%s\" - LINHA: %d\n", msg, linha_atual);
+	fprintf(stderr, "LINHA %d :: ERRO SINTATICO :: \"%s\"\n", linha_atual, msg);
 	exit(1);
 }

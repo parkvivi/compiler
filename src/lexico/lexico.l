@@ -84,12 +84,12 @@ NUM {DIGITO}+
 <COMENTARIO>.       {}
 
 <COMENTARIO><<EOF>>      {
-    fprintf(stderr, "ERRO LEXICO: Comentario nao fechado - ABERTO NA LINHA: %d\n", inicio_comentario);
+    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: Comentario nao fechado\n", inicio_comentario);
     exit(1);
 }
 
 "*/"                {
-    fprintf(stderr, "ERRO LEXICO: \"%s\" - LINHA: %d\n", yytext, linha_atual);
+    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha_atual, yytext);
     exit(1);
 }
 
@@ -167,7 +167,7 @@ NUM {DIGITO}+
 }
 
 .                   {
-    fprintf(stderr, "ERRO LEXICO: \"%s\" - LINHA: %d\n", yytext, linha_atual);
+    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha_atual, yytext);
     exit(1);
 }
 
