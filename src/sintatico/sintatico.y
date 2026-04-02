@@ -324,27 +324,14 @@
         T_ACHAVE declaracoesLocais listaEscopo T_FCHAVE
             {
                 sairEscopo();
-
-                if ($2 == NULL && $3 == NULL) {
-                    $$ = NULL;
-                } else if ($2 == NULL) {
-                    $$ = $3;
-                } else if ($3 == NULL) {
-                    $$ = $2;
-                } else {
-                    $$ = anexarIrmao($2, $3);
-                }
+                $$ = anexarIrmao($2, $3);
             }
         ;
 
     declaracoesLocais:
         declaracoesLocais declaracaoVariaveis
             {
-                if ($1 == NULL) {
-                    $$ = $2;
-                } else {
-                    $$ = anexarIrmao($1, $2);
-                }
+                $$ = anexarIrmao($1, $2);
             }
         |
             {
@@ -355,11 +342,7 @@
     listaEscopo:
         listaEscopo corpo
             {
-                if ($1 == NULL) {
-                    $$ = $2;
-                } else {
-                    $$ = anexarIrmao($1, $2);
-                }
+                $$ = anexarIrmao($1, $2);
             }
         |
             {

@@ -4,7 +4,7 @@ int func(void)
     int i; int soma;
     i = 0; soma = 0;
 
-    i[0] = 8;   /* PROBLEMAAAAAA!!!!!!!!!!!! */
+    /* i[0] = 8;  PROBLEMAAAAAA!!!!!!!!!!!! */
 
     while(i < 10)
     {
