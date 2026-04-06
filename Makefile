@@ -1,13 +1,14 @@
 LEX      = flex
 BISON    = bison
 CC       = gcc
-CFLAGS   = -Wall -Wextra
+CFLAGS   = -Wall -Wextra -Isrc/ast -Isrc/dot -Isrc/gci -Isrc/semantico -Isrc/main
 DOT      = dot
 
 LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
 BUILD_DIR = build
 INPUT_FILE = entrada/codigo.txt
+MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/tabsimbolos.c src/main/main.c
 
 ifeq ($(OS),Windows_NT)
     MKDIR = if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
@@ -52,8 +53,8 @@ run: $(PARSER_BIN)
 scanner: CFLAGS += -DLEX_STANDALONE
 scanner: $(SCANNER)
 
-$(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT)
-	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT) $(BISON_OUTPUT)
+$(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
+	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
 
 $(SCANNER): $(LEX_OUTPUT)
 	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT)
