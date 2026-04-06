@@ -5,9 +5,11 @@
     #include <stdlib.h>
     #include <string.h>
 
+    #include "sintatico.tab.h"
+
     #define YY_DECL int yylex()
 
-    #include "sintatico.tab.h"
+    void erroLexico(int linha, char* mensagem);
 
     int linha_atual = 1;
     int inicio_comentario = 0;
@@ -84,13 +86,11 @@ NUM {DIGITO}+
 <COMENTARIO>.       {}
 
 <COMENTARIO><<EOF>>      {
-    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: Comentario nao fechado\n", inicio_comentario);
-    exit(1);
+    erroLexico(inicio_comentario, "Comentario nao fechado");
 }
 
 "*/"                {
-    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha_atual, yytext);
-    exit(1);
+    erroLexico(linha_atual, yytext);
 }
 
 
@@ -167,29 +167,12 @@ NUM {DIGITO}+
 }
 
 .                   {
-    fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha_atual, yytext);
-    exit(1);
+    erroLexico(linha_atual, yytext);
 }
 
 %%
 
-#ifdef LEX_STANDALONE
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *file = fopen(argv[1], "r");
-        if (!file) {
-            perror("Erro ao abrir o arquivo");
-            return EXIT_FAILURE;
-        }
-        yyin = file;
-    }
-
-    yylex();
-
-    if (argc > 1) {
-        fclose(yyin);
-    }
-
-    return 0;
+void erroLexico(int linha, char* mensagem) {
+	fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha, mensagem);
+	exit(1);
 }
-#endif

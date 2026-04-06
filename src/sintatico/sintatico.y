@@ -1151,7 +1151,7 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void yyerror(const char* msg) {
-	fprintf(stderr, "LINHA %d :: ERRO SINTATICO :: \"%s\"\n", linha_atual, msg);
+void yyerror(const char* mensagem) {
+	fprintf(stderr, "LINHA %d :: ERRO SINTATICO :: \"%s\"\n", linha_atual, mensagem);
 	exit(1);
 }
