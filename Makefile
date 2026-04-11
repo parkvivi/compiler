@@ -7,7 +7,7 @@ DOT      = dot
 LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
 BUILD_DIR = build
-INPUT_FILE = entrada/codigo.txt
+INPUT_FILE = entrada/gcd.txt
 MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/tabsimbolos.c src/main/main.c
 
 ifeq ($(OS),Windows_NT)

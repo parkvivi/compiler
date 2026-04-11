@@ -11,6 +11,6 @@
 
 extern FILE* yyin;
 extern int linha_atual;
-extern int yyparse(void);
+extern int yyparse();
 
 #endif
