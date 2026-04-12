@@ -4,127 +4,93 @@
 
 extern int linha_atual;
 
-Escopo *topo_escopo = NULL;
+Escopo* topo_escopo = NULL;
 
-void entrarEscopo(int linhaInicio) {
+void entrarEscopo() {
 
-    Escopo *novoEscopo = (Escopo*) malloc(sizeof(Escopo));
+    Escopo* novoEscopo = (Escopo*) malloc(sizeof(Escopo));
 
     novoEscopo->simbolos = NULL;
-    novoEscopo->linhaInicio = linhaInicio;
     novoEscopo->prox = topo_escopo;
 
     topo_escopo = novoEscopo;
 }
 
-void sairEscopo() { // pop
+void sairEscopo() {
+
     if (topo_escopo == NULL) return;
 
-    Simbolo *s = topo_escopo->simbolos;
-    if (topo_escopo->prox == NULL && strcmp(topo_escopo->simbolos->nome, "main") != 0) {
-        // main() não foi declarada como último elemento do escopo global 
-        fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
-        return;
-    }
-
-    if (s) {
-        printf("ESCOPO: LINHAS %d a %d\n", topo_escopo->linhaInicio, linha_atual);
-    }
+    Simbolo* s = topo_escopo->simbolos;
 
     while (s) {
-        char *categoria = (s->categoria == Variavel) ? "variavel" : "funcao";
-        char *tipoSimbolo = (s->tipoSimbolo == TipoInt) ? "int" : "void";
-        char *tipoVariavel = (s->categoria == Variavel) ? (s->tipo == TipoInteiro ? "//inteiro" : "//vetor") : "";
-        printf("\t-> %s\t\t[%s//%s%s]\n", s->nome, categoria, tipoSimbolo, tipoVariavel);
-        
-        Simbolo *tmp = s;
+        Simbolo* sAux = s;
         s = s->prox;
         
-        free(tmp->nome);
-        
-        if (tmp->categoria == Variavel && tmp->tipo == TipoVetor) {
-            free(tmp->valor.vetor);
-        }
-        free(tmp);
+        free(sAux->nome);
+        free(sAux);
     }
 
-    Escopo *tmpE = topo_escopo;
+    Escopo* eAux = topo_escopo;
     topo_escopo = topo_escopo->prox;
-    free(tmpE);
+
+    free(eAux);
 }
 
-Simbolo* buscarSimboloEscopoAtual(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipoVar, int verificarTipos) {
+Simbolo* buscarSimboloEscopoAtual(const char* nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor) {
 
     if (!topo_escopo) return NULL;
 
-    Simbolo *s = topo_escopo->simbolos;
+    Simbolo* s = topo_escopo->simbolos;
+
     while (s) {
-        if (strcmp(s->nome, nome) == 0) {
-            if (verificarTipos == 1 && s->categoria != categoria && (categoria == Variavel && s->tipo != tipoVar)) {
-                s = s->prox;
-                continue;
-            }
+        if (strcmp(s->nome, nome) == 0 && s->categoria == categoria && s->tipo == tipo && s->ehVetor == ehVetor) {
             return s;
         }
+
         s = s->prox;
     }
+
     return NULL;
 }
 
-Simbolo* buscarSimboloTodosEscopos(const char *nome, CategoriaSimbolo categoria, TipoVariavel tipoVar, int verificarTipos) {
+Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor) {
 
-    Escopo *e = topo_escopo;
+    Escopo* e = topo_escopo;
+
     while (e) {
-        Simbolo *s = e->simbolos;
+        Simbolo* s = e->simbolos;
+
         while (s) {
-            if (strcmp(s->nome, nome) == 0) {
-                if (verificarTipos == 1 && s->categoria != categoria && (categoria == Variavel && s->tipo != tipoVar)) {
-                    s = s->prox;
-                    continue;
-                }
+            if (strcmp(s->nome, nome) == 0 && s->categoria == categoria && s->tipo == tipo && s->ehVetor == ehVetor) {
                 return s;
             }
+
             s = s->prox;
         }
+
         e = e->prox;
     }
 
     return NULL;
 }
 
-void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipoSimbolo, TipoVariavel tipo, int tamanhoVetor) {
+void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor) {
 
-    if (buscarSimboloEscopoAtual(nome, categoria, tipo, 1) != NULL) {
-        // Erro de simbolo duplicada no escopo
-        fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: identificador \"%s\" em uso\n", linha_atual, nome);
-        return;
+    // Verificações de uso correto da função declararSimbolo(); não verificam semântica
+    if (categoria == Funcao && (ehVetor == true || tamanhoVetor != 0)) {
+        fprintf(stderr, "Para a declaracao de funcoes, ehVetor tem que ser false e tamanhoVetor tem que ser 0");
     }
 
-    if (strcmp(nome, "output") == 0 || strcmp(nome, "input") == 0) {
-        // Erro de tentativa de declaração de função com nome reservado
-        fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: nome \"%s\" reservado para funcao\n", linha_atual, nome);
-        return;
+    if (categoria == Variavel && ehVetor == false && tamanhoVetor != 1) {
+        fprintf(stderr, "Para a declaracao de variaveis que não são vetores, tamanho tem que ser 1");
     }
 
-    Simbolo *s = (Simbolo*) malloc(sizeof(Simbolo));
+    Simbolo* s = (Simbolo*) malloc(sizeof(Simbolo));
 
     s->nome = strdup(nome);
     s->categoria = categoria;
-    s->tipoSimbolo = tipoSimbolo;
-    s->prox = topo_escopo->simbolos;
-    topo_escopo->simbolos = s;
-
-    if (s->categoria != Variavel) {
-        return;
-    }
-    
     s->tipo = tipo;
 
-    if (tipo == TipoInteiro) {
-        s->tamanho = 1;
-        s->valor.inteiro = 0; 
-    } else if (tipo == TipoVetor) {
-        s->tamanho = tamanhoVetor;
-        s->valor.vetor = (int*) calloc(tamanhoVetor, sizeof(int));
-    }
+    s->ehVetor = ehVetor;
+    s->tamanhoVetor = tamanhoVetor;
 }

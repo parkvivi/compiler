@@ -78,12 +78,6 @@
     declaracaoVariaveis:
         tipoEspecificador T_ID T_PONTOEVIRGULA
             {
-                if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" declarada com tipo \"void\"\n", linha_atual, $2);
-                }
-
-                declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
-
                 $$ = criarNo(TipoDeclaracaoVariavel);
                 $$->dado.nome = strdup($2);
 
@@ -93,12 +87,6 @@
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_NUM T_FCOLCHETE T_PONTOEVIRGULA
             {
-                if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" declarada com tipo \"void\"\n", linha_atual, $2);
-                }
-
-                declararSimbolo($2, Variavel, TipoInt, TipoVetor, 1);
-                
                 $$ = criarNo(TipoDeclaracaoVariavel);
                 $$->dado.nome = strdup($2);
                 
@@ -128,17 +116,14 @@
         ;
 
     declaracaoFuncao:
-        tipoEspecificador T_ID T_APAR { entrarEscopo(linha_atual); } parametros T_FPAR escopo
+        tipoEspecificador T_ID T_APAR parametros T_FPAR escopo
             {
-                TipoSimbolo tipoFuncao = (strcmp($1->dado.nome, "int") == 0) ? TipoInt : TipoVoid;
-                declararSimbolo($2, Funcao, tipoFuncao, TipoInteiro, 0);
-
                 $$ = criarNo(TipoDeclaracaoFuncao);
                 $$->dado.nome = strdup($2);
 
                 $$->filhos[0] = $1;
-                $$->filhos[1] = $5;
-                $$->filhos[2] = $7;
+                $$->filhos[1] = $4;
+                $$->filhos[2] = $6;
 
                 free($2);
             }
@@ -169,12 +154,6 @@
     parametro:
         tipoEspecificador T_ID
             {   
-                if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: parametro \"%s\" declarado com tipo \"void\"\n", linha_atual, $2);
-                }
-
-                declararSimbolo($2, Variavel, TipoInt, TipoInteiro, 1);
-
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
@@ -183,13 +162,7 @@
                 free($2);
             }
         | tipoEspecificador T_ID T_ACOLCHETE T_FCOLCHETE
-            {   
-                if (strcmp($1->dado.nome, "void") == 0) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: parametro \"%s\" declarado com tipo \"void\"\n", linha_atual, $2);
-                }
-
-                declararSimbolo($2, Variavel, TipoInt, TipoVetor, 100); // tamanho maximo de vetor definido como 100
-
+            {
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
@@ -202,7 +175,6 @@
     escopo:
         T_ACHAVE declaracoesLocais listaEscopo T_FCHAVE
             {
-                sairEscopo();
                 $$ = anexarIrmao($2, $3);
             }
         ;
@@ -234,9 +206,9 @@
             {
                 $$ = $1;
             }
-        | { entrarEscopo(linha_atual); } escopo
+        | escopo
             {
-                $$ = $2;
+                $$ = $1;
             }
         | declaracaoSelecao
             {
@@ -315,11 +287,7 @@
 
     variavel:
         T_ID
-            {   
-                if (buscarSimboloTodosEscopos($1, Variavel, TipoInteiro, 1) == NULL) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" nao declarada\n", linha_atual, $1);
-                }
-
+            {
                 $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 
@@ -327,10 +295,6 @@
             }
         | T_ID T_ACOLCHETE expressao T_FCOLCHETE
             {
-                if (buscarSimboloTodosEscopos($1, Variavel, TipoVetor, 1) == NULL) {
-                    fprintf(stderr, "LINHA %d :: ERRO SEMANTICO :: variavel \"%s\" nao declarada\n", linha_atual, $1);
-                }
-
                 $$ = criarNo(TipoVar);
                 $$->dado.nome = strdup($1);
 

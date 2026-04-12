@@ -16,9 +16,7 @@ int main(int argc, char **argv){
         }
     }
 
-    entrarEscopo(linha_atual);
     yyparse();
-    sairEscopo();
 
     /* Geração de quádruplas a partir da AST */
     /*gerar_quads(raizAST);

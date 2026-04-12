@@ -4,7 +4,10 @@ int func(void)
     int i; int soma;
     i = 0; soma = 0;
 
-    /* i[0] = 8;  PROBLEMAAAAAA!!!!!!!!!!!! */
+    {
+        int i;
+        int g;
+    }
 
     while(i < 10)
     {
