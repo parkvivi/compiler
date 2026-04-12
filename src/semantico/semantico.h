@@ -5,8 +5,8 @@
 #include "tabsimbolos.h"
 
 TipoSimbolo retornaTipo(AST* no);
-void criarTabSimbolos(AST* no);
-void verificarTipos();
+static void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo);
+void criarTabSimbolos(AST* no, FILE* arquivo);
 void analisarSemantica();
 
 #endif

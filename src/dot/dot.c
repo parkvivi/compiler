@@ -9,7 +9,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoParametro:             return  no->dado.nome;
         case TipoVar:                   return  no->dado.nome;
         case TipoChamadaFuncao:         return  no->dado.nome;
-        case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return   buffer;
+        case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return buffer;
         case TipoDeclaracaoSelecao:     return  "IF";
         case TipoDeclaracaoIteracao:    return  "WHILE";
         case TipoDeclaracaoRetorno:     return  "RETURN";

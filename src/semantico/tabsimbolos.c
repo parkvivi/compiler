@@ -4,9 +4,10 @@
 
 extern int linha_atual;
 
-Escopo* topo_escopo = NULL;
+Escopo* escopo_atual = NULL;
+Escopo* lista_escopos = NULL;
 
-static const char* categoriaParaString(CategoriaSimbolo categoria) {
+const char* categoriaParaString(CategoriaSimbolo categoria) {
     if (categoria == Funcao) {
         return "funcao";
     }
@@ -14,7 +15,7 @@ static const char* categoriaParaString(CategoriaSimbolo categoria) {
     return "variavel";
 }
 
-static const char* tipoParaString(TipoSimbolo tipo) {
+const char* tipoParaString(TipoSimbolo tipo) {
     if (tipo == TipoVoid) {
         return "void";
     }
@@ -27,41 +28,66 @@ void entrarEscopo() {
     Escopo* novoEscopo = (Escopo*) malloc(sizeof(Escopo));
 
     novoEscopo->simbolos = NULL;
-    novoEscopo->prox = topo_escopo;
+    novoEscopo->prox = escopo_atual;
 
-    topo_escopo = novoEscopo;
+    if (escopo_atual != NULL) {
+        if (escopo_atual->ant != NULL) {
+            escopo_atual->ant->prox = novoEscopo;
+            novoEscopo->ant = escopo_atual->ant;
+        } else {
+            novoEscopo->ant = NULL;
+            lista_escopos = novoEscopo;
+        }
+        escopo_atual->ant = novoEscopo;
+    } else {
+        novoEscopo->ant = NULL;
+        lista_escopos = novoEscopo;
+    }
+
+    escopo_atual = novoEscopo;
 }
 
 void sairEscopo() {
 
-    if (topo_escopo == NULL) return;
+    if (escopo_atual == NULL) return;
     
-    Simbolo* s = topo_escopo->simbolos;
+    escopo_atual = escopo_atual->prox;
+}
 
-    if (topo_escopo->prox == NULL && s != NULL && strcmp(s->nome, "main") != 0) {
-        fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
-        return;
+void liberarTabSimbolos() {
+
+    if (lista_escopos == NULL) return;
+
+    Escopo* e = lista_escopos;
+
+    while (e) {
+        Simbolo* s = lista_escopos->simbolos;
+
+        if (e->prox == NULL && strcmp(s->nome, "main") != 0) {
+            fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
+            return;
+        }
+
+        while (s) {
+            Simbolo* sAux = s;
+            s = s->prox;
+            
+            free(sAux->nome);
+            free(sAux);
+        }
+
+        Escopo* eAux = e;
+        e = e->prox;
+
+        free(eAux);
     }
-
-    while (s) {
-        Simbolo* sAux = s;
-        s = s->prox;
-        
-        free(sAux->nome);
-        free(sAux);
-    }
-
-    Escopo* eAux = topo_escopo;
-    topo_escopo = topo_escopo->prox;
-
-    free(eAux);
 }
 
 Simbolo* buscarSimboloEscopoAtual(const char* nome) {
 
-    if (!topo_escopo) return NULL;
+    if (!escopo_atual) return NULL;
 
-    Simbolo* s = topo_escopo->simbolos;
+    Simbolo* s = escopo_atual->simbolos;
 
     while (s) {
         if (strcmp(s->nome, nome) == 0) {
@@ -76,7 +102,7 @@ Simbolo* buscarSimboloEscopoAtual(const char* nome) {
 
 Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria, bool verificarCategoria) {
 
-    Escopo* e = topo_escopo;
+    Escopo* e = escopo_atual;
 
     while (e) {
         Simbolo* s = e->simbolos;
@@ -103,8 +129,8 @@ Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria,
 void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor) {
 
     // Verificações de uso correto da função declararSimbolo(); não verificam semântica
-    if (categoria == Funcao && (ehVetor == true || tamanhoVetor != 0)) {
-        fprintf(stderr, "Para a declaração de funções, ehVetor tem que ser false e tamanhoVetor tem que ser 0");
+    if (categoria == Funcao && (ehVetor == true || tamanhoVetor != -1)) {
+        fprintf(stderr, "Para a declaração de funções, ehVetor tem que ser false e tamanhoVetor tem que ser -1");
     }
 
     if (categoria == Variavel && ehVetor == false && tamanhoVetor != -1) {
@@ -122,26 +148,26 @@ void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo t
     s->tamanhoVetor = tamanhoVetor;
     s->prox = NULL;
 
-    if (topo_escopo == NULL) {
+    if (escopo_atual == NULL) {
         fprintf(stderr, "ERRO :: Nenhum escopo ativo para declarar simbolo '%s'", nome);
         free(s->nome);
         free(s);
         return;
     }
 
-    s->prox = topo_escopo->simbolos;
-    topo_escopo->simbolos = s;
+    s->prox = escopo_atual->simbolos;
+    escopo_atual->simbolos = s;
 }
 
 void imprimirEscopoAtual(FILE* saida, int idEscopo, int nivelEscopo) {
 
-    if (saida == NULL || topo_escopo == NULL) {
+    if (saida == NULL || escopo_atual == NULL) {
         return;
     }
 
     fprintf(saida, "Escopo #%d (nivel %d)\n", idEscopo, nivelEscopo);
 
-    Simbolo* simbolo = topo_escopo->simbolos;
+    Simbolo* simbolo = escopo_atual->simbolos;
 
     if (simbolo == NULL) {
         fprintf(saida, "  (sem simbolos)\n\n");

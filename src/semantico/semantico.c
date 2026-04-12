@@ -1,8 +1,8 @@
 #include "semantico.h"
 
-#define ARQUIVO_AUXILIAR_ESCOPO "build/escopos_simbolos.txt"
+#define ARQUIVO_TABELA_SIMBOLOS "build/tabsimbolos.txt"
 
-static void criarTabSimbolosInterno(AST* no, FILE* saida, int nivelEscopo, int* proximoIdEscopo) {
+void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo) {
 
     if (no == NULL) return;
 
@@ -18,7 +18,7 @@ static void criarTabSimbolosInterno(AST* no, FILE* saida, int nivelEscopo, int* 
                     fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
                 } else {
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
-                    declararSimbolo(no->dado.nome, Funcao, tipo, false, 0);
+                    declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
                 }
             }
 
@@ -76,9 +76,6 @@ static void criarTabSimbolosInterno(AST* no, FILE* saida, int nivelEscopo, int* 
             }
 
             break;
-
-        default:
-            break;
     }
 
     for (int i=0; i<MAXFILHOS; i++) {
@@ -87,25 +84,19 @@ static void criarTabSimbolosInterno(AST* no, FILE* saida, int nivelEscopo, int* 
             continue;
         }
 
-        criarTabSimbolosInterno(
-            filho,
-            saida,
-            escopoCriado ? nivelEscopo + 1 : nivelEscopo,
-            proximoIdEscopo
-        );
+        criarTabSimbolosInterno(filho, arquivo, escopoCriado ? nivelEscopo + 1 : nivelEscopo, proximoIdEscopo);
     }
 
     if (escopoCriado == true) {
-        imprimirEscopoAtual(saida, idEscopoAtual, nivelEscopo);
+        imprimirEscopoAtual(arquivo, idEscopoAtual, nivelEscopo);
         sairEscopo();
     }
 
-    criarTabSimbolosInterno(no->irmao, saida, nivelEscopo, proximoIdEscopo);
+    criarTabSimbolosInterno(no->irmao, arquivo, nivelEscopo, proximoIdEscopo);
 }
 
 TipoSimbolo retornaTipo(AST* no) {
 
-    // Antes de usar, ter CERTEZA de que no->tipo é TipoTipoEspecificador
     if (strcmp(no->dado.nome, "void") == 0) {
         return TipoVoid;
     }
@@ -113,22 +104,73 @@ TipoSimbolo retornaTipo(AST* no) {
     return TipoInt;
 }
 
-void criarTabSimbolos(AST* no) {
+void criarTabSimbolos(AST* no, FILE* arquivo) {
+
     int proximoIdEscopo = 1;
-    criarTabSimbolosInterno(no, NULL, 1, &proximoIdEscopo);
+    criarTabSimbolosInterno(no, arquivo, 1, &proximoIdEscopo);
 }
 
-void verificarTipos() {
-    // Função que percorre AST em pós-ordem
+TipoSimbolo verificarTipos(AST* no) {
+    
+    if (no == NULL) return TipoVoid;
 
+    TipoSimbolo tiposFilhos[MAXFILHOS];
+    for (int i=0; i<MAXFILHOS; i++) {
+        tiposFilhos[i] = verificarTipos(no->filhos[i]);
+    }
+
+    // verificação de tipos
+    switch(no->tipo) {
+        case TipoDeclaracaoVariavel:
+        case TipoParametro:
+            if (tiposFilhos[0] != TipoInt) {
+                fprintf(stderr, "ERRO SEMANTICO :: Variavel/parametro declarado como void");
+            }
+
+            return TipoVoid;
+
+        case TipoVar:
+            // verificar tipo
+            return TipoInt;
+
+        case TipoSoma:
+        case TipoSubtracao:
+        case TipoMultiplicacao:
+        case TipoDivisao:
+        case TipoAtribuicao:
+        case TipoMenorIgual:
+        case TipoMenor:
+        case TipoMaiorIgual:
+        case TipoMaior:
+        case TipoIgual:
+        case TipoDiferente:
+            if (tiposFilhos[0] == TipoVoid || tiposFilhos[1] == TipoVoid) {
+                fprintf(stderr, "ERRO SEMANTICO :: Expressoes so aceitam inteiros");
+            }
+
+            if (tiposFilhos[0] != tiposFilhos[1]) {
+                fprintf(stderr, "ERRO SEMANTICO :: Tipos inconsistentes");
+            }
+
+            break;
+
+        case TipoChamadaFuncao:
+            // retornar o tipo da função
+            break;
+
+        default:
+            return TipoVoid;
+    }
+
+    verificarTipos(no->irmao);
 }
 
 void analisarSemantica() {
     
-    FILE* saida = fopen(ARQUIVO_AUXILIAR_ESCOPO, "w");
+    FILE* saida = fopen(ARQUIVO_TABELA_SIMBOLOS, "w");
 
     if (saida == NULL) {
-        fprintf(stderr, "Nao foi possivel criar o arquivo auxiliar de escopos em '%s'\n", ARQUIVO_AUXILIAR_ESCOPO);
+        fprintf(stderr, "Nao foi possivel criar o arquivo auxiliar de escopos em '%s'\n", ARQUIVO_TABELA_SIMBOLOS);
         return;
     }
 
@@ -136,11 +178,19 @@ void analisarSemantica() {
 
     entrarEscopo();
 
-    int proximoIdEscopo = 1;
-    criarTabSimbolosInterno(raizAST, saida, 1, &proximoIdEscopo);
+    declararSimbolo("input", Funcao, TipoInt, false, -1);
+    declararSimbolo("output", Funcao, TipoVoid, false, -1);
+
+    criarTabSimbolos(raizAST, saida);
 
     imprimirEscopoAtual(saida, 0, 0);
     sairEscopo();
 
     fclose(saida);
+}
+
+// TODO: Incorporar no código
+void erroSemantico(char* mensagem) {
+	fprintf(stderr, "ERRO SEMANTICO :: \"%s\"\n", mensagem);
+	exit(1);
 }

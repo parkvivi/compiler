@@ -23,10 +23,13 @@ typedef struct Simbolo {
 
 typedef struct Escopo {
     Simbolo* simbolos;
+    struct Escopo* ant;
     struct Escopo* prox;
 } Escopo;
 
-extern Escopo* topo_escopo;
+extern Escopo* escopo_atual;
+extern Escopo* lista_escopos;
+
 
 void entrarEscopo();
 void sairEscopo();
