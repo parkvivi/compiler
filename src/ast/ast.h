@@ -16,6 +16,7 @@ typedef enum {
     TipoDeclaracaoRetorno,
     TipoChamadaFuncao,
     TipoParametro,
+    TipoParametroVetor,
     TipoAtribuicao,
     TipoMenorIgual,
     TipoMenor,

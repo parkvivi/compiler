@@ -36,7 +36,7 @@ void liberaAST(AST* no) {
         liberaAST(no->filhos[i]);
     }
 
-    if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao || no->tipo == TipoTipoEspecificador) {
+    if(no->tipo == TipoVar || no->tipo == TipoDeclaracaoFuncao || no->tipo == TipoDeclaracaoVariavel || no->tipo == TipoParametro || no->tipo == TipoChamadaFuncao || no->tipo == TipoTipoEspecificador) {
         free(no->dado.nome);
     }
 

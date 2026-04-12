@@ -3,18 +3,19 @@
 const char* nomeTipoNo(AST* no) {
     static char buffer[50];
     switch (no->tipo) {
-        case TipoDeclaracaoVariavel:    return no->dado.nome;
-        case TipoDeclaracaoFuncao:      return no->dado.nome;
-        case TipoTipoEspecificador:     return no->dado.nome;
-        case TipoParametro:             return no->dado.nome;
-        case TipoVar:                   return no->dado.nome;
-        case TipoChamadaFuncao:         return no->dado.nome;
-        case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return buffer;
-        case TipoDeclaracaoSelecao:     return "IF";
-        case TipoDeclaracaoIteracao:    return "WHILE";
-        case TipoDeclaracaoRetorno:     return "RETURN";
-        case TipoEscopo:                return "ESCOPO";
-        case TipoAtribuicao:            return "=";
+        case TipoDeclaracaoVariavel:    return  no->dado.nome;
+        case TipoDeclaracaoFuncao:      return  no->dado.nome;
+        case TipoTipoEspecificador:     return  no->dado.nome;
+        case TipoParametro:             return  no->dado.nome;
+        case TipoVar:                   return  no->dado.nome;
+        case TipoChamadaFuncao:         return  no->dado.nome;
+        case TipoNum:                   sprintf(buffer, "%d", no->dado.valor); return   buffer;
+        case TipoDeclaracaoSelecao:     return  "IF";
+        case TipoDeclaracaoIteracao:    return  "WHILE";
+        case TipoDeclaracaoRetorno:     return  "RETURN";
+        case TipoEscopo:                return  "ESCOPO";
+        case TipoParametroVetor:        return  "[]";
+        case TipoAtribuicao:            return  "=";
         case TipoMenorIgual:            return  "<=";
         case TipoMenor:                 return  "<";
         case TipoMaiorIgual:            return  ">=";
@@ -25,7 +26,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoDivisao:               return  "/";
         case TipoSoma:                  return  "+";
         case TipoSubtracao:             return  "-";
-        default:                        return "???";
+        default:                        return  "???";
     }
 }
 

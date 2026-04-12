@@ -166,7 +166,8 @@
                 $$ = criarNo(TipoParametro);
                 $$->dado.nome = strdup($2);
 
-                $$->filhos[0] = $1; // mais alguma coisa para vetor?
+                $$->filhos[0] = $1;
+                $$->filhos[1] = criarNo(TipoParametroVetor);
 
                 free($2);
             }
