@@ -33,6 +33,7 @@ extern Escopo* lista_escopos;
 
 void entrarEscopo();
 void sairEscopo();
+void liberarTabSimbolos();
 Simbolo* buscarSimboloEscopoAtual(const char* nome);
 Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria, bool verificarCategoria);
 void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor);

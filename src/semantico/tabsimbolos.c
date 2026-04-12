@@ -40,8 +40,19 @@ void entrarEscopo() {
         }
         escopo_atual->ant = novoEscopo;
     } else {
-        novoEscopo->ant = NULL;
-        lista_escopos = novoEscopo;
+        if (lista_escopos == NULL) {
+            novoEscopo->ant = NULL;
+            lista_escopos = novoEscopo;
+        } else {
+            Escopo* ultimoEscopo = lista_escopos;
+
+            while (ultimoEscopo->prox != NULL) {
+                ultimoEscopo = ultimoEscopo->prox;
+            }
+
+            ultimoEscopo->prox = novoEscopo;
+            novoEscopo->ant = ultimoEscopo;
+        }
     }
 
     escopo_atual = novoEscopo;
@@ -61,11 +72,10 @@ void liberarTabSimbolos() {
     Escopo* e = lista_escopos;
 
     while (e) {
-        Simbolo* s = lista_escopos->simbolos;
+        Simbolo* s = e->simbolos;
 
-        if (e->prox == NULL && strcmp(s->nome, "main") != 0) {
+        if (e->prox == NULL && (s == NULL || (s != NULL && strcmp(s->nome, "main") != 0))) {
             fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
-            return;
         }
 
         while (s) {

@@ -185,6 +185,7 @@ void analisarSemantica() {
 
     imprimirEscopoAtual(saida, 0, 0);
     sairEscopo();
+    liberarTabSimbolos();
 
     fclose(saida);
 }
