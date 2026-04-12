@@ -10,6 +10,7 @@ typedef enum {
     TipoTipoEspecificador,
     TipoNum,
     TipoVar,
+    TipoEscopo,
     TipoDeclaracaoSelecao,
     TipoDeclaracaoIteracao,
     TipoDeclaracaoRetorno,

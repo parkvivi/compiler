@@ -208,7 +208,8 @@
             }
         | escopo
             {
-                $$ = $1;
+                $$ = criarNo(TipoEscopo);
+                $$->filhos[0] = $1;
             }
         | declaracaoSelecao
             {

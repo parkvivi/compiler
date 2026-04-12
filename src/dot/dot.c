@@ -13,6 +13,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoDeclaracaoSelecao:     return "IF";
         case TipoDeclaracaoIteracao:    return "WHILE";
         case TipoDeclaracaoRetorno:     return "RETURN";
+        case TipoEscopo:                return "ESCOPO";
         case TipoAtribuicao:            return "=";
         case TipoMenorIgual:            return  "<=";
         case TipoMenor:                 return  "<";
