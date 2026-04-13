@@ -2,6 +2,15 @@
 
 #define ARQUIVO_TABELA_SIMBOLOS "build/tabsimbolos.txt"
 
+TipoSimbolo retornaTipo(AST* no) {
+
+    if (strcmp(no->dado.nome, "void") == 0) {
+        return TipoVoid;
+    }
+
+    return TipoInt;
+}
+
 void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo) {
 
     if (no == NULL) return;
@@ -16,9 +25,11 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
                 Simbolo* funcDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
                 if (funcDeclarada != NULL) {
                     fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
+                    break;
                 } else {
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
-                    declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
+                    Simbolo* s = declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
+                    no->simbolo = s;
                 }
             }
 
@@ -33,48 +44,41 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
             Simbolo* varProcurada = buscarSimboloTodosEscopos(no->dado.nome, Variavel, true);
             if(varProcurada == NULL) {
                 fprintf(stderr, "ERRO SEMANTICO :: Variavel '%s' nao declarada\n", no->dado.nome);
+                break;
             }
+            no->simbolo = varProcurada;
 
             break;
         }
 
         case TipoDeclaracaoVariavel:
         case TipoParametro:
-            if (no->tipo == TipoParametro && no->filhos[1] != NULL && no->filhos[1]->tipo == TipoParametroVetor) {
-                Simbolo* varDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
-                if (varDeclarada != NULL) {
-                    fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
-                } else {
-                    TipoSimbolo tipo = retornaTipo(no->filhos[0]);
-                    declararSimbolo(no->dado.nome, Variavel, tipo, true, -1);
-                }
-
+            Simbolo* varDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
+            if (varDeclarada != NULL) {
+                fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
                 break;
             }
 
-            {
-                Simbolo* varDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
-                if (varDeclarada != NULL) {
-                    fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
+            TipoSimbolo tipo = retornaTipo(no->filhos[0]);
+            bool ehVetor = no->filhos[1] == NULL ? false : true;
+            int tamanhoVetor;
+
+            if (ehVetor == true) {
+                if (no->filhos[1]->tipo == TipoNum) {
+                    tamanhoVetor = no->filhos[1]->dado.valor;
                 } else {
-                    TipoSimbolo tipo = retornaTipo(no->filhos[0]);
-                    bool ehVetor = no->filhos[1] == NULL ? false : true;
-                    int tamanhoVetor;
-
-                    if (ehVetor == true) {
-                        if (no->filhos[1]->tipo == TipoNum) {
-                            tamanhoVetor = no->filhos[1]->dado.valor;
-                        } else {
-                            tamanhoVetor = -1;
-                        }
-                    } else {
-                        tamanhoVetor = -1;
-                    }
-
-                    declararSimbolo(no->dado.nome, Variavel, tipo, ehVetor, tamanhoVetor);
+                    tamanhoVetor = -1;
                 }
+            } else {
+                tamanhoVetor = -1;
             }
 
+            Simbolo* s = declararSimbolo(no->dado.nome, Variavel, tipo, ehVetor, tamanhoVetor);
+            no->simbolo = s;
+
+            break;
+        
+        default:
             break;
     }
 
@@ -95,21 +99,13 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
     criarTabSimbolosInterno(no->irmao, arquivo, nivelEscopo, proximoIdEscopo);
 }
 
-TipoSimbolo retornaTipo(AST* no) {
-
-    if (strcmp(no->dado.nome, "void") == 0) {
-        return TipoVoid;
-    }
-
-    return TipoInt;
-}
-
 void criarTabSimbolos(AST* no, FILE* arquivo) {
 
     int proximoIdEscopo = 1;
     criarTabSimbolosInterno(no, arquivo, 1, &proximoIdEscopo);
 }
 
+/*
 TipoSimbolo verificarTipos(AST* no) {
     
     if (no == NULL) return TipoVoid;
@@ -164,6 +160,7 @@ TipoSimbolo verificarTipos(AST* no) {
 
     verificarTipos(no->irmao);
 }
+*/
 
 void analisarSemantica() {
     

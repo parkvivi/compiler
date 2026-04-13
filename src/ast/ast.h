@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "tabsimbolos.h"
 
 typedef enum {
     TipoDeclaracaoFuncao,
@@ -38,6 +39,7 @@ typedef struct AST {
         char* nome;
         int valor;
     } dado;
+    Simbolo* simbolo;
     struct AST* irmao;
     struct AST* filhos[MAXFILHOS];
 } AST;

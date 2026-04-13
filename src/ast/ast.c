@@ -8,6 +8,7 @@ AST* criarNo(TipoNo tipo) {
     AST* novoNo = malloc(sizeof(AST));
     novoNo->tipo = tipo;
 
+    novoNo->simbolo = NULL;
     novoNo->irmao = NULL;
 
     for (int i=0; i<MAXFILHOS; i++) {

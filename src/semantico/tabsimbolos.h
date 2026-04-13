@@ -30,13 +30,14 @@ typedef struct Escopo {
 extern Escopo* escopo_atual;
 extern Escopo* lista_escopos;
 
-
 void entrarEscopo();
 void sairEscopo();
 void liberarTabSimbolos();
 Simbolo* buscarSimboloEscopoAtual(const char* nome);
 Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria, bool verificarCategoria);
-void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor);
+Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor);
+const char* categoriaParaString(CategoriaSimbolo categoria);
+const char* tipoParaString(TipoSimbolo tipo);
 void imprimirEscopoAtual(FILE* saida, int idEscopo, int nivelEscopo);
 
 #endif

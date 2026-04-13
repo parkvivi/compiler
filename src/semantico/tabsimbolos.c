@@ -7,22 +7,6 @@ extern int linha_atual;
 Escopo* escopo_atual = NULL;
 Escopo* lista_escopos = NULL;
 
-const char* categoriaParaString(CategoriaSimbolo categoria) {
-    if (categoria == Funcao) {
-        return "funcao";
-    }
-
-    return "variavel";
-}
-
-const char* tipoParaString(TipoSimbolo tipo) {
-    if (tipo == TipoVoid) {
-        return "void";
-    }
-
-    return "int";
-}
-
 void entrarEscopo() {
 
     Escopo* novoEscopo = (Escopo*) malloc(sizeof(Escopo));
@@ -136,16 +120,18 @@ Simbolo* buscarSimboloTodosEscopos(const char* nome, CategoriaSimbolo categoria,
     return NULL;
 }
 
-void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor) {
+Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo tipo, bool ehVetor, int tamanhoVetor) {
 
     // Verificações de uso correto da função declararSimbolo(); não verificam semântica
     if (categoria == Funcao && (ehVetor == true || tamanhoVetor != -1)) {
         fprintf(stderr, "Para a declaração de funções, ehVetor tem que ser false e tamanhoVetor tem que ser -1");
+        return NULL;
     }
 
     if (categoria == Variavel && ehVetor == false && tamanhoVetor != -1) {
         // -1 indica que tamanhoVetor não importa
         fprintf(stderr, "Para a declaração de variáveis que não são vetores, tamanho tem que ser -1");
+        return NULL;
     }
 
     Simbolo* s = (Simbolo*) malloc(sizeof(Simbolo));
@@ -162,11 +148,29 @@ void declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbolo t
         fprintf(stderr, "ERRO :: Nenhum escopo ativo para declarar simbolo '%s'", nome);
         free(s->nome);
         free(s);
-        return;
+        return NULL;
     }
 
     s->prox = escopo_atual->simbolos;
     escopo_atual->simbolos = s;
+
+    return s;
+}
+
+const char* categoriaParaString(CategoriaSimbolo categoria) {
+    if (categoria == Funcao) {
+        return "funcao";
+    }
+
+    return "variavel";
+}
+
+const char* tipoParaString(TipoSimbolo tipo) {
+    if (tipo == TipoVoid) {
+        return "void";
+    }
+
+    return "int";
 }
 
 void imprimirEscopoAtual(FILE* saida, int idEscopo, int nivelEscopo) {
