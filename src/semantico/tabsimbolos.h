@@ -39,5 +39,6 @@ Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbo
 const char* categoriaParaString(CategoriaSimbolo categoria);
 const char* tipoParaString(TipoSimbolo tipo);
 void imprimirEscopoAtual(FILE* saida, int idEscopo, int nivelEscopo);
+void erroSemantico(const char*);
 
 #endif

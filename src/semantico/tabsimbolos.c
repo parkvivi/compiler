@@ -59,7 +59,7 @@ void liberarTabSimbolos() {
         Simbolo* s = e->simbolos;
 
         if (e->prox == NULL && (s == NULL || (s != NULL && strcmp(s->nome, "main") != 0))) {
-            fprintf(stderr, "ERRO SEMANTICO :: funcao \"main\" nao declarada ou declarada incorretamente");
+            erroSemantico("Funcao \"main\" nao declarada ou declarada incorretamente");
         }
 
         while (s) {

@@ -8,5 +8,6 @@ TipoSimbolo retornaTipo(AST* no);
 void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo);
 void criarTabSimbolos(AST* no, FILE* arquivo);
 void analisarSemantica();
+void erroSemantico(const char*);
 
 #endif

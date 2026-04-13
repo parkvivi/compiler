@@ -25,8 +25,9 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
             if (no->tipo == TipoDeclaracaoFuncao) {
                 Simbolo* funcDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
                 if (funcDeclarada != NULL) {
-                    fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
-                    break;
+                    char buffer[50];
+                    sprintf(buffer, "Identificador '%s' em uso", no->dado.nome);
+                    erroSemantico(buffer);
                 } else {
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
                     Simbolo* s = declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
@@ -44,8 +45,9 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoVar:
             Simbolo* varProcurada = buscarSimboloTodosEscopos(no->dado.nome, Variavel, true);
             if(varProcurada == NULL) {
-                fprintf(stderr, "ERRO SEMANTICO :: Variavel '%s' nao declarada\n", no->dado.nome);
-                break;
+                char buffer[50];
+                sprintf(buffer, "Variavel '%s' nao declarada", no->dado.nome);
+                erroSemantico(buffer);
             }
             no->simbolo = varProcurada;
 
@@ -55,8 +57,9 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoParametro:
             Simbolo* varDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
             if (varDeclarada != NULL) {
-                fprintf(stderr, "ERRO SEMANTICO :: Identificador '%s' em uso\n", no->dado.nome);
-                break;
+                char buffer[50];
+                sprintf(buffer, "Identificador '%s' em uso", no->dado.nome);
+                erroSemantico(buffer);
             }
 
             TipoSimbolo tipo = retornaTipo(no->filhos[0]);
@@ -81,8 +84,9 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoChamadaFuncao:
             Simbolo* funcProcurada = buscarSimboloTodosEscopos(no->dado.nome, Funcao, true);
             if(funcProcurada == NULL) {
-                fprintf(stderr, "ERRO SEMANTICO :: Funcao '%s' nao declarada\n", no->dado.nome);
-                break;
+                char buffer[50];
+                sprintf(buffer, "Funcao '%s' nao declarada", no->dado.nome);
+                erroSemantico(buffer);
             }
             no->simbolo = funcProcurada;
 
@@ -124,54 +128,80 @@ TipoSimbolo verificarTipos(AST* no) {
         tiposFilhos[i] = verificarTipos(no->filhos[i]);
     }
 
-    // verificação de tipos
+    TipoSimbolo tipoRetornado;
+
     switch(no->tipo) {
+        case TipoNum:
+            tipoRetornado = TipoInt;
+            break;
+            
         case TipoTipoEspecificador:
-            return retornaTipo(no);
+            tipoRetornado = retornaTipo(no);
+            break;
 
         case TipoDeclaracaoVariavel:
         case TipoParametro:
             if (tiposFilhos[0] != TipoInt) {
-                fprintf(stderr, "ERRO SEMANTICO :: Variavel/parametro declarado como void");
-                return TipoVoid;
+                erroSemantico("Variavel/parametro declarado como void");
+                tipoRetornado = TipoVoid;
+                break;
             }
 
-            return TipoVoid;
+            tipoRetornado = TipoVoid;
+            break;
 
         case TipoVar:
             if (no->simbolo->tipo != TipoInt) {
-                fprintf(stderr, "ERRO SEMANTICO :: Variavel/parametro eh void");
-                return TipoVoid;
+                erroSemantico("Variavel/parametro eh void");
+                tipoRetornado = TipoVoid;
+                break;
             }
 
-            return no->simbolo->tipo;
+            tipoRetornado = no->simbolo->tipo;
+            break;
 
         case TipoSoma:
         case TipoSubtracao:
         case TipoMultiplicacao:
         case TipoDivisao:
-        case TipoAtribuicao:
         case TipoMenorIgual:
         case TipoMenor:
         case TipoMaiorIgual:
         case TipoMaior:
         case TipoIgual:
         case TipoDiferente:
+        case TipoAtribuicao:
             if (tiposFilhos[0] == TipoVoid || tiposFilhos[1] == TipoVoid) {
-                fprintf(stderr, "ERRO SEMANTICO :: Expressoes so aceitam inteiros");
-                return TipoVoid;
+                //fprint(stderr, "");
+                erroSemantico("Expressoes so aceitam inteiros");
+                tipoRetornado = TipoVoid;
+                break;
             }
 
-            return TipoInt;
+            tipoRetornado = TipoInt;
+            break;
 
         case TipoChamadaFuncao:
-            return no->simbolo->tipo;
+            tipoRetornado = no->simbolo->tipo;
+            break;
+
+        case TipoDeclaracaoFuncao:
+            if (tiposFilhos[0] == TipoInt) {
+                // tem que ter return int
+            } else {
+                // nao pode ter return int
+            }
+            
+            tipoRetornado = TipoVoid;
+            break;
 
         default:
-            return TipoVoid;
+            tipoRetornado = TipoVoid;
+            break;
     }
 
     verificarTipos(no->irmao);
+    return tipoRetornado;
 }
 
 void analisarSemantica() {
@@ -194,13 +224,15 @@ void analisarSemantica() {
 
     imprimirEscopoAtual(saida, 0, 0);
     sairEscopo();
+
+    verificarTipos(raizAST);
+
     liberarTabSimbolos();
 
     fclose(saida);
 }
 
-// TODO: Incorporar no código
-void erroSemantico(char* mensagem) {
+void erroSemantico(const char* mensagem) {
 	fprintf(stderr, "ERRO SEMANTICO :: \"%s\"\n", mensagem);
 	exit(1);
 }

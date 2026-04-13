@@ -9,7 +9,7 @@
 
     #define YY_DECL int yylex()
 
-    void erroLexico(int linha, char* mensagem);
+    void erroLexico(int linha, const char* mensagem);
 
     int linha_atual = 1;
     int inicio_comentario = 0;
@@ -172,7 +172,7 @@ NUM {DIGITO}+
 
 %%
 
-void erroLexico(int linha, char* mensagem) {
+void erroLexico(int linha, const char* mensagem) {
 	fprintf(stderr, "LINHA %d :: ERRO LEXICO :: \"%s\"\n", linha, mensagem);
 	exit(1);
 }
