@@ -18,6 +18,8 @@ typedef struct Simbolo {
     bool ehVetor;
     int tamanhoVetor;
 
+    int quantidadeParametros;
+
     struct Simbolo* prox;
 } Simbolo;
 

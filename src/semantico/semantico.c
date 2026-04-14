@@ -31,6 +31,11 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
                 } else {
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
                     Simbolo* s = declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
+
+                    int quantidadeParametros = 0; 
+                    for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao, quantidadeParametros++);
+                    s->quantidadeParametros = quantidadeParametros;
+
                     no->simbolo = s;
                 }
             }
@@ -44,7 +49,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
 
         case TipoVar:
             Simbolo* varProcurada = buscarSimboloTodosEscopos(no->dado.nome, Variavel, true);
-            if(varProcurada == NULL) {
+            if (varProcurada == NULL) {
                 char buffer[50];
                 sprintf(buffer, "Variavel '%s' nao declarada", no->dado.nome);
                 erroSemantico(buffer);
@@ -83,11 +88,20 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         
         case TipoChamadaFuncao:
             Simbolo* funcProcurada = buscarSimboloTodosEscopos(no->dado.nome, Funcao, true);
-            if(funcProcurada == NULL) {
+            if (funcProcurada == NULL) {
                 char buffer[50];
                 sprintf(buffer, "Funcao '%s' nao declarada", no->dado.nome);
                 erroSemantico(buffer);
             }
+
+            int quantidadeArgumentos = 0;
+            for (AST* arg=no->filhos[0]; arg!=NULL; arg=arg->irmao, quantidadeArgumentos++);
+            if (quantidadeArgumentos != funcProcurada->quantidadeParametros) {
+                char buffer[100];
+                sprintf(buffer, "Funcao '%s' chamada com argumentos a mais ou insuficientes", no->dado.nome);
+                erroSemantico(buffer);
+            }
+
             no->simbolo = funcProcurada;
 
             break;
@@ -217,8 +231,11 @@ void analisarSemantica() {
 
     entrarEscopo();
 
-    declararSimbolo("input", Funcao, TipoInt, false, -1);
-    declararSimbolo("output", Funcao, TipoVoid, false, -1);
+    Simbolo* s;
+    s = declararSimbolo("input", Funcao, TipoInt, false, -1);
+    s->quantidadeParametros = 0;
+    s = declararSimbolo("output", Funcao, TipoVoid, false, -1);
+    s->quantidadeParametros = 1;
 
     criarTabSimbolos(raizAST, saida);
 
