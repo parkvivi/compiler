@@ -31,26 +31,6 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
                 } else {
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
                     Simbolo* s = declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
-
-                    int quantidadeParametros = 0;
-                    Parametro* listaParametros = NULL;
-                    Parametro* ultimoParametro = NULL;
-                    for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao, quantidadeParametros++) {
-                        Parametro* p = (Parametro*) malloc(sizeof(Parametro));
-                        p->tipoParam = retornaTipo(param->filhos[0]);
-                        p->paramVetor = param->filhos[1] == NULL ? false: true;
-                        p->prox = NULL;
-                        if (ultimoParametro == NULL) {
-                            listaParametros = p;
-                            ultimoParametro = p;
-                        } else {
-                            ultimoParametro->prox = p;
-                            ultimoParametro = p;
-                        }
-                    }
-                    s->quantidadeParametros = quantidadeParametros;
-                    s->parametros = listaParametros;
-
                     no->simbolo = s;
                 }
             }
@@ -106,14 +86,6 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
             if (funcProcurada == NULL) {
                 char buffer[50];
                 sprintf(buffer, "Funcao '%s' nao declarada", no->dado.nome);
-                erroSemantico(buffer);
-            }
-
-            int quantidadeArgumentos = 0;
-            for (AST* arg=no->filhos[0]; arg!=NULL; arg=arg->irmao, quantidadeArgumentos++);
-            if (quantidadeArgumentos != funcProcurada->quantidadeParametros) {
-                char buffer[100];
-                sprintf(buffer, "Funcao '%s' chamada com argumentos a mais ou insuficientes", no->dado.nome);
                 erroSemantico(buffer);
             }
 
@@ -243,8 +215,8 @@ TipoSimbolo verificarTipos(AST* no) {
             }
 
             if (argumento != NULL || parametro != NULL) {
-                char buffer[50];
-                sprintf(buffer, "Funcao '%s' chamada com argumentos incompativeis", no->dado.nome);
+                char buffer[60];
+                sprintf(buffer, "Funcao '%s' chamada com argumentos a mais ou insuficientes", no->dado.nome);
                 erroSemantico(buffer);
             }
 
@@ -259,7 +231,24 @@ TipoSimbolo verificarTipos(AST* no) {
                 // nao pode ter return int
             }
             
-            // mudar análise dos parâmetros pra cá???
+            Simbolo* s = no->simbolo;
+
+            Parametro* listaParametros = NULL;
+            Parametro* ultimoParametro = NULL;
+            for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao) {
+                Parametro* p = (Parametro*) malloc(sizeof(Parametro));
+                p->tipoParam = retornaTipo(param->filhos[0]);
+                p->paramVetor = param->filhos[1] == NULL ? false: true;
+                p->prox = NULL;
+                if (ultimoParametro == NULL) {
+                    listaParametros = p;
+                    ultimoParametro = p;
+                } else {
+                    ultimoParametro->prox = p;
+                    ultimoParametro = p;
+                }
+            }
+            s->parametros = listaParametros;
 
             verificarTipos(no->filhos[1]);
             verificarTipos(no->filhos[2]);
@@ -286,7 +275,12 @@ TipoSimbolo verificarTipos(AST* no) {
 
         default:
             for (int i=0; i<MAXFILHOS; i++) {
-                verificarTipos(no->filhos[i]);
+                AST* filho = no->filhos[i];
+                if (filho == NULL) {
+                    continue;
+                }
+
+                verificarTipos(filho);
             }
 
             tipo = TipoVoid;
@@ -312,10 +306,8 @@ void analisarSemantica() {
 
     Simbolo* s;
     s = declararSimbolo("input", Funcao, TipoInt, false, -1);
-    s->quantidadeParametros = 0;
 
     s = declararSimbolo("output", Funcao, TipoVoid, false, -1);
-    s->quantidadeParametros = 1;
     Parametro* pOutput = (Parametro*) malloc(sizeof(Parametro));
     pOutput->tipoParam = TipoInt;
     pOutput->paramVetor = false;
