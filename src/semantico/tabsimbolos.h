@@ -6,8 +6,15 @@
 #include <string.h>
 #include <stdbool.h>
 
-typedef enum { Variavel, Funcao } CategoriaSimbolo;     // Categoria do simbolo -> variavel ou funcao
-typedef enum { TipoVoid, TipoInt } TipoSimbolo;         // Tipo do simbolo -> void ou int
+typedef enum { Variavel, Funcao } CategoriaSimbolo;
+typedef enum { TipoVoid, TipoInt } TipoSimbolo;
+
+typedef struct Parametro {
+    TipoSimbolo tipoParam;
+    bool paramVetor;
+    
+    struct Parametro* prox;
+} Parametro;
 
 typedef struct Simbolo {
     char* nome;
@@ -19,6 +26,7 @@ typedef struct Simbolo {
     int tamanhoVetor;
 
     int quantidadeParametros;
+    Parametro* parametros;
 
     struct Simbolo* prox;
 } Simbolo;

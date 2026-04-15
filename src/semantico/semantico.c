@@ -32,9 +32,24 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
                     TipoSimbolo tipo = retornaTipo(no->filhos[0]);
                     Simbolo* s = declararSimbolo(no->dado.nome, Funcao, tipo, false, -1);
 
-                    int quantidadeParametros = 0; 
-                    for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao, quantidadeParametros++);
+                    int quantidadeParametros = 0;
+                    Parametro* listaParametros = NULL;
+                    Parametro* ultimoParametro = NULL;
+                    for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao, quantidadeParametros++) {
+                        Parametro* p = (Parametro*) malloc(sizeof(Parametro));
+                        p->tipoParam = retornaTipo(param->filhos[0]);
+                        p->paramVetor = param->filhos[1] == NULL ? false: true;
+                        p->prox = NULL;
+                        if (ultimoParametro == NULL) {
+                            listaParametros = p;
+                            ultimoParametro = p;
+                        } else {
+                            ultimoParametro->prox = p;
+                            ultimoParametro = p;
+                        }
+                    }
                     s->quantidadeParametros = quantidadeParametros;
+                    s->parametros = listaParametros;
 
                     no->simbolo = s;
                 }
@@ -157,8 +172,6 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoParametro:
             if (tiposFilhos[0] != TipoInt) {
                 erroSemantico("Variavel/parametro declarado como void");
-                tipoRetornado = TipoVoid;
-                break;
             }
 
             tipoRetornado = TipoVoid;
@@ -167,8 +180,6 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoVar:
             if (no->simbolo->tipo != TipoInt) {
                 erroSemantico("Variavel/parametro eh void");
-                tipoRetornado = TipoVoid;
-                break;
             }
 
             tipoRetornado = no->simbolo->tipo;
@@ -186,16 +197,28 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoDiferente:
         case TipoAtribuicao:
             if (tiposFilhos[0] == TipoVoid || tiposFilhos[1] == TipoVoid) {
-                //fprint(stderr, "");
                 erroSemantico("Expressoes so aceitam inteiros");
-                tipoRetornado = TipoVoid;
-                break;
+            }
+
+            AST* filhoEsquerdo = no->filhos[0];
+            if (filhoEsquerdo->tipo == TipoVar && filhoEsquerdo->simbolo->ehVetor == true && filhoEsquerdo->filhos[0] == NULL) {
+                char buffer[50];
+                sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", filhoEsquerdo->dado.nome);
+                erroSemantico(buffer);
+            }
+
+            AST* filhoDireito = no->filhos[1];
+            if (filhoDireito->tipo == TipoVar && filhoDireito->simbolo->ehVetor == true && filhoDireito->filhos[0] == NULL) {
+                char buffer[50];
+                sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", filhoDireito->dado.nome);
+                erroSemantico(buffer);
             }
 
             tipoRetornado = TipoInt;
             break;
 
         case TipoChamadaFuncao:
+            // como ver os argumentos?
             tipoRetornado = no->simbolo->tipo;
             break;
 
@@ -206,6 +229,17 @@ TipoSimbolo verificarTipos(AST* no) {
                 // nao pode ter return int
             }
             
+            tipoRetornado = TipoVoid;
+            break;
+
+        case TipoDeclaracaoRetorno:
+            AST* expressaoRetornada = no->filhos[0];
+            if (expressaoRetornada != NULL && expressaoRetornada->tipo == TipoVar && expressaoRetornada->simbolo->ehVetor == true && expressaoRetornada->filhos[0] == NULL) {
+                char buffer[50];
+                sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", expressaoRetornada->dado.nome);
+                erroSemantico(buffer);
+            }
+
             tipoRetornado = TipoVoid;
             break;
 

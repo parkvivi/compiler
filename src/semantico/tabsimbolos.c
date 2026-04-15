@@ -65,6 +65,17 @@ void liberarTabSimbolos() {
         while (s) {
             Simbolo* sAux = s;
             s = s->prox;
+
+            if (s->parametros != NULL) {
+                Parametro* p = s->parametros;
+
+                while (p) {
+                    Parametro* pAux = p;
+                    p = p->prox;
+
+                    free(pAux);
+                }
+            }
             
             free(sAux->nome);
             free(sAux);
@@ -143,6 +154,7 @@ Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbo
     s->ehVetor = ehVetor;
     s->tamanhoVetor = tamanhoVetor;
     s->quantidadeParametros = -1;
+    s->parametros = NULL;
     s->prox = NULL;
 
     if (escopo_atual == NULL) {
