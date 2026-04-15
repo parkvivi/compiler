@@ -14,7 +14,7 @@ const char* nomeTipoNo(AST* no) {
         case TipoDeclaracaoIteracao:    return  "WHILE";
         case TipoDeclaracaoRetorno:     return  "RETURN";
         case TipoEscopo:                return  "ESCOPO";
-        case TipoParametroVetor:        return  "[]";
+        case TipoVetor:                 return  "[]";
         case TipoAtribuicao:            return  "=";
         case TipoMenorIgual:            return  "<=";
         case TipoMenor:                 return  "<";
@@ -31,6 +31,7 @@ const char* nomeTipoNo(AST* no) {
 }
 
 void imprimirNoDOT(AST* no, FILE* file) {
+
     if (!no) return;
 
     AST* atual = no;
@@ -98,6 +99,7 @@ void imprimirNoDOT(AST* no, FILE* file) {
 }
 
 void gerarDOT(AST* raiz) {
+
     FILE *file;
     file = fopen("build/arvore.dot", "w");
     if(file==NULL) {

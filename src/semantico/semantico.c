@@ -152,11 +152,6 @@ TipoSimbolo verificarTipos(AST* no) {
     
     if (no == NULL) return TipoVoid;
 
-    TipoSimbolo tiposFilhos[MAXFILHOS];
-    for (int i=0; i<MAXFILHOS; i++) {
-        tiposFilhos[i] = verificarTipos(no->filhos[i]);
-    }
-
     TipoSimbolo tipoRetornado;
 
     switch(no->tipo) {
@@ -170,7 +165,8 @@ TipoSimbolo verificarTipos(AST* no) {
 
         case TipoDeclaracaoVariavel:
         case TipoParametro:
-            if (tiposFilhos[0] != TipoInt) {
+            TipoSimbolo tipo = verificarTipos(no->filhos[0]); 
+            if (tipo != TipoInt) {
                 erroSemantico("Variavel/parametro declarado como void");
             }
 
@@ -196,7 +192,10 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoIgual:
         case TipoDiferente:
         case TipoAtribuicao:
-            if (tiposFilhos[0] == TipoVoid || tiposFilhos[1] == TipoVoid) {
+            TipoSimbolo tipoEsquerdo = verificarTipos(no->filhos[0]);
+            TipoSimbolo tipoDireito = verificarTipos(no->filhos[1]);
+
+            if (tipoEsquerdo == TipoVoid || tipoDireito == TipoVoid) {
                 erroSemantico("Expressoes so aceitam inteiros");
             }
 
@@ -218,12 +217,28 @@ TipoSimbolo verificarTipos(AST* no) {
             break;
 
         case TipoChamadaFuncao:
-            // como ver os argumentos?
+            AST* argumento = no->filhos[0];
+            Parametro* parametro = no->simbolo->parametros;
+
+            while (argumento != NULL) {
+                TipoSimbolo tipo = verificarTipos(argumento);
+
+                if (tipo != parametro->tipoParam || (argumento->tipo == TipoVar && argumento->simbolo->ehVetor != parametro->paramVetor)) {
+                    char buffer[50];
+                    sprintf(buffer, "Funcao '%s' chamada com argumentos incompativeis", no->dado.nome);
+                    erroSemantico(buffer);
+                }
+
+                argumento = argumento->irmao;
+                parametro = parametro->prox;
+            }
+
             tipoRetornado = no->simbolo->tipo;
             break;
 
         case TipoDeclaracaoFuncao:
-            if (tiposFilhos[0] == TipoInt) {
+            TipoSimbolo tipoFuncao = verificarTipos(no->filhos[1]);
+            if (tipoFuncao == TipoInt) {
                 // tem que ter return int
             } else {
                 // nao pode ter return int
@@ -248,7 +263,6 @@ TipoSimbolo verificarTipos(AST* no) {
             break;
     }
 
-    verificarTipos(no->irmao);
     return tipoRetornado;
 }
 

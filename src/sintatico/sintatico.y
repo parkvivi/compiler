@@ -167,7 +167,7 @@
                 $$->dado.nome = strdup($2);
 
                 $$->filhos[0] = $1;
-                $$->filhos[1] = criarNo(TipoParametroVetor);
+                $$->filhos[1] = criarNo(TipoVetor);
 
                 free($2);
             }
@@ -301,6 +301,7 @@
                 $$->dado.nome = strdup($1);
 
                 $$->filhos[0] = $3;
+                $$->filhos[1] = criarNo(TipoVetor);
 
                 free($1);
             }
