@@ -66,8 +66,8 @@ void liberarTabSimbolos() {
             Simbolo* sAux = s;
             s = s->prox;
 
-            if (s->parametros != NULL) {
-                Parametro* p = s->parametros;
+            if (sAux->parametros != NULL) {
+                Parametro* p = sAux->parametros;
 
                 while (p) {
                     Parametro* pAux = p;

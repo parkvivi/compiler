@@ -220,6 +220,7 @@ TipoSimbolo verificarTipos(AST* no) {
             AST* argumento = no->filhos[0];
             Parametro* parametro = no->simbolo->parametros;
 
+            // TODO: ALGO AQUI ESTÁ ERRADO
             while (argumento != NULL) {
                 TipoSimbolo tipo = verificarTipos(argumento);
 
