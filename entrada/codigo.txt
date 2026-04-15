@@ -1,4 +1,4 @@
-int func(int h[])
+int func(int y, int u)
 {
     int x[10];
     int i; int soma;
@@ -21,6 +21,6 @@ int func(int h[])
 void main(void)
 {
     int y;
-    int h[2];
-    y = func(h);
+    y = 2;
+    y = func(y, 3);
 }

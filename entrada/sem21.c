@@ -8,3 +8,5 @@ void main(void) {
 
     x = func(j);
 }
+
+/* esperado: erro semantico; funcao func chamada com inteiro, espera vetor*/
