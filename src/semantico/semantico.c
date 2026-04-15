@@ -228,10 +228,11 @@ TipoSimbolo verificarTipos(AST* no) {
             AST* argumento = no->filhos[0];
             Parametro* parametro = no->simbolo->parametros;
 
-            while (argumento != NULL) {
+            while (argumento != NULL && parametro != NULL) {
                 TipoSimbolo tipo = verificarTipos(argumento);
+                bool argumentoEhVetor = (argumento->tipo == TipoVar && argumento->simbolo->ehVetor == true && argumento->filhos[0] == NULL);
 
-                if (tipo != parametro->tipoParam || (argumento->tipo == TipoVar && argumento->simbolo->ehVetor != parametro->paramVetor)) {
+                if (tipo != parametro->tipoParam || argumentoEhVetor != parametro->paramVetor) {
                     char buffer[50];
                     sprintf(buffer, "Funcao '%s' chamada com argumentos incompativeis", no->dado.nome);
                     erroSemantico(buffer);
@@ -239,6 +240,12 @@ TipoSimbolo verificarTipos(AST* no) {
 
                 argumento = argumento->irmao;
                 parametro = parametro->prox;
+            }
+
+            if (argumento != NULL || parametro != NULL) {
+                char buffer[50];
+                sprintf(buffer, "Funcao '%s' chamada com argumentos incompativeis", no->dado.nome);
+                erroSemantico(buffer);
             }
 
             tipo = no->simbolo->tipo;
@@ -306,8 +313,14 @@ void analisarSemantica() {
     Simbolo* s;
     s = declararSimbolo("input", Funcao, TipoInt, false, -1);
     s->quantidadeParametros = 0;
+
     s = declararSimbolo("output", Funcao, TipoVoid, false, -1);
     s->quantidadeParametros = 1;
+    Parametro* pOutput = (Parametro*) malloc(sizeof(Parametro));
+    pOutput->tipoParam = TipoInt;
+    pOutput->paramVetor = false;
+    pOutput->prox = NULL;
+    s->parametros = pOutput;
 
     criarTabSimbolos(raizAST, saida);
 

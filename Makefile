@@ -50,6 +50,53 @@ run: $(PARSER_BIN)
 	$(PARSER_BIN) $(INPUT_FILE)
 	$(DOT) -Tpng $(BUILD_DIR)/arvore.dot -o $(BUILD_DIR)/arvore.png
 
+ifeq ($(OS),Windows_NT)
+regression: $(PARSER_BIN)
+	powershell -NoProfile -Command "$${cases} = @( \
+	    @{f='entrada/codigo.txt'; e=0}, \
+	    @{f='entrada/gcd.txt'; e=0}, \
+	    @{f='entrada/sort.txt'; e=0}, \
+	    @{f='entrada/lex2.c'; e=1}, \
+	    @{f='entrada/par1.c'; e=1}, \
+	    @{f='entrada/sem10.c'; e=1}, \
+	    @{f='entrada/sem17.c'; e=1}, \
+	    @{f='entrada/tac1.c'; e=0} \
+	); \
+	$${ok} = $$true; \
+	foreach ($${c} in $${cases}) { \
+	    & '$(PARSER_BIN)' $${c}.f | Out-Null; \
+	    $${got} = $$LASTEXITCODE; \
+	    if ($${got} -ne $${c}.e) { \
+	        Write-Host ('FALHOU: ' + $${c}.f + ' esperado=' + $${c}.e + ' obtido=' + $${got}); \
+	        $${ok} = $$false; \
+	    } else { \
+	        Write-Host ('OK: ' + $${c}.f + ' (exit=' + $${got} + ')'); \
+	    } \
+	}; \
+	if (-not $${ok}) { exit 1 }"
+else
+regression: $(PARSER_BIN)
+	@set -e; \
+	for c in \
+	  "entrada/codigo.txt:0" \
+	  "entrada/gcd.txt:0" \
+	  "entrada/sort.txt:0" \
+	  "entrada/lex2.c:1" \
+	  "entrada/par1.c:1" \
+	  "entrada/sem10.c:1" \
+	  "entrada/sem17.c:1" \
+	  "entrada/tac1.c:0"; do \
+	  file=$${c%:*}; expected=$${c#*:}; \
+	  set +e; $(PARSER_BIN) $$file >/dev/null 2>&1; got=$$?; set -e; \
+	  if [ $$got -ne $$expected ]; then \
+	    echo "FALHOU: $$file esperado=$$expected obtido=$$got"; \
+	    exit 1; \
+	  else \
+	    echo "OK: $$file (exit=$$got)"; \
+	  fi; \
+	done
+endif
+
 scanner: CFLAGS += -DLEX_STANDALONE
 scanner: $(SCANNER)
 
@@ -70,4 +117,4 @@ $(BISON_OUTPUT) $(BISON_HEADER): $(BISON_SRC)
 clean:
 	$(RM)
 
-.PHONY: all clean parser scanner run
+.PHONY: all clean parser scanner run regression
