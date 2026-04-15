@@ -25,7 +25,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
             if (no->tipo == TipoDeclaracaoFuncao) {
                 Simbolo* funcDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
                 if (funcDeclarada != NULL) {
-                    char buffer[50];
+                    char buffer[80];
                     sprintf(buffer, "Identificador '%s' em uso", no->dado.nome);
                     erroSemantico(buffer);
                 } else {
@@ -45,7 +45,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoVar:
             Simbolo* varProcurada = buscarSimboloTodosEscopos(no->dado.nome, Variavel, true);
             if (varProcurada == NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Variavel '%s' nao declarada", no->dado.nome);
                 erroSemantico(buffer);
             }
@@ -57,7 +57,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoParametro:
             Simbolo* varDeclarada = buscarSimboloEscopoAtual(no->dado.nome);
             if (varDeclarada != NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Identificador '%s' em uso", no->dado.nome);
                 erroSemantico(buffer);
             }
@@ -84,7 +84,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         case TipoChamadaFuncao:
             Simbolo* funcProcurada = buscarSimboloTodosEscopos(no->dado.nome, Funcao, true);
             if (funcProcurada == NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Funcao '%s' nao declarada", no->dado.nome);
                 erroSemantico(buffer);
             }
@@ -120,7 +120,7 @@ void criarTabSimbolos(AST* no, FILE* arquivo) {
     criarTabSimbolosInterno(no, arquivo, 1, &proximoIdEscopo);
 }
 
-TipoSimbolo verificarTipos(AST* no) {
+TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouReturnVoid) {
 
     if (no == NULL) return TipoVoid;
 
@@ -137,7 +137,7 @@ TipoSimbolo verificarTipos(AST* no) {
 
         case TipoDeclaracaoVariavel:
         case TipoParametro:
-            TipoSimbolo tipoVarParam = verificarTipos(no->filhos[0]); 
+            TipoSimbolo tipoVarParam = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid); 
 
             if (tipoVarParam != TipoInt) {
                 erroSemantico("Variavel/parametro declarado como void");
@@ -151,9 +151,9 @@ TipoSimbolo verificarTipos(AST* no) {
                 erroSemantico("Variavel/parametro eh void");
             }
 
-            TipoSimbolo tipoIndiceAcessado = verificarTipos(no->filhos[0]);
+            TipoSimbolo tipoIndiceAcessado = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid);
             if (no->filhos[0] != NULL && tipoIndiceAcessado != TipoInt) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Indice nao inteiro acessado no vetor '%s'", no->dado.nome);
                 erroSemantico(buffer);
             }
@@ -172,8 +172,8 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoIgual:
         case TipoDiferente:
         case TipoAtribuicao:
-            TipoSimbolo tipoEsquerdo = verificarTipos(no->filhos[0]);
-            TipoSimbolo tipoDireito = verificarTipos(no->filhos[1]);
+            TipoSimbolo tipoEsquerdo = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid);
+            TipoSimbolo tipoDireito = verificarTipos(no->filhos[1], encontrouReturnInt, encontrouReturnVoid);
 
             if (tipoEsquerdo == TipoVoid || tipoDireito == TipoVoid) {
                 erroSemantico("Expressoes so aceitam inteiros");
@@ -181,14 +181,14 @@ TipoSimbolo verificarTipos(AST* no) {
 
             AST* filhoEsquerdo = no->filhos[0];
             if (filhoEsquerdo->tipo == TipoVar && filhoEsquerdo->simbolo->ehVetor == true && filhoEsquerdo->filhos[0] == NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", filhoEsquerdo->dado.nome);
                 erroSemantico(buffer);
             }
 
             AST* filhoDireito = no->filhos[1];
             if (filhoDireito->tipo == TipoVar && filhoDireito->simbolo->ehVetor == true && filhoDireito->filhos[0] == NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", filhoDireito->dado.nome);
                 erroSemantico(buffer);
             }
@@ -201,11 +201,11 @@ TipoSimbolo verificarTipos(AST* no) {
             Parametro* parametro = no->simbolo->parametros;
 
             while (argumento != NULL && parametro != NULL) {
-                TipoSimbolo tipo = verificarTipos(argumento);
+                TipoSimbolo tipo = verificarTipos(argumento, encontrouReturnInt, encontrouReturnVoid);
                 bool argumentoEhVetor = (argumento->tipo == TipoVar && argumento->simbolo->ehVetor == true && argumento->filhos[0] == NULL);
 
                 if (tipo != parametro->tipoParam || argumentoEhVetor != parametro->paramVetor) {
-                    char buffer[50];
+                    char buffer[80];
                     sprintf(buffer, "Funcao '%s' chamada com argumentos incompativeis", no->dado.nome);
                     erroSemantico(buffer);
                 }
@@ -215,7 +215,7 @@ TipoSimbolo verificarTipos(AST* no) {
             }
 
             if (argumento != NULL || parametro != NULL) {
-                char buffer[60];
+                char buffer[80];
                 sprintf(buffer, "Funcao '%s' chamada com argumentos a mais ou insuficientes", no->dado.nome);
                 erroSemantico(buffer);
             }
@@ -224,15 +224,9 @@ TipoSimbolo verificarTipos(AST* no) {
             break;
 
         case TipoDeclaracaoFuncao:
-            TipoSimbolo tipoFuncao = verificarTipos(no->filhos[0]);
-            if (tipoFuncao == TipoInt) {
-                // tem que ter return int
-            } else {
-                // nao pode ter return int
-            }
+            TipoSimbolo tipoFuncao = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid);
             
             Simbolo* s = no->simbolo;
-
             Parametro* listaParametros = NULL;
             Parametro* ultimoParametro = NULL;
             for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao) {
@@ -250,8 +244,22 @@ TipoSimbolo verificarTipos(AST* no) {
             }
             s->parametros = listaParametros;
 
-            verificarTipos(no->filhos[1]);
-            verificarTipos(no->filhos[2]);
+            verificarTipos(no->filhos[1], encontrouReturnInt, encontrouReturnVoid);
+
+            *encontrouReturnInt = false;
+            *encontrouReturnVoid = false;
+        
+            verificarTipos(no->filhos[2], encontrouReturnInt, encontrouReturnVoid);
+
+            if ((tipoFuncao == TipoInt && *encontrouReturnVoid == true) || (tipoFuncao == TipoVoid && *encontrouReturnInt == true)) {
+                char buffer[80];
+                sprintf(buffer, "Funcao '%s' possui retorno de tipo incompativel em seu escopo", no->dado.nome);
+                erroSemantico(buffer);
+            }
+
+            if (tipoFuncao == TipoInt) {
+                avisoSemantico("Certifique-se de que todos os caminhos incluem retorno");
+            }
             
             tipo = TipoVoid;
             break;
@@ -259,16 +267,22 @@ TipoSimbolo verificarTipos(AST* no) {
         case TipoDeclaracaoRetorno:
             AST* expressaoRetornada = no->filhos[0];
             if (expressaoRetornada != NULL && expressaoRetornada->tipo == TipoVar && expressaoRetornada->simbolo->ehVetor == true && expressaoRetornada->filhos[0] == NULL) {
-                char buffer[50];
+                char buffer[80];
                 sprintf(buffer, "Vetor '%s' sendo usando como variavel inteira", expressaoRetornada->dado.nome);
                 erroSemantico(buffer);
             }
 
-            TipoSimbolo tipoRetorno = verificarTipos(no->filhos[0]);
+            TipoSimbolo tipoRetorno = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid);
 
-            if (expressaoRetornada != NULL && tipoRetorno != TipoInt) {
-                erroSemantico("Retorno de tipo incompativel");
+            if (expressaoRetornada != NULL) {
+                if (tipoRetorno != TipoInt) {
+                    erroSemantico("Retorno de tipo incompativel");
+                }
+                *encontrouReturnInt = true;
+            } else {
+                *encontrouReturnVoid = true;
             }
+
 
             tipo = tipoRetorno;
             break;
@@ -280,14 +294,14 @@ TipoSimbolo verificarTipos(AST* no) {
                     continue;
                 }
 
-                verificarTipos(filho);
+                verificarTipos(filho, encontrouReturnInt, encontrouReturnVoid);
             }
 
             tipo = TipoVoid;
             break;
     }
 
-    verificarTipos(no->irmao);
+    verificarTipos(no->irmao, encontrouReturnInt, encontrouReturnVoid);
     return tipo;
 }
 
@@ -319,11 +333,17 @@ void analisarSemantica() {
     imprimirEscopoAtual(saida, 0, 0);
     sairEscopo();
 
-    verificarTipos(raizAST);
+    bool encontrouReturnInt = false;
+    bool encontrouReturnVoid = false;
+    verificarTipos(raizAST, &encontrouReturnInt, &encontrouReturnVoid);
 
     liberarTabSimbolos();
 
     fclose(saida);
+}
+
+void avisoSemantico(const char* mensagem) {
+    fprintf(stderr, "AVISO SEMANTICO :: \"%s\"\n", mensagem);
 }
 
 void erroSemantico(const char* mensagem) {
