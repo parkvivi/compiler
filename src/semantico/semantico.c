@@ -273,7 +273,6 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
             }
 
             TipoSimbolo tipoRetorno = verificarTipos(no->filhos[0], encontrouReturnInt, encontrouReturnVoid);
-
             if (expressaoRetornada != NULL) {
                 if (tipoRetorno != TipoInt) {
                     erroSemantico("Retorno de tipo incompativel");
@@ -282,7 +281,6 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
             } else {
                 *encontrouReturnVoid = true;
             }
-
 
             tipo = tipoRetorno;
             break;

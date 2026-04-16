@@ -17,7 +17,6 @@ int main(int argc, char **argv){
     }
 
     yyparse();
-
     analisarSemantica();
 
     /* Geração de quádruplas a partir da AST */
