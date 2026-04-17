@@ -3,24 +3,22 @@
 
 #include "ast.h"
 
-typedef struct {
+typedef struct Quadrupla {
     char *operacao;
     char *argumento1;
     char *argumento2;
-    char *resultado;
+    char *argumento3;
+    struct Quadrupla* prox;
 } Quadrupla;
 
-extern Quadrupla *quads;
-extern int quads_cont;
-extern char *funcao_atual;
 extern int temp_cont;
 extern int label_cont;
 
 char* novoTemp();
 char* novoLabel();
-void emitir_quads(const char *op, const char *a1, const char *a2, const char *res);
-void limpa_quads();
-char* gerar_quads(AST* no);
-void print_quads(FILE *out);
+void emitirQuadrupla(const char *op, const char *a1, const char *a2, const char *a3);
+void liberarQuadruplas();
+void gerarQuadruplas(AST* no);
+void imprimirQuadruplas(FILE *out);
 
 #endif
