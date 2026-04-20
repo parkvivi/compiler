@@ -115,7 +115,17 @@ char* gerarQuadruplas(AST* no){
 
     switch (no->tipo) {
         case TipoDeclaracaoFuncao:
-            // TODO: terminar
+            char* nomeFuncaoDeclarada = no->dado.nome;
+            char* tipoFuncaoDeclarada = no->simbolo->tipo == TipoInt ? "int" : "void";
+            char* labelComecoFuncao   = novoLabel();
+
+            emitirQuadrupla("FUNCTION", nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL);
+            emitirQuadrupla("LABEL", NULL, NULL, labelComecoFuncao);
+
+            gerarQuadruplas(no->filhos[1]);
+            gerarQuadruplas(no->filhos[2]);
+
+            emitirQuadrupla("END", nomeFuncaoDeclarada, NULL, NULL);
             break;
 
         case TipoDeclaracaoVariavel:
@@ -203,7 +213,24 @@ char* gerarQuadruplas(AST* no){
             break;
 
         case TipoChamadaFuncao:
-            // TODO: terminar
+            char* nomeFuncaoChamada = no->dado.nome;
+            int contaArgumentos = 0;
+            char* destinoValorRetornado = no->simbolo->tipo == TipoInt ? novoTemporario() : NULL;
+
+            for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
+                contaArgumentos++;
+                char* origemArgumento = gerarQuadruplas(argumento);
+                emitirQuadrupla("ARG", origemArgumento, NULL, NULL);
+            }
+
+            char quantidadeArgumentos[20];
+            sprintf(quantidadeArgumentos, "%d", contaArgumentos);
+
+            emitirQuadrupla("CALL", nomeFuncaoChamada, quantidadeArgumentos, destinoValorRetornado);
+
+            // TODO: TROCAR POR UM RETURN, SENAO VAI PERCORRER ARGUMENTOS 2X
+            return destinoValorRetornado;
+            //arg = destinoValorRetornado;
             break;
 
         case TipoParametro:
@@ -211,16 +238,17 @@ char* gerarQuadruplas(AST* no){
 
             // TODO: trocar 2o argumento para nome da funcao
             // TODO: 4a posicao indica vetor?
+            // TODO: incluir alocacao de memoria aqui???
             emitirQuadrupla("PARAM", NULL, nomeParametro, NULL);
             break;
         
         case TipoAtribuicao:
-            char* destino   = gerarQuadruplas(no->filhos[0]);
+            char* destinoAtribuicao   = gerarQuadruplas(no->filhos[0]);
             char* operando  = gerarQuadruplas(no->filhos[1]);
 
-            emitirQuadrupla("ASSIGN", operando, NULL, destino);
+            emitirQuadrupla("ASSIGN", operando, NULL, destinoAtribuicao);
 
-            arg = destino;
+            arg = destinoAtribuicao;
             break;
 
         case TipoMenorIgual:
@@ -236,11 +264,11 @@ char* gerarQuadruplas(AST* no){
             char* operacao          = verificarOperacao(no->tipo);
             char* operandoEsquerdo  = gerarQuadruplas(no->filhos[0]);
             char* operandoDireito   = gerarQuadruplas(no->filhos[1]);
-            char* destino           = novoTemporario();
+            char* destinoOperacao   = novoTemporario();
 
-            emitirQuadrupla(operacao, operandoEsquerdo, operandoDireito, destino);
+            emitirQuadrupla(operacao, operandoEsquerdo, operandoDireito, destinoOperacao);
 
-            arg = destino;  
+            arg = destinoOperacao;  
             break;
         
         default:

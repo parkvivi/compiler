@@ -7,6 +7,7 @@
 #include "dot.h"
 #include "gci.h"
 #include "semantico.h"
+#include "gci.h"
 
 extern FILE* yyin;
 extern int linha_atual;

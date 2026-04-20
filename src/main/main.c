@@ -19,12 +19,7 @@ int main(int argc, char **argv){
     yyparse();
     analisarSemantica();
 
-    /* Geração de quádruplas a partir da AST */
-    /*gerar_quads(raizAST);
-    printf("\nQuadruplas geradas:\n");
-    print_quads(stdout);
-    printf("---------------------\n> ");
-    limpa_quads();*/
+    gerarCodigoIntermediario();
 
     gerarDOT(raizAST);
 

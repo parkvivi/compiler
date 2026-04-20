@@ -257,6 +257,12 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
                 erroSemantico(buffer);
             }
 
+            if (tipoFuncao == TipoInt && *encontrouReturnInt == false) {
+                char buffer[80];
+                sprintf(buffer, "Funcao '%s' eh de tipo int mas nao retorna nada", no->dado.nome);
+                erroSemantico(buffer);
+            }
+
             if (tipoFuncao == TipoInt) {
                 avisoSemantico("Certifique-se de que todos os caminhos incluem retorno");
             }
