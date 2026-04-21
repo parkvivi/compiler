@@ -12,7 +12,8 @@ int func(int h[])
     while(i < 10)
     {
         x[i] = i;
-        soma = soma + i;
+        soma = soma + 1;
+        i = i + 1;
     }
 
     return soma;

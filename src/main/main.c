@@ -23,6 +23,7 @@ int main(int argc, char **argv){
 
     gerarDOT(raizAST);
 
+    liberarTabSimbolos();
     liberaAST(raizAST);
     fclose(yyin);
 

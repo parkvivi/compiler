@@ -341,8 +341,6 @@ void analisarSemantica() {
     bool encontrouReturnVoid = false;
     verificarTipos(raizAST, &encontrouReturnInt, &encontrouReturnVoid);
 
-    liberarTabSimbolos();
-
     fclose(saida);
 }
 
