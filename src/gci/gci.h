@@ -14,7 +14,11 @@ typedef struct Quadrupla {
 extern int temp_cont;
 extern int label_cont;
 
+void inicializaTemporarios();
+bool ehTemporario(const char* candidato);
 char* novoTemporario();
+void liberarTemporario(const char* temporario);
+int temporarioParaNumero(const char* temporario);
 char* novoLabel();
 void emitirQuadrupla(const char *op, const char *a1, const char *a2, const char *a3);
 void liberarQuadruplas();

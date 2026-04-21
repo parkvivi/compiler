@@ -2,26 +2,85 @@
 #include <string.h>
 
 #define ARQUIVO_CODIGO_INTERMEDIARIO "build/codigointermediario.txt"
+#define MAX_TEMPORARIOS 32
+#define LR 31   // link register
+#define SP 30   // stack pointer
+#define FP 29   // frame pointer
+#define RR 0    // return register
 
 Quadrupla* lista_quadruplas = NULL;
 Quadrupla* ultima_quadrupla = NULL;
-int temp_cont = 0;
+bool temporariosOcupados[MAX_TEMPORARIOS];
 int label_cont = 0;
+
+void inicializaTemporarios() {
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
+        if (i == FP || i == SP || i == LR) {
+            temporariosOcupados[i] = true;
+            continue;
+        }
+
+        temporariosOcupados[i] = false;
+    }
+}
+
+bool ehTemporario(const char* candidato) {
+
+    if (candidato != NULL && candidato[0] == '$') {
+        return true;
+    }
+
+    return false;
+}
 
 char* novoTemporario() {
 
-    char* t = malloc(sizeof(char)*20);
-    sprintf(t, "t%d", temp_cont++);
+    for (int i=RR+1; i<FP; i++) {
+        if (temporariosOcupados[i] == false) {
+            char* novoTemporario = malloc(sizeof(char)*20);
+            sprintf(novoTemporario, "$R%d", i);
 
-    return t;
+            temporariosOcupados[i] = true;
+
+            return novoTemporario;
+        }
+    }
+
+    fprintf(stderr, "GCI :: Erro ao criar novos temporarios");
+    return NULL;
+}
+
+void liberarTemporario(const char* temporario) {
+
+    int indiceTemporario = temporarioParaNumero(temporario);
+    if (indiceTemporario < 0 || indiceTemporario >= MAX_TEMPORARIOS) {
+        fprintf(stderr, "GCI :: Erro ao liberar temporarios");
+        return;
+    }
+
+    temporariosOcupados[indiceTemporario] = false;
+}
+
+int temporarioParaNumero(const char* temporario) {
+
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
+        char buffer[20];
+        sprintf(buffer, "$R%d", i);
+
+        if (strcmp(temporario, buffer) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 char* novoLabel() {
 
-    char* l = malloc(sizeof(char)*20);
-    sprintf(l, "L%d", label_cont++);
+    char* novoLabel = malloc(sizeof(char)*20);
+    sprintf(novoLabel, "L%d", label_cont++);
 
-    return l;
+    return novoLabel;
 }
 
 char* verificarOperacao(TipoNo tipo) {
@@ -45,10 +104,10 @@ void emitirQuadrupla(const char *op, const char *a1, const char *a2, const char 
 
     Quadrupla* novaQuadrupla = (Quadrupla*) malloc(sizeof(Quadrupla));
 
-    novaQuadrupla->operacao   = op != NULL ? strdup(op) : NULL;
-    novaQuadrupla->argumento1 = a1 != NULL ? strdup(a1) : NULL;
-    novaQuadrupla->argumento2 = a2 != NULL ? strdup(a2) : NULL;
-    novaQuadrupla->argumento3 = a3 != NULL ? strdup(a3) : NULL;
+    novaQuadrupla->operacao   = ((op != NULL) ? strdup(op) : NULL);
+    novaQuadrupla->argumento1 = ((a1 != NULL) ? strdup(a1) : NULL);
+    novaQuadrupla->argumento2 = ((a2 != NULL) ? strdup(a2) : NULL);
+    novaQuadrupla->argumento3 = ((a3 != NULL) ? strdup(a3) : NULL);
     novaQuadrupla->prox = NULL;
 
     if (ultima_quadrupla == NULL) {
@@ -68,10 +127,10 @@ void imprimirQuadruplas(FILE *arquivo) {
 
     while (quad != NULL) {
         fprintf(arquivo, "(%s, %s, %s, %s)\n",
-                quad->operacao   != NULL ? quad->operacao   : "-",
-                quad->argumento1 != NULL ? quad->argumento1 : "-",
-                quad->argumento2 != NULL ? quad->argumento2 : "-",
-                quad->argumento3 != NULL ? quad->argumento3 : "-"
+                ((quad->operacao   != NULL) ? quad->operacao   : "-"),
+                ((quad->argumento1 != NULL) ? quad->argumento1 : "-"),
+                ((quad->argumento2 != NULL) ? quad->argumento2 : "-"),
+                ((quad->argumento3 != NULL) ? quad->argumento3 : "-")
             );
 
         quad=quad->prox;
@@ -115,14 +174,19 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
     switch (no->tipo) {
         case TipoDeclaracaoFuncao:
             char* nomeFuncaoDeclarada = no->dado.nome;
-            char* tipoFuncaoDeclarada = no->simbolo->tipo == TipoInt ? "int" : "void";
-            char* labelComecoFuncao   = novoLabel();
+            char* tipoFuncaoDeclarada = ((no->simbolo->tipo == TipoInt) ? "int" : "void");
 
             emitirQuadrupla("FUNCTION", nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL);
-            emitirQuadrupla("LABEL", NULL, NULL, labelComecoFuncao);
 
-            gerarQuadruplas(no->filhos[1], nomeFuncaoDeclarada, true);
-            gerarQuadruplas(no->filhos[2], nomeFuncaoDeclarada, true);
+            char* argTipoFuncao = gerarQuadruplas(no->filhos[1], nomeFuncaoDeclarada, true);
+            if (ehTemporario(argTipoFuncao) == true) {
+                liberarTemporario(argTipoFuncao);
+            }
+
+            char* argParametrosFuncao = gerarQuadruplas(no->filhos[2], nomeFuncaoDeclarada, true);
+            if (ehTemporario(argParametrosFuncao) == true) {
+                liberarTemporario(argParametrosFuncao);
+            }
 
             emitirQuadrupla("END", nomeFuncaoDeclarada, NULL, NULL);
             break;
@@ -151,8 +215,15 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
 
             char* condicaoIteracao = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true);
             emitirQuadrupla("IFF", condicaoIteracao, NULL, labelFinalIteracao);
+            if (ehTemporario(condicaoIteracao) == true) {
+                liberarTemporario(condicaoIteracao);
+            }
 
-            gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
+            char* argEscopoIteracao = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
+            if (ehTemporario(argEscopoIteracao) == true) {
+                liberarTemporario(argEscopoIteracao);
+            }
+
             emitirQuadrupla("GOTO", NULL, NULL, labelComecoIteracao);
 
             emitirQuadrupla("LABEL", NULL, NULL, labelFinalIteracao);
@@ -168,12 +239,23 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
             char* labelFinalSelecao = novoLabel();
 
             emitirQuadrupla("IFF", condicaoSelecao, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse));
-            gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
+
+            if (ehTemporario(condicaoSelecao) == true) {
+                liberarTemporario(condicaoSelecao);
+            }
+
+            char* argEscopoSelecao = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
+            if (ehTemporario(argEscopoSelecao) == true) {
+                liberarTemporario(argEscopoSelecao);
+            }
             emitirQuadrupla("GOTO", NULL, NULL, labelFinalSelecao);
             emitirQuadrupla("LABEL", NULL, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse));
 
             if (labelElse != NULL) {
-                gerarQuadruplas(no->filhos[2], nomeFuncaoAtual, true);
+                char* argElse = gerarQuadruplas(no->filhos[2], nomeFuncaoAtual, true);
+                if (ehTemporario(argElse) == true) {
+                    liberarTemporario(argElse);
+                }
                 emitirQuadrupla("GOTO", NULL, NULL, labelFinalSelecao);
                 emitirQuadrupla("LABEL", NULL, NULL, labelFinalSelecao);
 
@@ -189,6 +271,10 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
 
             emitirQuadrupla("RETURN", operandoRetornado, NULL, NULL);
 
+            if (ehTemporario(operandoRetornado) == true) {
+                liberarTemporario(operandoRetornado);
+            }
+
             break;
 
         case TipoVar:
@@ -201,13 +287,17 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
 
                 emitirQuadrupla("LOAD", nomeVetor, indiceAcessado, destinoConteudoAcessado);
 
+                if (ehTemporario(indiceAcessado) == true) {
+                    liberarTemporario(indiceAcessado);
+                }
+
                 arg = destinoConteudoAcessado;
             }
             break;
             
         case TipoNum: 
             char numero[20];
-            sprintf(numero, "%d", no->dado.valor);
+            sprintf(numero, "#%d", no->dado.valor);
             
             arg = strdup(numero);
             break;
@@ -221,6 +311,10 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
                 contaArgumentos++;
                 char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false);
                 emitirQuadrupla("ARG", origemArgumento, NULL, NULL);
+
+                if (ehTemporario(origemArgumento) == true) {
+                    liberarTemporario(origemArgumento);
+                }
             }
 
             char quantidadeArgumentos[20];
@@ -235,7 +329,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
             char* nomeParametro = no->dado.nome;
             char* indiceVetor = ((no->filhos[1] == NULL) ? NULL : "vet");
             
-            // TODO: incluir alocacao de memoria aqui???
             emitirQuadrupla("PARAM", nomeFuncaoAtual, nomeParametro, indiceVetor);
 
             break;
@@ -248,10 +341,20 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
                 char* nomeVetor = filhoEsquerdo->dado.nome;
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true);
                 emitirQuadrupla("STORE", nomeVetor, indiceAcessado, operando);
+
+                if (ehTemporario(indiceAcessado) == true) {
+                    liberarTemporario(indiceAcessado);
+                }
+
                 arg = operando;
             } else {
                 char* destinoAtribuicao = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true);
                 emitirQuadrupla("ASSIGN", operando, NULL, destinoAtribuicao);
+
+                if (ehTemporario(operando) == true) {
+                    liberarTemporario(operando);
+                }
+
                 arg = destinoAtribuicao;
             }
             
@@ -267,10 +370,24 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
         case TipoSubtracao:
         case TipoMultiplicacao:
         case TipoDivisao:
-            char* operacao          = verificarOperacao(no->tipo);
-            char* operandoEsquerdo  = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true);
-            char* operandoDireito   = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
-            char* destinoOperacao   = novoTemporario();
+            char* operacao = verificarOperacao(no->tipo);
+            char* operandoEsquerdo = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true);
+            char* operandoDireito = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
+            char* destinoOperacao = NULL;
+
+            bool esqEhTemporario = ehTemporario(operandoEsquerdo);
+            bool dirEhTemporario = ehTemporario(operandoDireito);
+
+            if (esqEhTemporario == true && dirEhTemporario == true) {
+                liberarTemporario(operandoDireito);
+                destinoOperacao = operandoEsquerdo;
+            } else if (esqEhTemporario == true) {
+                destinoOperacao = operandoEsquerdo;
+            } else if (dirEhTemporario == true) {
+                destinoOperacao = operandoDireito;
+            } else {
+                destinoOperacao = novoTemporario();
+            }
 
             emitirQuadrupla(operacao, operandoEsquerdo, operandoDireito, destinoOperacao);
 
@@ -284,14 +401,20 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
                     continue;
                 }
 
-                gerarQuadruplas(filho, nomeFuncaoAtual, true);
+                char* argFilhos = gerarQuadruplas(filho, nomeFuncaoAtual, true);
+                if (ehTemporario(argFilhos) == true) {
+                    liberarTemporario(argFilhos);
+                }
             }
 
             break;
     }
 
     if (percorrerIrmaos == true) {
-        gerarQuadruplas(no->irmao, nomeFuncaoAtual, true);
+        char* argIrmao = gerarQuadruplas(no->irmao, nomeFuncaoAtual, true);
+        if (ehTemporario(argIrmao) == true) {
+            liberarTemporario(argIrmao);
+        }
     }
 
     return arg;
@@ -306,6 +429,7 @@ void gerarCodigoIntermediario() {
         return;
     }
 
+    inicializaTemporarios();
     gerarQuadruplas(raizAST, NULL, true);
 
     imprimirQuadruplas(saida);
