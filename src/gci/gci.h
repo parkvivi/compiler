@@ -3,6 +3,12 @@
 
 #include "ast.h"
 
+typedef struct Temporario {
+    bool ocupado;
+    bool representaVariavel;
+    Simbolo* variavel; // ponteiro para no na tab de simbolos que representa a variavel em questao (deixar?)
+} Temporario;
+
 typedef struct Quadrupla {
     char *operacao;
     char *argumento1;

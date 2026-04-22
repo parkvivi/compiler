@@ -337,7 +337,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos){
             char* operando = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true);
 
             AST* filhoEsquerdo = no->filhos[0];
-            if (filhoEsquerdo->tipo == TipoVar && filhoEsquerdo->filhos[0] != NULL) {
+            if (filhoEsquerdo->tipo == TipoVar) {
                 char* nomeVetor = filhoEsquerdo->dado.nome;
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true);
                 emitirQuadrupla("STORE", nomeVetor, indiceAcessado, operando);
