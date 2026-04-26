@@ -145,16 +145,21 @@ void liberarTemporariosEscopoAtual(int nivelEscopo) {
 
 int temporarioParaNumero(const char* temporario) {
 
-    for (int i=0; i<MAX_TEMPORARIOS; i++) {
-        char buffer[20];
-        sprintf(buffer, "R%d", i);
+    if (temporario == NULL || temporario[0] != 'R') return -1;
 
-        if (strcmp(temporario, buffer) == 0) {
-            return i;
-        }
+    int tamanhoTemporario = strlen(temporario);
+    int dezena = 0, unidade = 0;
+
+    if (tamanhoTemporario == 2) {
+        unidade = temporario[1] - 48;
+    } else if (tamanhoTemporario == 3) {
+        unidade = temporario[2] - 48;
+        dezena = 10 * (temporario[1] - 48);
+    } else {
+        return -1;
     }
 
-    return -1;
+    return dezena + unidade;
 }
 
 char* novoLabel() {
@@ -321,7 +326,10 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* argEscopoSelecao = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true, nivelEscopo + 1);
             liberarTemporario(argEscopoSelecao, true);
             
-            emitirQuadrupla("GOTO", NULL, NULL, labelFinalSelecao);
+            if (labelElse != NULL) {
+                emitirQuadrupla("GOTO", NULL, NULL, labelFinalSelecao);
+            }
+
             emitirQuadrupla("LABEL", NULL, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse));
 
             liberarTemporariosEscopoAtual(nivelEscopo + 1);
@@ -330,7 +338,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* argElse = gerarQuadruplas(no->filhos[2], nomeFuncaoAtual, true, nivelEscopo + 1);
                 liberarTemporario(argElse, true);
                 
-                emitirQuadrupla("GOTO", NULL, NULL, labelFinalSelecao);
                 emitirQuadrupla("LABEL", NULL, NULL, labelFinalSelecao);
 
                 liberarTemporariosEscopoAtual(nivelEscopo + 1);
@@ -364,13 +371,21 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
                 arg = destinoConteudoVariavel;
             } else {
-                char* nomeVetor = no->dado.nome;
+                char* nomeVetor = no->simbolo->temporario;
+
+                if (nomeVetor == NULL) {
+                    nomeVetor = novoTemporario(no->simbolo, nivelEscopo);
+                    emitirQuadrupla("LOAD", no->dado.nome, NULL, nomeVetor);
+                }
+                
                 char* indiceAcessado = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo);
                 char* destinoConteudoAcessado = novoTemporario(NULL, nivelEscopo);
 
                 emitirQuadrupla("LOAD", nomeVetor, indiceAcessado, destinoConteudoAcessado);
 
-                liberarTemporario(indiceAcessado, true);
+                if (liberarTemporario(indiceAcessado, false) == 2) {
+                    liberarTemporario(indiceAcessado, true);
+                }
 
                 arg = destinoConteudoAcessado;
             }
@@ -386,32 +401,47 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
         case TipoChamadaFuncao:
             char* nomeFuncaoChamada = no->dado.nome;
             int contaArgumentos = 0;
-            char* destinoValorRetornado = ((no->simbolo->tipo == TipoInt) ? "R0" : NULL);
-            bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && strcmp(nomeFuncaoChamada, "output") != 0);
-            
-            // TODO: pensar se aqui é o melhor lugar pra isso
+            char* destinoIntermediario = ((no->simbolo->tipo == TipoInt) ? "R0" : NULL);
+
+            bool ehOutput = (strcmp(nomeFuncaoChamada, "output") == 0);
+            bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false);
+
             if (mudarContexto == true) {
                 preservarTemporarios();
             }
 
-            for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
-                contaArgumentos++;
-                char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false, nivelEscopo);
-                emitirQuadrupla("ARG", origemArgumento, NULL, NULL);
+            if (ehOutput == true) {
+                char* origemArgumento = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, false, nivelEscopo);
+                emitirQuadrupla("MOVE", origemArgumento, NULL, "R0");
 
-                if (liberarTemporario(origemArgumento, false) == 2) {
-                    // so libera se nao estiver associado a variavel
-                    liberarTemporario(origemArgumento, true);
+                liberarTemporario(origemArgumento, true);
+            } else {
+                for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
+                    contaArgumentos++;
+                    char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false, nivelEscopo + 1);
+                    emitirQuadrupla("ARG", origemArgumento, NULL, NULL);
+
+                    if (liberarTemporario(origemArgumento, false) == 2){
+                        liberarTemporario(origemArgumento, true);
+                    }
                 }
+
+                liberarTemporariosEscopoAtual(nivelEscopo + 1);
             }
 
             char quantidadeArgumentos[20];
             sprintf(quantidadeArgumentos, "%d", contaArgumentos);
 
-            emitirQuadrupla("CALL", nomeFuncaoChamada, quantidadeArgumentos, destinoValorRetornado);
+            emitirQuadrupla("CALL", nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario);
             
             if (mudarContexto == true) {
                 restaurarTemporarios();
+            }
+
+            char* destinoValorRetornado = ((no->simbolo->tipo == TipoInt) ? novoTemporario(NULL, nivelEscopo) : NULL);
+            
+            if (no->simbolo->tipo == TipoInt) {
+                emitirQuadrupla("MOVE", "R0", NULL, destinoValorRetornado);
             }
 
             arg = destinoValorRetornado;
@@ -433,7 +463,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true, nivelEscopo);
                 emitirQuadrupla("STORE", nomeVariavel, indiceAcessado, operando);
 
-                liberarTemporario(operando, true);
                 reassociarTemporario(operando, nivelEscopo);
                 liberarTemporario(indiceAcessado, true);
 
