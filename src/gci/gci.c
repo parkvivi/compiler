@@ -2,11 +2,7 @@
 #include <string.h>
 
 #define ARQUIVO_CODIGO_INTERMEDIARIO "build/codigointermediario.txt"
-#define MAX_TEMPORARIOS 32
-#define LR 31   // link register
-#define SP 30   // stack pointer
-#define FP 29   // frame pointer
-#define RR 0    // return register
+#define MAX_TEMPORARIOS 28
 
 Quadrupla* lista_quadruplas = NULL;
 Quadrupla* ultima_quadrupla = NULL;
@@ -15,14 +11,9 @@ Temporario temporarios[MAX_TEMPORARIOS];
 int label_cont = 0;
 
 void inicializaTemporarios() {
-    for (int i=0; i<MAX_TEMPORARIOS; i++) {
-        if (i == FP || i == SP || i == LR) {
-            temporarios[i].estado = ValorTemporario;
-            continue;
-        } else {
-            temporarios[i].estado = Livre;
-        }
 
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
+        temporarios[i].estado = Livre;
         temporarios[i].nivelEscopo = -1;
         temporarios[i].variavel = NULL;
     }
@@ -30,10 +21,10 @@ void inicializaTemporarios() {
 
 char* novoTemporario(Simbolo* variavel, int nivelEscopo) {
 
-    for (int i=RR+1; i<FP; i++) {
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
         if (temporarios[i].estado == Livre) {
             char* novoTemporario = malloc(sizeof(char)*20);
-            sprintf(novoTemporario, "R%d", i);
+            sprintf(novoTemporario, "R%d", i + 1);
 
             temporarios[i].nivelEscopo = nivelEscopo;
             temporarios[i].variavel = variavel;
@@ -55,10 +46,10 @@ char* novoTemporario(Simbolo* variavel, int nivelEscopo) {
 
 void preservarTemporarios() {
 
-    for (int i=RR+1; i<FP; i++) {
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
         if (temporarios[i].estado != Livre) {
             char buffer[20];
-            sprintf(buffer, "R%d", i);
+            sprintf(buffer, "R%d", i + 1);
 
             emitirQuadrupla("PUSH", NULL, NULL, buffer);
         }
@@ -67,10 +58,10 @@ void preservarTemporarios() {
 
 void restaurarTemporarios() {
 
-    for (int i=FP-1; i>RR; i--) {
+    for (int i=MAX_TEMPORARIOS-1; i>=0; i--) {
         if (temporarios[i].estado != Livre) {
             char buffer[20];
-            sprintf(buffer, "R%d", i);
+            sprintf(buffer, "R%d", i + 1);
 
             emitirQuadrupla("POP", NULL, NULL, buffer);
         }
@@ -149,6 +140,7 @@ int temporarioParaNumero(const char* temporario) {
 
     int tamanhoTemporario = strlen(temporario);
     int dezena = 0, unidade = 0;
+    int numero = 0;
 
     if (tamanhoTemporario == 2) {
         unidade = temporario[1] - 48;
@@ -159,7 +151,12 @@ int temporarioParaNumero(const char* temporario) {
         return -1;
     }
 
-    return dezena + unidade;
+    numero = dezena + unidade;
+    if (numero < 1 || numero > MAX_TEMPORARIOS) {
+        return -1;
+    }
+
+    return numero - 1;
 }
 
 char* novoLabel() {
