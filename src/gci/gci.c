@@ -476,7 +476,9 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 if (filhoEsquerdo->filhos[0] == NULL && liberarTemporario(operando, false) != 1) {
                     reassociarTemporario(operando, filhoEsquerdo->simbolo, nivelEscopo);
                 }
-                liberarTemporario(indiceAcessado, true);
+                if (liberarTemporario(indiceAcessado, false) == 2) {
+                    liberarTemporario(indiceAcessado, true);
+                }
 
                 arg = operando;
             } else {
