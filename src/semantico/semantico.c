@@ -264,7 +264,9 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
             }
 
             if (tipoFuncao == TipoInt) {
-                avisoSemantico("Certifique-se de que todos os caminhos incluem retorno");
+                char buffer[200];
+                sprintf(buffer, "Certifique-se de que todos os caminhos da funcao '%s' incluem retorno", no->dado.nome);
+                avisoSemantico(buffer);
             }
             
             tipo = TipoVoid;
@@ -309,6 +311,17 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
     return tipo;
 }
 
+void analisarMain() {
+
+    Escopo* e;
+    for (e=lista_escopos; e!=NULL && e->prox!=NULL; e=e->prox);
+
+    Simbolo* main = e->simbolos;
+    if (main == NULL || strcmp(main->nome, "main") != 0 || main->tipo != TipoVoid || main->parametros != NULL) {
+        erroSemantico("Funcao 'main' nao declarada ou declarada incorretamente");
+    }
+}
+
 void analisarSemantica() {
     
     FILE* saida = fopen(ARQUIVO_TABELA_SIMBOLOS, "w");
@@ -340,6 +353,8 @@ void analisarSemantica() {
     bool encontrouReturnInt = false;
     bool encontrouReturnVoid = false;
     verificarTipos(raizAST, &encontrouReturnInt, &encontrouReturnVoid);
+
+    analisarMain();
 
     fclose(saida);
 }

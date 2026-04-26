@@ -8,6 +8,7 @@ void main(void) {
 }
 
 int teste(void) {
+    return 3;
 }
 
 /* esperado: erro semantico; funcao func() declarada depois de main() */

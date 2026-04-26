@@ -4,7 +4,7 @@ void main(void) {
     x = 0; y = 2;
 
     if (x < (y = y + 2)) {
-        z = y;
+        z = input() + input();
         output(2);
     }
 }
