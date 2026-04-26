@@ -68,9 +68,9 @@ void restaurarTemporarios() {
     }
 }
 
-void reassociarTemporario(const char* temporario, int nivelEscopo) {
+void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEscopo) {
 
-    if (temporario == NULL || temporario[0] != 'R') return;
+    if (temporario == NULL || temporario[0] != 'R' || variavel == NULL) return;
 
     int indiceTemporario = temporarioParaNumero(temporario);
     if (indiceTemporario < 0 || indiceTemporario >= MAX_TEMPORARIOS) {
@@ -78,15 +78,22 @@ void reassociarTemporario(const char* temporario, int nivelEscopo) {
         return;
     }
 
-    Simbolo* s = temporarios[indiceTemporario].variavel;
-    if (s != NULL && s->temporario != NULL) {
-        free(s->temporario);
-        s->temporario = NULL;
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
+        if (temporarios[i].variavel == variavel) {
+            temporarios[i].estado = Livre;
+            temporarios[i].nivelEscopo = -1;
+            temporarios[i].variavel = NULL;
+        }
     }
 
-    temporarios[indiceTemporario].estado = ValorTemporario;
+    if (variavel->temporario != NULL) {
+        free(variavel->temporario);
+    }
+
+    variavel->temporario = strdup(temporario);
+    temporarios[indiceTemporario].estado = AssociadoVariavel;
     temporarios[indiceTemporario].nivelEscopo = nivelEscopo;
-    temporarios[indiceTemporario].variavel = NULL;
+    temporarios[indiceTemporario].variavel = variavel;
 }
 
 int liberarTemporario(const char* temporario, bool liberarTemporario) {
@@ -466,7 +473,9 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true, nivelEscopo);
                 emitirQuadrupla("STORE", nomeVariavel, indiceAcessado, operando);
 
-                reassociarTemporario(operando, nivelEscopo);
+                if (filhoEsquerdo->filhos[0] == NULL && liberarTemporario(operando, false) != 1) {
+                    reassociarTemporario(operando, filhoEsquerdo->simbolo, nivelEscopo);
+                }
                 liberarTemporario(indiceAcessado, true);
 
                 arg = operando;

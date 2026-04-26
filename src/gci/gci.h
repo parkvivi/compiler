@@ -23,7 +23,7 @@ extern int label_cont;
 
 void inicializaTemporarios();
 char* novoTemporario(Simbolo* variavel, int nivelEscopo);
-void reassociarTemporario(const char* temporario, int nivelEscopo);
+void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEscopo);
 int liberarTemporario(const char* temporario, bool liberarTemporario);
 int temporarioParaNumero(const char* temporario);
 char* novoLabel();

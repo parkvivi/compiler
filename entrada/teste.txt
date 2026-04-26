@@ -1,9 +1,10 @@
 void main(void) {
-    int x; int y;
+    int x; int y; int z;
 
     x = 0; y = 2;
 
     if (x < (y = y + 2)) {
+        z = y;
         output(2);
     }
 }
