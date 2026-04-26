@@ -3,10 +3,12 @@
 
 #include "ast.h"
 
+typedef enum { Livre, ValorTemporario, AssociadoVariavel } EstadoTemporario;
+
 typedef struct Temporario {
-    bool ocupado;
-    bool representaVariavel;
-    Simbolo* variavel; // ponteiro para no na tab de simbolos que representa a variavel em questao (deixar?)
+    EstadoTemporario estado;
+    int nivelEscopo;
+    Simbolo* variavel;
 } Temporario;
 
 typedef struct Quadrupla {
@@ -17,18 +19,17 @@ typedef struct Quadrupla {
     struct Quadrupla* prox;
 } Quadrupla;
 
-extern int temp_cont;
 extern int label_cont;
 
 void inicializaTemporarios();
-bool ehTemporario(const char* candidato);
-char* novoTemporario();
-void liberarTemporario(const char* temporario);
+char* novoTemporario(Simbolo* variavel, int nivelEscopo);
+void reassociarTemporario(const char* temporario, int nivelEscopo);
+int liberarTemporario(const char* temporario, bool liberarTemporario);
 int temporarioParaNumero(const char* temporario);
 char* novoLabel();
 void emitirQuadrupla(const char *op, const char *a1, const char *a2, const char *a3);
 void liberarQuadruplas();
-char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos);
+char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int nivelEscopo);
 void imprimirQuadruplas(FILE *out);
 void gerarCodigoIntermediario();
 

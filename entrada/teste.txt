@@ -1,0 +1,26 @@
+int func(void) {
+    int a;
+    int b;
+    int c;
+    int d;
+
+    a = 1;
+    b = 2;
+    c = 3;
+    d = 4;
+
+    return a*b-c+a/b*b-d/d/d;
+}
+
+void main(void) {
+    int x;
+    int y;
+    int z;
+    int a;
+
+    x = 2;
+    y = 5;
+    z = 1;
+
+    a = z*x+y-x/func()*z-input();
+}

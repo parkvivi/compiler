@@ -27,6 +27,8 @@ typedef struct Simbolo {
 
     Parametro* parametros;
 
+    char* temporario;
+
     struct Simbolo* prox;
 } Simbolo;
 

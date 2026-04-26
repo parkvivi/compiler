@@ -58,10 +58,6 @@ void liberarTabSimbolos() {
     while (e) {
         Simbolo* s = e->simbolos;
 
-        if (e->prox == NULL && (s == NULL || (s != NULL && strcmp(s->nome, "main") != 0))) {
-            erroSemantico("Funcao \"main\" nao declarada ou declarada incorretamente");
-        }
-
         while (s) {
             Simbolo* sAux = s;
             s = s->prox;
@@ -75,6 +71,10 @@ void liberarTabSimbolos() {
 
                     free(pAux);
                 }
+            }
+            
+            if (sAux->temporario != NULL) {
+                free(sAux->temporario);
             }
             
             free(sAux->nome);
@@ -154,6 +154,7 @@ Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbo
     s->ehVetor = ehVetor;
     s->tamanhoVetor = tamanhoVetor;
     s->parametros = NULL;
+    s->temporario = NULL;
     s->prox = NULL;
 
     if (escopo_atual == NULL) {
