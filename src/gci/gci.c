@@ -78,6 +78,12 @@ void reassociarTemporario(const char* temporario, int nivelEscopo) {
         return;
     }
 
+    Simbolo* s = temporarios[indiceTemporario].variavel;
+    if (s != NULL && s->temporario != NULL) {
+        free(s->temporario);
+        s->temporario = NULL;
+    }
+
     temporarios[indiceTemporario].estado = ValorTemporario;
     temporarios[indiceTemporario].nivelEscopo = nivelEscopo;
     temporarios[indiceTemporario].variavel = NULL;

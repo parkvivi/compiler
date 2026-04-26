@@ -1,15 +1,9 @@
-void func(int a, int b) {
-}
-
 void main(void) {
-    int x;
-    int y;
-    int z;
-    int a;
+    int x; int y;
 
-    x = 2;
-    y = 5;
-    z = 1;
+    x = 0; y = 2;
 
-    func(y, (x*y)+z);
+    if (x < (y = y + 2)) {
+        output(2);
+    }
 }
