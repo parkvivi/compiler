@@ -400,12 +400,27 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 }
                 
                 char* indiceAcessado = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo, true);
+                
+                // significa que indiceAcessado eh um temporario
+                if (no->filhos[0]->tipo != TipoNum) {
+                    char* novo = ((liberarTemporario(indiceAcessado, false) == 2) ? indiceAcessado : novoTemporario(NULL, nivelEscopo));
+
+                    emitirQuadrupla("ADD", nomeVetor, indiceAcessado, novo);
+
+                    if (liberarTemporario(indiceAcessado, false) == 2) {
+                        liberarTemporario(indiceAcessado, true);
+                    }
+
+                    nomeVetor = novo;
+                    indiceAcessado = NULL;
+                }
+                
                 char* destinoConteudoAcessado = novoTemporario(NULL, nivelEscopo);
 
                 emitirQuadrupla("LOAD", nomeVetor, indiceAcessado, destinoConteudoAcessado);
 
-                if (liberarTemporario(indiceAcessado, false) == 2) {
-                    liberarTemporario(indiceAcessado, true);
+                if (liberarTemporario(nomeVetor, false) == 2) {
+                    liberarTemporario(nomeVetor, true);
                 }
 
                 arg = destinoConteudoAcessado;
@@ -523,12 +538,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 if (liberarTemporario(nomeVariavel, false) == 2) {
                     liberarTemporario(nomeVariavel, true);
                 }
-                
-                /*
-                if (liberarTemporario(indiceAcessado, false) == 2) {
-                    liberarTemporario(indiceAcessado, true);
-                }
-                */
 
                 arg = operando;
 
