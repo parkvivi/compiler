@@ -16,13 +16,14 @@ void inicializaTemporarios() {
         temporarios[i].estado = Livre;
         temporarios[i].nivelEscopo = -1;
         temporarios[i].variavel = NULL;
+        temporarios[i].preservado = false;
     }
 }
 
 char* novoTemporario(Simbolo* variavel, int nivelEscopo) {
 
     for (int i=0; i<MAX_TEMPORARIOS; i++) {
-        if (temporarios[i].estado == Livre) {
+        if (temporarios[i].estado == Livre && temporarios[i].preservado == false) {
             char* novoTemporario = malloc(sizeof(char)*20);
             sprintf(novoTemporario, "R%d", i + 1);
 
@@ -51,6 +52,7 @@ void preservarTemporarios() {
             char buffer[20];
             sprintf(buffer, "R%d", i + 1);
 
+            temporarios[i].preservado = true;
             emitirQuadrupla("PUSH", NULL, NULL, buffer);
         }
     }
@@ -59,11 +61,12 @@ void preservarTemporarios() {
 void restaurarTemporarios() {
 
     for (int i=MAX_TEMPORARIOS-1; i>=0; i--) {
-        if (temporarios[i].estado != Livre) {
+        if (temporarios[i].preservado == true) {
             char buffer[20];
             sprintf(buffer, "R%d", i + 1);
 
             emitirQuadrupla("POP", NULL, NULL, buffer);
+            temporarios[i].preservado = false;
         }
     }
 }
@@ -117,6 +120,10 @@ int liberarTemporario(const char* temporario, bool liberarTemporario) {
         return 2;
     }
 
+    if (temporarios[indiceTemporario].preservado == true) {
+        return 0;
+    }
+
     temporarios[indiceTemporario].estado = Livre;
     temporarios[indiceTemporario].nivelEscopo = -1;
 
@@ -134,6 +141,10 @@ void liberarTemporariosEscopoAtual(int nivelEscopo) {
 
     for (int i=0; i<MAX_TEMPORARIOS; i++) {
         if (temporarios[i].nivelEscopo == nivelEscopo) {
+            if (temporarios[i].preservado == true) {
+                continue;
+            }
+
             temporarios[i].estado = Livre;
             temporarios[i].nivelEscopo = -1;
 

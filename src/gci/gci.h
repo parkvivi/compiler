@@ -9,6 +9,7 @@ typedef struct Temporario {
     EstadoTemporario estado;
     int nivelEscopo;
     Simbolo* variavel;
+    bool preservado;
 } Temporario;
 
 typedef struct Quadrupla {
