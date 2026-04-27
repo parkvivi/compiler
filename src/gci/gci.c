@@ -471,9 +471,13 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             if (filhoEsquerdo->tipo == TipoVar) {
                 char* nomeVariavel = filhoEsquerdo->dado.nome;
                 if (filhoEsquerdo->filhos[0] != NULL) {
-                    char* novo = ((filhoEsquerdo->simbolo->temporario == NULL) ? novoTemporario(filhoEsquerdo->simbolo, nivelEscopo) : filhoEsquerdo->simbolo->temporario);
-                    emitirQuadrupla("LOAD", nomeVariavel, NULL, novo);
-                    nomeVariavel = novo;
+                    if (filhoEsquerdo->simbolo->temporario == NULL) {
+                        char* novo = novoTemporario(filhoEsquerdo->simbolo, nivelEscopo);
+                        emitirQuadrupla("LOAD", nomeVariavel, NULL, novo);
+                        nomeVariavel = novo;
+                    } else {
+                        nomeVariavel = filhoEsquerdo->simbolo->temporario;
+                    }
                 }
 
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true, nivelEscopo);
