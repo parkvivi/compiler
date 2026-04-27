@@ -29,7 +29,7 @@ int temporarioParaNumero(const char* temporario);
 char* novoLabel();
 void emitirQuadrupla(const char *op, const char *a1, const char *a2, const char *a3);
 void liberarQuadruplas();
-char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int nivelEscopo);
+char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int nivelEscopo, bool reutilizaAtribuicao);
 void imprimirQuadruplas(FILE *out);
 void gerarCodigoIntermediario();
 
