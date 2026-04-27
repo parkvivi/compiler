@@ -470,12 +470,19 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             AST* filhoEsquerdo = no->filhos[0];
             if (filhoEsquerdo->tipo == TipoVar) {
                 char* nomeVariavel = filhoEsquerdo->dado.nome;
+                if (filhoEsquerdo->filhos[0] != NULL) {
+                    char* novo = ((filhoEsquerdo->simbolo->temporario == NULL) ? novoTemporario(filhoEsquerdo->simbolo, nivelEscopo) : filhoEsquerdo->simbolo->temporario);
+                    emitirQuadrupla("LOAD", nomeVariavel, NULL, novo);
+                    nomeVariavel = novo;
+                }
+
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true, nivelEscopo);
                 emitirQuadrupla("STORE", nomeVariavel, indiceAcessado, operando);
 
                 if (filhoEsquerdo->filhos[0] == NULL && liberarTemporario(operando, false) != 1) {
                     reassociarTemporario(operando, filhoEsquerdo->simbolo, nivelEscopo);
                 }
+                
                 if (liberarTemporario(indiceAcessado, false) == 2) {
                     liberarTemporario(indiceAcessado, true);
                 }
@@ -507,6 +514,12 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* operandoDireito = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true, nivelEscopo);
             char* destinoOperacao = NULL;
             bool liberarDireito = false;
+
+            if (no->filhos[0]->tipo == TipoNum) {
+                char* novo = novoTemporario(NULL, nivelEscopo);
+                emitirQuadrupla("LOAD", operandoEsquerdo, NULL, novo);
+                operandoEsquerdo = novo;
+            }
 
             // aqui, liberarTemporario() inicialmente so verifica se argumento eh temporario
             if (liberarTemporario(operandoEsquerdo, false) == 2) {
