@@ -490,12 +490,17 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* indiceAcessado = gerarQuadruplas(filhoEsquerdo->filhos[0], nomeFuncaoAtual, true, nivelEscopo, true);
 
                 // significa que indiceAcessado eh um temporario
-                if (filhoEsquerdo->filhos[0]->tipo != TipoNum) {
-                    // TODO: verificar se indiceAcessado eh temporario ou se representa variavel
-                    // char* novo = novoTemporario(NULL, nivelEscopo); 
-                    // emitirQuadrupla("ADD", nomeVariavel, indiceAcessado, novo);
-                    // nomeVariavel = novo;
-                    // indiceAcessado = NULL;
+                if (filhoEsquerdo->filhos[0] != NULL && filhoEsquerdo->filhos[0]->tipo != TipoNum) {
+                    char* novo = ((liberarTemporario(indiceAcessado, false) == 2) ? indiceAcessado : novoTemporario(NULL, nivelEscopo));
+
+                    emitirQuadrupla("ADD", nomeVariavel, indiceAcessado, novo);
+
+                    if (liberarTemporario(indiceAcessado, false) == 2) {
+                        liberarTemporario(indiceAcessado, true);
+                    }
+
+                    nomeVariavel = novo;
+                    indiceAcessado = NULL;
                 }
 
                 emitirQuadrupla("STORE", nomeVariavel, indiceAcessado, operando);
@@ -504,10 +509,15 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                     reassociarTemporario(operando, filhoEsquerdo->simbolo, nivelEscopo);
                 }
                 
-                // TODO: mudar isso aqui pra dentro do if ali de cima
+                if (liberarTemporario(nomeVariavel, false) == 2) {
+                    liberarTemporario(nomeVariavel, true);
+                }
+                
+                /*
                 if (liberarTemporario(indiceAcessado, false) == 2) {
                     liberarTemporario(indiceAcessado, true);
                 }
+                */
 
                 arg = operando;
 
