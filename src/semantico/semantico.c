@@ -1,6 +1,15 @@
 #include "semantico.h"
+#include <stdlib.h>
 
-#define ARQUIVO_TABELA_SIMBOLOS "build/tabsimbolos.txt"
+static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
+
+    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
+    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
+        diretorioSaida = "build";
+    }
+
+    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
+}
 
 TipoSimbolo retornaTipo(AST* no) {
 
@@ -323,11 +332,14 @@ void analisarMain() {
 }
 
 void analisarSemantica() {
-    
-    FILE* saida = fopen(ARQUIVO_TABELA_SIMBOLOS, "w");
+
+    char caminhoSaida[260];
+    montarCaminhoSaida(caminhoSaida, sizeof(caminhoSaida), "tabsimbolos.txt");
+
+    FILE* saida = fopen(caminhoSaida, "w");
 
     if (saida == NULL) {
-        fprintf(stderr, "Nao foi possivel criar o arquivo auxiliar de escopos em '%s'\n", ARQUIVO_TABELA_SIMBOLOS);
+        fprintf(stderr, "Nao foi possivel criar o arquivo auxiliar de escopos em '%s'\n", caminhoSaida);
         return;
     }
 

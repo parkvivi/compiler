@@ -1,8 +1,18 @@
 #include "gci.h"
+#include <stdlib.h>
 #include <string.h>
 
-#define ARQUIVO_CODIGO_INTERMEDIARIO "build/codigointermediario.txt"
 #define MAX_TEMPORARIOS 29
+
+static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
+
+    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
+    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
+        diretorioSaida = "build";
+    }
+
+    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
+}
 
 Quadrupla* lista_quadruplas = NULL;
 Quadrupla* ultima_quadrupla = NULL;
@@ -609,10 +619,13 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
 void gerarCodigoIntermediario() {
 
-    FILE* saida = fopen(ARQUIVO_CODIGO_INTERMEDIARIO, "w");
+    char caminhoSaida[260];
+    montarCaminhoSaida(caminhoSaida, sizeof(caminhoSaida), "codigointermediario.txt");
+
+    FILE* saida = fopen(caminhoSaida, "w");
 
     if (saida == NULL) {
-        fprintf(stderr, "Nao foi possivel criar o arquivo '%s'\n", ARQUIVO_CODIGO_INTERMEDIARIO);
+        fprintf(stderr, "Nao foi possivel criar o arquivo '%s'\n", caminhoSaida);
         return;
     }
 

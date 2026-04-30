@@ -1,4 +1,16 @@
 #include "dot.h" 
+#include <stdlib.h>
+#include <string.h>
+
+static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
+
+    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
+    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
+        diretorioSaida = "build";
+    }
+
+    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
+}
 
 const char* nomeTipoNo(AST* no) {
     static char buffer[50];
@@ -101,9 +113,12 @@ void imprimirNoDOT(AST* no, FILE* file) {
 void gerarDOT(AST* raiz) {
 
     FILE *file;
-    file = fopen("build/arvore.dot", "w");
+    char caminhoSaida[260];
+    montarCaminhoSaida(caminhoSaida, sizeof(caminhoSaida), "arvore.dot");
+
+    file = fopen(caminhoSaida, "w");
     if(file==NULL) {
-        printf("Erro ao abrir arquivo para gerar arquivo.dot\n");
+        printf("Erro ao abrir arquivo para gerar arquivo.dot em '%s'\n", caminhoSaida);
         return;
     }
     

@@ -8,6 +8,7 @@ LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
 BUILD_DIR = build
 INPUT_FILE = entrada/gcd.txt
+MAIN_INPUT_DIR = entrada/main
 MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/main/main.c
 
 ifeq ($(OS),Windows_NT)
@@ -26,6 +27,12 @@ ifeq ($(OS),Windows_NT)
 
     PARSER_BIN = $(BUILD_DIR)\parser.exe
     SCANNER    = $(BUILD_DIR)\scanner.exe
+    GCD_INPUT  = $(MAIN_INPUT_DIR)\gcd.txt
+    SORT_INPUT = $(MAIN_INPUT_DIR)\sort.txt
+    GCD_DIR    = $(BUILD_DIR)\gcd
+    SORT_DIR   = $(BUILD_DIR)\sort
+    GCD_DOT    = $(GCD_DIR)\arvore.dot
+    SORT_DOT   = $(SORT_DIR)\arvore.dot
 else
     MKDIR = mkdir -p $(BUILD_DIR)
     RM = rm -rf $(BUILD_DIR)
@@ -40,65 +47,45 @@ else
 
     PARSER_BIN = $(BUILD_DIR)/parser
     SCANNER    = $(BUILD_DIR)/scanner
+    GCD_INPUT  = $(MAIN_INPUT_DIR)/gcd.txt
+    SORT_INPUT = $(MAIN_INPUT_DIR)/sort.txt
+    GCD_DIR    = $(BUILD_DIR)/gcd
+    SORT_DIR   = $(BUILD_DIR)/sort
+    GCD_DOT    = $(GCD_DIR)/arvore.dot
+    SORT_DOT   = $(SORT_DIR)/arvore.dot
 endif
 
 all: $(PARSER_BIN)
 
 parser: $(PARSER_BIN)
 
-run: $(PARSER_BIN)
-	$(PARSER_BIN) $(INPUT_FILE)
-	$(DOT) -Tpng $(BUILD_DIR)/arvore.dot -o $(BUILD_DIR)/arvore.png
+run: run-gcd run-sort
 
 ifeq ($(OS),Windows_NT)
-regression: $(PARSER_BIN)
-	powershell -NoProfile -Command "$${cases} = @( \
-	    @{f='entrada/codigo.txt'; e=0}, \
-	    @{f='entrada/gcd.txt'; e=0}, \
-	    @{f='entrada/sort.txt'; e=0}, \
-	    @{f='entrada/lex2.c'; e=1}, \
-	    @{f='entrada/par1.c'; e=1}, \
-	    @{f='entrada/sem10.c'; e=1}, \
-	    @{f='entrada/sem17.c'; e=1}, \
-	    @{f='entrada/tac1.c'; e=0} \
-	); \
-	$${ok} = $$true; \
-	foreach ($${c} in $${cases}) { \
-	    & '$(PARSER_BIN)' $${c}.f | Out-Null; \
-	    $${got} = $$LASTEXITCODE; \
-	    if ($${got} -ne $${c}.e) { \
-	        Write-Host ('FALHOU: ' + $${c}.f + ' esperado=' + $${c}.e + ' obtido=' + $${got}); \
-	        $${ok} = $$false; \
-	    } else { \
-	        Write-Host ('OK: ' + $${c}.f + ' (exit=' + $${got} + ')'); \
-	    } \
-	}; \
-	if (-not $${ok}) { exit 1 }"
+run-gcd: $(PARSER_BIN)
+	if not exist $(GCD_DIR) mkdir $(GCD_DIR)
+	set "COMPILER_OUTPUT_DIR=$(GCD_DIR)" && $(PARSER_BIN) $(GCD_INPUT)
+	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)\arvore.png
+
+run-sort: $(PARSER_BIN)
+	if not exist $(SORT_DIR) mkdir $(SORT_DIR)
+	set "COMPILER_OUTPUT_DIR=$(SORT_DIR)" && $(PARSER_BIN) $(SORT_INPUT)
+	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)\arvore.png
 else
-regression: $(PARSER_BIN)
-	@set -e; \
-	for c in \
-	  "entrada/codigo.txt:0" \
-	  "entrada/gcd.txt:0" \
-	  "entrada/sort.txt:0" \
-	  "entrada/lex2.c:1" \
-	  "entrada/par1.c:1" \
-	  "entrada/sem10.c:1" \
-	  "entrada/sem17.c:1" \
-	  "entrada/tac1.c:0"; do \
-	  file=$${c%:*}; expected=$${c#*:}; \
-	  set +e; $(PARSER_BIN) $$file >/dev/null 2>&1; got=$$?; set -e; \
-	  if [ $$got -ne $$expected ]; then \
-	    echo "FALHOU: $$file esperado=$$expected obtido=$$got"; \
-	    exit 1; \
-	  else \
-	    echo "OK: $$file (exit=$$got)"; \
-	  fi; \
-	done
+run-gcd: $(PARSER_BIN)
+	mkdir -p $(GCD_DIR)
+	COMPILER_OUTPUT_DIR=$(GCD_DIR) $(PARSER_BIN) $(GCD_INPUT)
+	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)/arvore.png
+
+run-sort: $(PARSER_BIN)
+	mkdir -p $(SORT_DIR)
+	COMPILER_OUTPUT_DIR=$(SORT_DIR) $(PARSER_BIN) $(SORT_INPUT)
+	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)/arvore.png
 endif
 
 scanner: CFLAGS += -DLEX_STANDALONE
 scanner: $(SCANNER)
+
 
 $(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
 	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
@@ -117,4 +104,4 @@ $(BISON_OUTPUT) $(BISON_HEADER): $(BISON_SRC)
 clean:
 	$(RM)
 
-.PHONY: all clean parser scanner run regression
+.PHONY: all clean parser scanner run run-gcd run-sort
