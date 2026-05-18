@@ -1,91 +1,179 @@
 #include "assembly.h"
 
-void gerarAssembly() {
+Instrucao* lista_instrucoes = NULL;
+Instrucao* ultima_instrucao = NULL;
+
+char* operacaoInstrucao(OperacaoInstrucao operacao) {
+    switch (operacao) {
+        case OP_ADD:    return "ADD";
+        case OP_ADDS:   return "ADDS";
+        case OP_SUB:    return "SUB";
+        case OP_SUBS:   return "SUBS";
+        case OP_RSB:    return "RSB";
+        case OP_MUL:    return "MUL";
+        case OP_UDIV:   return "UDIV";
+        case OP_NOT:    return "NOT";
+        case OP_AND:    return "AND";
+        case OP_ORR:    return "ORR";
+        case OP_EOR:    return "EOR";
+        case OP_MOV:    return "MOV";
+        case OP_CMP:    return "CMP";
+        case OP_B:      return "B";
+        case OP_BX:     return "BX";
+        case OP_BL:     return "BL";
+        case OP_LDR:    return "LDR";
+        case OP_STR:    return "STR";
+        case OP_NOP:    return "NOP";
+        case OP_HLT:    return "HLT";
+        case OP_IN:     return "IN";
+        case OP_OUT:    return "OUT";
+        default:        return NULL;
+    }
+}
+
+void imprimirInstrucoes(FILE *arquivo) {
+
+    emitirInstrucao(OP_HLT, NULL, NULL, NULL);
+
+    // imprimir diferentemente dependendo da instrucao
+}
+
+void liberarInstrucoes() {
+
+    Instrucao* instrucao = lista_instrucoes;
+
+    while (instrucao != NULL) {
+        Instrucao* instrAux = instrucao;
+        instrucao=instrucao->prox;
+
+        if (instrAux->argumento1 != NULL) {
+            free(instrAux->argumento1);
+        }
+
+        if (instrAux->argumento2 != NULL) {
+            free(instrAux->argumento2);
+        }
+
+        if (instrAux->argumento3 != NULL) {
+            free(instrAux->argumento3);
+        }
+
+        free(instrAux);
+    }
+}
+
+void emitirInstrucao(OperacaoInstrucao op, const char *a1, const char *a2, const char *a3) {
+
+    Instrucao* novaInstrucao = (Instrucao*) malloc(sizeof(Instrucao));
+
+    novaInstrucao->operacao   = op;
+    novaInstrucao->argumento1 = ((a1 != NULL) ? strdup(a1) : NULL);
+    novaInstrucao->argumento2 = ((a2 != NULL) ? strdup(a2) : NULL);
+    novaInstrucao->argumento3 = ((a3 != NULL) ? strdup(a3) : NULL);
+    novaInstrucao->prox = NULL;
+
+    if (ultima_instrucao == NULL) {
+        lista_instrucoes = novaInstrucao;
+        ultima_instrucao = novaInstrucao;
+    } else {
+        ultima_instrucao->prox = novaInstrucao;
+        ultima_instrucao = novaInstrucao;
+    }
+}
+
+void quadruplasParaAssembly() {
+
     for (Quadrupla* quad=lista_quadruplas; quad!=NULL; quad=quad->prox) {
         switch (quad->operacao) {
-            case ADD:
+            case GCI_ADD:
+
                 continue;
 
-            case SUB:
+            case GCI_SUB:
                 continue;
 
-            case MUL:
+            case GCI_MUL:
                 continue;
 
-            case DIV:
+            case GCI_DIV:
                 continue;
 
-            case ASSIGN:
+            case GCI_ASSIGN:
                 continue;
 
-            case LT:     
+            case GCI_LT:     
                 continue;
 
-            case LE:     
+            case GCI_LE:     
                 continue;
 
-            case GT:     
+            case GCI_GT:     
                 continue;
 
-            case GE:     
+            case GCI_GE:     
                 continue;
 
-            case EQ:     
+            case GCI_EQ:     
                 continue;
 
-            case NEQ:
+            case GCI_NEQ:
                 continue;
 
-            case FUNCTION:
+            case GCI_FUNCTION:
                 continue;
 
-            case CALL:
+            case GCI_CALL:
                 continue;
 
-            case ALLOC:
+            case GCI_ALLOC:
                 continue;
 
-            case PARAM:
+            case GCI_PARAM:
                 continue;
 
-            case ARG:
+            case GCI_ARG:
                 continue;
 
-            case RETURN:
+            case GCI_RETURN:
                 continue;
 
-            case END:
+            case GCI_END:
                 continue;
 
-            case IFF:
+            case GCI_IFF:
                 continue;
 
-            case GOTO:
+            case GCI_GOTO:
                 continue;
 
-            case LABEL:
+            case GCI_LABEL:
                 continue;
 
-            case LOAD:
+            case GCI_LOAD:
                 continue;
 
-            case STORE:
+            case GCI_STORE:
                 continue;
 
-            case HALT:
+            case GCI_HALT:
                 continue;
 
-            case PUSH:
+            case GCI_PUSH:
                 continue;
 
-            case POP:
+            case GCI_POP:
                 continue;
 
-            case MOVE:
+            case GCI_MOVE:
                 continue;
 
             default:
                 continue;
         }
     }
+}
+
+void gerarAssembly() {
+    quadruplasParaAssembly();
+    // liberarInstrucoes();
 }
