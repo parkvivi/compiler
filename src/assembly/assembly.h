@@ -49,6 +49,7 @@ typedef enum {
 typedef struct Instrucao {
     OperacaoInstrucao operacao;
     SufixoCondicional sufixo;
+    char* label;
     char* argumento1;
     char* argumento2;
     char* argumento3;
@@ -62,7 +63,7 @@ char* operacaoInstrucao(OperacaoInstrucao operacao);
 char* sufixoInstrucao(SufixoCondicional sufixo);
 void imprimirInstrucoes(FILE *arquivo);
 void liberarInstrucoes();
-void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char *a1, const char *a2, const char *a3);
+void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char* l, const char *a1, const char *a2, const char *a3);
 void quadruplasParaAssembly();
 void gerarAssembly();
 
