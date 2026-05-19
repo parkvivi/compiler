@@ -663,5 +663,4 @@ void gerarCodigoIntermediario() {
     gerarQuadruplas(raizAST, NULL, true, 0, false);
 
     imprimirQuadruplas(saida);
-    liberarQuadruplas();
 }

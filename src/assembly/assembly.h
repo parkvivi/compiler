@@ -1,3 +1,6 @@
+#ifndef ASSEMBLY_H
+#define ASSEMBLY_H
+
 #include "gci.h"
 
 typedef enum {
@@ -51,3 +54,16 @@ typedef struct Instrucao {
     char* argumento3;
     struct Instrucao* prox;
 } Instrucao;
+
+extern Instrucao* lista_instrucoes;
+extern Instrucao* ultima_instrucao;
+
+char* operacaoInstrucao(OperacaoInstrucao operacao);
+char* sufixoInstrucao(SufixoCondicional sufixo);
+void imprimirInstrucoes(FILE *arquivo);
+void liberarInstrucoes();
+void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char *a1, const char *a2, const char *a3);
+void quadruplasParaAssembly();
+void gerarAssembly();
+
+#endif
