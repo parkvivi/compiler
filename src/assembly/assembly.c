@@ -31,11 +31,32 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
     }
 }
 
+char* sufixoInstrucao(SufixoCondicional sufixo) {
+    switch (sufixo) {
+        case SUFIXO_EQ: return "EQ";
+        case SUFIXO_NE: return "NE";
+        case SUFIXO_CS: return "CS";
+        case SUFIXO_CC: return "CC";
+        case SUFIXO_MI: return "MI";
+        case SUFIXO_PL: return "PL";
+        case SUFIXO_VS: return "VS";
+        case SUFIXO_VC: return "VC";
+        case SUFIXO_HI: return "HI";
+        case SUFIXO_LS: return "LS";
+        case SUFIXO_GE: return "GE";
+        case SUFIXO_LT: return "LT";
+        case SUFIXO_GT: return "GT";
+        case SUFIXO_LE: return "LE";
+        default:        return NULL;
+    }
+}
+
 void imprimirInstrucoes(FILE *arquivo) {
 
     emitirInstrucao(OP_HLT, NULL, NULL, NULL);
 
     // imprimir diferentemente dependendo da instrucao
+    // usar operacaoInstrucao e sufixoInstrucao
 }
 
 void liberarInstrucoes() {
@@ -86,13 +107,15 @@ void quadruplasParaAssembly() {
     for (Quadrupla* quad=lista_quadruplas; quad!=NULL; quad=quad->prox) {
         switch (quad->operacao) {
             case GCI_ADD:
-
+                emitirInstrucao(OP_ADD, quad->argumento3, quad->argumento1, quad->argumento2);
                 continue;
 
             case GCI_SUB:
+                emitirInstrucao(OP_SUB, quad->argumento3, quad->argumento1, quad->argumento2);
                 continue;
 
             case GCI_MUL:
+                emitirInstrucao(OP_SUB, quad->argumento3, quad->argumento1, quad->argumento2);
                 continue;
 
             case GCI_DIV:

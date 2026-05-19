@@ -25,8 +25,27 @@ typedef enum {
     OP_OUT
 } OperacaoInstrucao;
 
+typedef enum {
+    SUFIXO_EQ,
+    SUFIXO_NE,
+    SUFIXO_CS,
+    SUFIXO_CC,
+    SUFIXO_MI,
+    SUFIXO_PL,
+    SUFIXO_VS,
+    SUFIXO_VC,
+    SUFIXO_HI,
+    SUFIXO_LS,
+    SUFIXO_GE,
+    SUFIXO_LT,
+    SUFIXO_GT,
+    SUFIXO_LE,
+    SUFIXO_AL
+} SufixoCondicional;
+
 typedef struct Instrucao {
     OperacaoInstrucao operacao;
+    SufixoCondicional sufixo;
     char* argumento1;
     char* argumento2;
     char* argumento3;
