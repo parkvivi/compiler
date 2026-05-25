@@ -154,6 +154,7 @@ Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbo
     s->ehVetor = ehVetor;
     s->tamanhoVetor = tamanhoVetor;
     s->parametros = NULL;
+    s->quantidadeParametros = -1;
     s->temporario = NULL;
     s->prox = NULL;
 

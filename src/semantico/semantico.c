@@ -238,11 +238,13 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
             Simbolo* s = no->simbolo;
             Parametro* listaParametros = NULL;
             Parametro* ultimoParametro = NULL;
+            int quantidadeParametros = 0;
             for (AST* param=no->filhos[1]; param!=NULL; param=param->irmao) {
                 Parametro* p = (Parametro*) malloc(sizeof(Parametro));
                 p->tipoParam = retornaTipo(param->filhos[0]);
                 p->paramVetor = param->filhos[1] == NULL ? false: true;
                 p->prox = NULL;
+                quantidadeParametros++;
                 if (ultimoParametro == NULL) {
                     listaParametros = p;
                     ultimoParametro = p;
@@ -252,6 +254,7 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
                 }
             }
             s->parametros = listaParametros;
+            s->quantidadeParametros = quantidadeParametros;
 
             verificarTipos(no->filhos[1], encontrouReturnInt, encontrouReturnVoid);
 

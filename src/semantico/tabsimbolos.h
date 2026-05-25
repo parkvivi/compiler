@@ -26,6 +26,7 @@ typedef struct Simbolo {
     int tamanhoVetor;
 
     Parametro* parametros;
+    int quantidadeParametros;
 
     char* temporario;
 

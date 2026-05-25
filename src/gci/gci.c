@@ -477,7 +477,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
         case TipoChamadaFuncao:
             char* nomeFuncaoChamada = no->dado.nome;
-            int contaArgumentos = 0;
             char* destinoIntermediario = ((no->simbolo->tipo == TipoInt) ? "R0" : NULL);
 
             bool ehOutput = (strcmp(nomeFuncaoChamada, "output") == 0);
@@ -494,7 +493,6 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 liberarTemporario(origemArgumento, true);
             } else {
                 for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
-                    contaArgumentos++;
                     char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false, nivelEscopo + 1, true);
                     emitirQuadrupla(GCI_ARG, origemArgumento, NULL, NULL, NULL);
 
@@ -507,7 +505,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             }
 
             char quantidadeArgumentos[20];
-            sprintf(quantidadeArgumentos, "%d", contaArgumentos);
+            sprintf(quantidadeArgumentos, "%d", no->simbolo->quantidadeParametros);
 
             emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, NULL);
 
