@@ -63,7 +63,7 @@ void preservarTemporarios() {
             sprintf(buffer, "R%d", i + 1);
 
             temporarios[i].preservado = true;
-            emitirQuadrupla(GCI_PUSH, NULL, NULL, buffer);
+            emitirQuadrupla(GCI_PUSH, NULL, NULL, buffer, NULL);
         }
     }
 }
@@ -75,7 +75,7 @@ void restaurarTemporarios() {
             char buffer[20];
             sprintf(buffer, "R%d", i + 1);
 
-            emitirQuadrupla(GCI_POP, NULL, NULL, buffer);
+            emitirQuadrupla(GCI_POP, NULL, NULL, buffer, NULL);
             temporarios[i].preservado = false;
         }
     }
@@ -252,7 +252,7 @@ char* operacaoQuadrupla(OperacaoQuadrupla tipo) {
     }
 }
 
-void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const char *a3) {
+void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const char *a3, Simbolo* simbolo) {
 
     Quadrupla* novaQuadrupla = (Quadrupla*) malloc(sizeof(Quadrupla));
 
@@ -260,6 +260,7 @@ void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const
     novaQuadrupla->argumento1 = ((a1 != NULL) ? strdup(a1) : NULL);
     novaQuadrupla->argumento2 = ((a2 != NULL) ? strdup(a2) : NULL);
     novaQuadrupla->argumento3 = ((a3 != NULL) ? strdup(a3) : NULL);
+    novaQuadrupla->simbolo = simbolo;
     novaQuadrupla->prox = NULL;
 
     if (ultima_quadrupla == NULL) {
@@ -273,7 +274,7 @@ void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const
 
 void imprimirQuadruplas(FILE *arquivo) {
 
-    emitirQuadrupla(GCI_HALT, NULL, NULL, NULL);
+    emitirQuadrupla(GCI_HALT, NULL, NULL, NULL, NULL);
 
     Quadrupla* quad=lista_quadruplas;
 
@@ -324,7 +325,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* nomeFuncaoDeclarada = no->dado.nome;
             char* tipoFuncaoDeclarada = ((no->simbolo->tipo == TipoInt) ? "int" : "void");
 
-            emitirQuadrupla(GCI_FUNCTION, nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL);
+            emitirQuadrupla(GCI_FUNCTION, nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL, NULL);
 
             char* argParametrosFuncao = gerarQuadruplas(no->filhos[1], nomeFuncaoDeclarada, true, nivelEscopo, false);
             liberarTemporario(argParametrosFuncao, true);
@@ -332,7 +333,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* argCorpoFuncao = gerarQuadruplas(no->filhos[2], nomeFuncaoDeclarada, true, nivelEscopo + 1, false);
             liberarTemporario(argCorpoFuncao, true);
 
-            emitirQuadrupla(GCI_END, nomeFuncaoDeclarada, NULL, NULL);
+            emitirQuadrupla(GCI_END, nomeFuncaoDeclarada, NULL, NULL, NULL);
             
             liberarTemporariosEscopoAtual(nivelEscopo + 1);
             break;
@@ -346,7 +347,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 sprintf(tamanhoVetor, "%d", no->filhos[1]->dado.valor);
             }
 
-            emitirQuadrupla(GCI_ALLOC, nomeFuncaoAtual, nomeVariavel, tamanhoVetor);
+            emitirQuadrupla(GCI_ALLOC, nomeFuncaoAtual, nomeVariavel, tamanhoVetor, no->simbolo);
 
             if (tamanhoVetor != NULL) {
                 free(tamanhoVetor);
@@ -357,17 +358,17 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
         case TipoDeclaracaoIteracao:
             char* labelComecoIteracao = novoLabel();
             char* labelFinalIteracao = novoLabel();
-            emitirQuadrupla(GCI_LABEL, NULL, NULL, labelComecoIteracao);
+            emitirQuadrupla(GCI_LABEL, NULL, NULL, labelComecoIteracao, NULL);
 
             char* condicaoIteracao = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo, true);
-            emitirQuadrupla(GCI_IFF, condicaoIteracao, NULL, labelFinalIteracao);
+            emitirQuadrupla(GCI_IFF, condicaoIteracao, NULL, labelFinalIteracao, NULL);
             liberarTemporario(condicaoIteracao, true);
 
             char* argEscopoIteracao = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true, nivelEscopo + 1, false);
             liberarTemporario(argEscopoIteracao, true);
 
-            emitirQuadrupla(GCI_GOTO, NULL, NULL, labelComecoIteracao);
-            emitirQuadrupla(GCI_LABEL, NULL, NULL, labelFinalIteracao);
+            emitirQuadrupla(GCI_GOTO, NULL, NULL, labelComecoIteracao, NULL);
+            emitirQuadrupla(GCI_LABEL, NULL, NULL, labelFinalIteracao, NULL);
 
             liberarTemporariosEscopoAtual(nivelEscopo + 1);
 
@@ -381,17 +382,17 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* labelElse = ((no->filhos[2] == NULL) ? NULL : novoLabel());
             char* labelFinalSelecao = novoLabel();
 
-            emitirQuadrupla(GCI_IFF, condicaoSelecao, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse));
+            emitirQuadrupla(GCI_IFF, condicaoSelecao, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse), NULL);
             liberarTemporario(condicaoSelecao, true);
 
             char* argEscopoSelecao = gerarQuadruplas(no->filhos[1], nomeFuncaoAtual, true, nivelEscopo + 1, false);
             liberarTemporario(argEscopoSelecao, true);
             
             if (labelElse != NULL) {
-                emitirQuadrupla(GCI_GOTO, NULL, NULL, labelFinalSelecao);
+                emitirQuadrupla(GCI_GOTO, NULL, NULL, labelFinalSelecao, NULL);
             }
 
-            emitirQuadrupla(GCI_LABEL, NULL, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse));
+            emitirQuadrupla(GCI_LABEL, NULL, NULL, ((labelElse == NULL) ? labelFinalSelecao : labelElse), NULL);
 
             liberarTemporariosEscopoAtual(nivelEscopo + 1);
 
@@ -399,7 +400,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* argElse = gerarQuadruplas(no->filhos[2], nomeFuncaoAtual, true, nivelEscopo + 1, false);
                 liberarTemporario(argElse, true);
                 
-                emitirQuadrupla(GCI_LABEL, NULL, NULL, labelFinalSelecao);
+                emitirQuadrupla(GCI_LABEL, NULL, NULL, labelFinalSelecao, NULL);
 
                 liberarTemporariosEscopoAtual(nivelEscopo + 1);
 
@@ -413,7 +414,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
         case TipoDeclaracaoRetorno:
             char* operandoRetornado = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo, true);
 
-            emitirQuadrupla(GCI_RETURN, operandoRetornado, NULL, NULL);
+            emitirQuadrupla(GCI_RETURN, operandoRetornado, NULL, NULL, NULL);
             liberarTemporario(operandoRetornado, true);
 
             break;
@@ -428,7 +429,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 char* nomeVariavel = no->dado.nome;
                 char* destinoConteudoVariavel = novoTemporario(no->simbolo, nivelEscopo);
 
-                emitirQuadrupla(GCI_LOAD, nomeVariavel, NULL, destinoConteudoVariavel);
+                emitirQuadrupla(GCI_LOAD, nomeVariavel, NULL, destinoConteudoVariavel, no->simbolo);
 
                 arg = destinoConteudoVariavel;
             } else {
@@ -436,7 +437,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
                 if (nomeVetor == NULL) {
                     nomeVetor = novoTemporario(no->simbolo, nivelEscopo);
-                    emitirQuadrupla(GCI_LOAD, no->dado.nome, NULL, nomeVetor);
+                    emitirQuadrupla(GCI_LOAD, no->dado.nome, NULL, nomeVetor, no->simbolo);
                 }
                 
                 char* indiceAcessado = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo, true);
@@ -445,7 +446,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 if (no->filhos[0]->tipo != TipoNum) {
                     char* novo = ((liberarTemporario(indiceAcessado, false) == 2) ? indiceAcessado : novoTemporario(NULL, nivelEscopo));
 
-                    emitirQuadrupla(GCI_ADD, nomeVetor, indiceAcessado, novo);
+                    emitirQuadrupla(GCI_ADD, nomeVetor, indiceAcessado, novo, NULL);
 
                     if (liberarTemporario(indiceAcessado, false) == 2) {
                         liberarTemporario(indiceAcessado, true);
@@ -457,7 +458,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 
                 char* destinoConteudoAcessado = novoTemporario(NULL, nivelEscopo);
 
-                emitirQuadrupla(GCI_LOAD, nomeVetor, indiceAcessado, destinoConteudoAcessado);
+                emitirQuadrupla(GCI_LOAD, nomeVetor, indiceAcessado, destinoConteudoAcessado, no->simbolo);
 
                 if (liberarTemporario(nomeVetor, false) == 2) {
                     liberarTemporario(nomeVetor, true);
@@ -488,16 +489,16 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
             if (ehOutput == true) {
                 char* origemArgumento = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, false, nivelEscopo, true);
-                emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "R0");
+                emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "R0", NULL);
 
                 liberarTemporario(origemArgumento, true);
             } else {
                 for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
                     contaArgumentos++;
                     char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false, nivelEscopo + 1, true);
-                    emitirQuadrupla(GCI_ARG, origemArgumento, NULL, NULL);
+                    emitirQuadrupla(GCI_ARG, origemArgumento, NULL, NULL, NULL);
 
-                    if (liberarTemporario(origemArgumento, false) == 2){
+                    if (liberarTemporario(origemArgumento, false) == 2) {
                         liberarTemporario(origemArgumento, true);
                     }
                 }
@@ -508,7 +509,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char quantidadeArgumentos[20];
             sprintf(quantidadeArgumentos, "%d", contaArgumentos);
 
-            emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario);
+            emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, NULL);
 
             if (mudarContexto == true) {
                 restaurarTemporarios();
@@ -517,7 +518,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* destinoValorRetornado = ((no->simbolo->tipo == TipoInt) ? novoTemporario(NULL, nivelEscopo) : NULL);
 
             if (no->simbolo->tipo == TipoInt) {
-                emitirQuadrupla(GCI_MOVE, "R0", NULL, destinoValorRetornado);
+                emitirQuadrupla(GCI_MOVE, "R0", NULL, destinoValorRetornado, NULL);
             }
 
             arg = destinoValorRetornado;
@@ -533,7 +534,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 if (filhoEsquerdo->filhos[0] != NULL) {
                     if (filhoEsquerdo->simbolo->temporario == NULL) {
                         char* novo = novoTemporario(filhoEsquerdo->simbolo, nivelEscopo);
-                        emitirQuadrupla(GCI_LOAD, nomeVariavel, NULL, novo);
+                        emitirQuadrupla(GCI_LOAD, nomeVariavel, NULL, novo, filhoEsquerdo->simbolo);
                         nomeVariavel = novo;
                     } else {
                         nomeVariavel = filhoEsquerdo->simbolo->temporario;
@@ -542,7 +543,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
                 if (no->filhos[1]->tipo == TipoNum) {
                     char* novo = novoTemporario(NULL, nivelEscopo);
-                    emitirQuadrupla(GCI_LOAD, operando, NULL, novo);
+                    emitirQuadrupla(GCI_LOAD, operando, NULL, novo, NULL);
                     operando = novo;
                 }
 
@@ -552,7 +553,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 if (filhoEsquerdo->filhos[0] != NULL && filhoEsquerdo->filhos[0]->tipo != TipoNum) {
                     char* novo = ((liberarTemporario(indiceAcessado, false) == 2) ? indiceAcessado : novoTemporario(NULL, nivelEscopo));
 
-                    emitirQuadrupla(GCI_ADD, nomeVariavel, indiceAcessado, novo);
+                    emitirQuadrupla(GCI_ADD, nomeVariavel, indiceAcessado, novo, NULL);
 
                     if (liberarTemporario(indiceAcessado, false) == 2) {
                         liberarTemporario(indiceAcessado, true);
@@ -562,7 +563,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                     indiceAcessado = NULL;
                 }
 
-                emitirQuadrupla(GCI_STORE, nomeVariavel, indiceAcessado, operando);
+                emitirQuadrupla(GCI_STORE, nomeVariavel, indiceAcessado, operando, filhoEsquerdo->simbolo);
 
                 if (filhoEsquerdo->filhos[0] == NULL && liberarTemporario(operando, false) != 1) {
                     reassociarTemporario(operando, filhoEsquerdo->simbolo, nivelEscopo);
@@ -581,7 +582,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             } else {
                 char* destinoAtribuicao = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, true, nivelEscopo, false);
                 
-                emitirQuadrupla(GCI_ASSIGN, operando, NULL, destinoAtribuicao);
+                emitirQuadrupla(GCI_ASSIGN, operando, NULL, destinoAtribuicao, NULL);
                 liberarTemporario(operando, true);
 
                 arg = destinoAtribuicao;
@@ -607,7 +608,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
             if (no->filhos[0]->tipo == TipoNum) {
                 char* novo = novoTemporario(NULL, nivelEscopo);
-                emitirQuadrupla(GCI_LOAD, operandoEsquerdo, NULL, novo);
+                emitirQuadrupla(GCI_LOAD, operandoEsquerdo, NULL, novo, NULL);
                 operandoEsquerdo = novo;
             }
 
@@ -621,7 +622,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 destinoOperacao = novoTemporario(NULL, nivelEscopo);
             }
 
-            emitirQuadrupla(operacao, operandoEsquerdo, operandoDireito, destinoOperacao);
+            emitirQuadrupla(operacao, operandoEsquerdo, operandoDireito, destinoOperacao, NULL);
             
             if (liberarDireito == true) {
                 liberarTemporario(operandoDireito, true);

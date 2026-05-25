@@ -3,6 +3,13 @@
 
 #include "gci.h"
 
+#define RR "R0"  // return register
+#define FP "R29" // frame pointer
+#define SP "R30" // stack pointer
+#define LR "R31" // link register
+
+#define COMECO_VAR_LOCAIS 2
+
 typedef enum {
     OP_ADD,
     OP_ADDS,

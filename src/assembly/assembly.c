@@ -214,6 +214,10 @@ void quadruplasParaAssembly() {
 
     SufixoCondicional sufixoAtual = SUFIXO_AL;
     char* labelAtual = NULL;
+    char* funcaoAtual = NULL;
+
+    int enderecoGlobal = 0;
+    int enderecoLocal = COMECO_VAR_LOCAIS;
 
     Quadrupla* quad=lista_quadruplas;
 
@@ -300,19 +304,20 @@ void quadruplasParaAssembly() {
                 // TODO: percorrer parametros e allocs
                 labelAtual = quad->argumento1;
                 sufixoAtual = SUFIXO_AL;
+                funcaoAtual = quad->argumento1;
 
                 if (strcmp(quad->argumento1, "main") == 0) {
                     break;
                 }
 
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, "R30", "R29", NULL);   // STR SP, FP
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, SP, FP, NULL);   // STR SP, FP
 
                 labelAtual = NULL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, "R29", NULL, "R30");   // MOV FP, SP
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, "R30", "R30", "#1");   // ADD SP, SP, #1
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, "R30", "R31", NULL);   // STR SP, LR
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, "R30", "R30", "#1");   // ADD SP, SP, #1
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP);   // MOV FP, SP
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");   // ADD SP, SP, #1
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, SP, FP, NULL);   // STR SP, LR
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");   // ADD SP, SP, #1
 
                 break;
 
@@ -320,7 +325,7 @@ void quadruplasParaAssembly() {
                 if (strcmp(quad->argumento1, "input") == 0) {
                     emitirInstrucao(OP_IN, sufixoAtual, labelAtual, quad->argumento3, NULL, NULL);
                 } else if (strcmp(quad->argumento1, "output") == 0) {
-                    emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, "R0", NULL);
+                    emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, RR, NULL);
                 } else {
                     char decremento[20];
                     sprintf(decremento, "#%d", atoi(quad->argumento2) + 1);
@@ -329,7 +334,7 @@ void quadruplasParaAssembly() {
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
 
-                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, "R31", "R31", decremento);
+                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, FP, FP, decremento);
                 }
 
                 labelAtual = NULL;
@@ -337,10 +342,18 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_ALLOC:
-                // TODO: reservar espaço na memória
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
+                // TODO: guardar informacao (endereco global / offset da var local) em algum lugar (simbolo)
 
-                //labelAtual = NULL;
-                //sufixoAtual = SUFIXO_AL;
+                // atualização dos endereços 
+                if (funcaoAtual == NULL) {
+                    enderecoGlobal += 1;    // variável global
+                } else {
+                    enderecoLocal += 1;     // variável local
+                }
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
                 break;
 
             case GCI_PARAM:
@@ -351,34 +364,39 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_ARG:
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, quad->argumento1, "R30", NULL);
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, quad->argumento1, SP, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, "R30", "R30", "#1");
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
 
                 break;
 
             case GCI_RETURN:
             case GCI_END:
                 if (quad->operacao == GCI_RETURN && quad->argumento1 != NULL) {
-                    emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, "R0", NULL, quad->argumento1);
+                    emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, RR, NULL, quad->argumento1);
                     
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
                 } else if (quad->operacao == GCI_END && strcmp(quad->argumento1, "main") == 0) {
+                    enderecoLocal = COMECO_VAR_LOCAIS;
+                    funcaoAtual = NULL;
                     break;
+                } else if (quad->operacao == GCI_END) {
+                    enderecoLocal = COMECO_VAR_LOCAIS;
+                    funcaoAtual = NULL;
                 }
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R31", "R29", "#1");   // LDR LR, [FP, #1]
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, FP, "#1");   // LDR LR, [FP, #1]
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, "R30", NULL, "R29");   // MOV SP, FP
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R29", "R30", NULL);   // LDR FP, SP
-                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, "R31", NULL);     // BX LR
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SP, NULL, FP);   // MOV SP, FP
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL);   // LDR FP, SP
+                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, FP, NULL);  // BX LR
                 break;
 
             case GCI_IFF:
@@ -422,21 +440,21 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_PUSH:
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, quad->argumento3, "R30", NULL);
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, quad->argumento3, SP, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, "R30", "R30", "#1");
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
                 break;
 
             case GCI_POP:
-                emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, "R30", "R30", "#1");
+                emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, "#1");
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R30", quad->argumento3, NULL);
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, SP, quad->argumento3, NULL);
                 break;
 
             case GCI_MOVE:
@@ -460,10 +478,10 @@ void gerarAssembly() {
 
     emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL);     // NOP
 
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, "R0", NULL, "#0");     // MOV R0, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, "R29", NULL, "#0");    // MOV R29, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, "R30", NULL, "#0");    // MOV R30, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, "R31", NULL, "#0");    // MOV R31, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, "#0");     // MOV R0, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, "#0");    // MOV R29, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, "#0");    // MOV R30, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, "#0");    // MOV R31, #0
 
     emitirInstrucao(OP_B, SUFIXO_AL, NULL, NULL, NULL, "main");     // B main
 

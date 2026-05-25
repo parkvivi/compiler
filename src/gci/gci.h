@@ -48,6 +48,7 @@ typedef struct Quadrupla {
     char *argumento1;
     char *argumento2;
     char *argumento3;
+    Simbolo* simbolo;
     struct Quadrupla* prox;
 } Quadrupla;
 
