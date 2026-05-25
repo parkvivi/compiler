@@ -325,7 +325,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* nomeFuncaoDeclarada = no->dado.nome;
             char* tipoFuncaoDeclarada = ((no->simbolo->tipo == TipoInt) ? "int" : "void");
 
-            emitirQuadrupla(GCI_FUNCTION, nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL, NULL);
+            emitirQuadrupla(GCI_FUNCTION, nomeFuncaoDeclarada, tipoFuncaoDeclarada, NULL, no->simbolo);
 
             char* argParametrosFuncao = gerarQuadruplas(no->filhos[1], nomeFuncaoDeclarada, true, nivelEscopo, false);
             liberarTemporario(argParametrosFuncao, true);
@@ -333,7 +333,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* argCorpoFuncao = gerarQuadruplas(no->filhos[2], nomeFuncaoDeclarada, true, nivelEscopo + 1, false);
             liberarTemporario(argCorpoFuncao, true);
 
-            emitirQuadrupla(GCI_END, nomeFuncaoDeclarada, NULL, NULL, NULL);
+            emitirQuadrupla(GCI_END, nomeFuncaoDeclarada, NULL, NULL, no->simbolo);
             
             liberarTemporariosEscopoAtual(nivelEscopo + 1);
             break;
@@ -507,7 +507,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char quantidadeArgumentos[20];
             sprintf(quantidadeArgumentos, "%d", no->simbolo->quantidadeParametros);
 
-            emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, NULL);
+            emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, no->simbolo);
 
             if (mudarContexto == true) {
                 restaurarTemporarios();
