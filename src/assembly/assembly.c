@@ -218,6 +218,7 @@ void quadruplasParaAssembly() {
 
     int enderecoGlobal = 0;
     int enderecoLocal = COMECO_VAR_LOCAIS;
+    int quantidadeParametros = 0;
 
     Quadrupla* quad=lista_quadruplas;
 
@@ -343,13 +344,14 @@ void quadruplasParaAssembly() {
 
             case GCI_ALLOC:
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
-                // TODO: guardar informacao (endereco global / offset da var local) em algum lugar (simbolo)
 
-                // atualização dos endereços 
-                if (funcaoAtual == NULL) {
-                    enderecoGlobal += 1;    // variável global
-                } else {
-                    enderecoLocal += 1;     // variável local
+                if (funcaoAtual == NULL) {  // variável global
+                    quad->simbolo->ehVarGlobal = true;
+                    quad->simbolo->offset = enderecoGlobal;
+                    enderecoGlobal++;
+                } else {                    // variável local
+                    quad->simbolo->offset = enderecoLocal;
+                    enderecoLocal++;
                 }
 
                 labelAtual = NULL;
@@ -386,6 +388,7 @@ void quadruplasParaAssembly() {
                     break;
                 } else if (quad->operacao == GCI_END) {
                     enderecoLocal = COMECO_VAR_LOCAIS;
+                    quantidadeParametros = 0;
                     funcaoAtual = NULL;
                 }
 
