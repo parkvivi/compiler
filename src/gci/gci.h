@@ -61,7 +61,7 @@ void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEs
 int liberarTemporario(const char* temporario, bool liberarTemporario);
 int temporarioParaNumero(const char* temporario);
 char* novoLabel();
-void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const char *a3);
+void emitirQuadrupla(OperacaoQuadrupla op, const char *a1, const char *a2, const char *a3, Simbolo* simbolo);
 void liberarQuadruplas();
 char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int nivelEscopo, bool reutilizaAtribuicao);
 void imprimirQuadruplas(FILE *out);

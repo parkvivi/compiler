@@ -1,5 +1,7 @@
 #include "assembly.h"
 
+// TODO: estrutura para realizar a equivalência de temporários e registradores disponíveis
+
 Instrucao* lista_instrucoes = NULL;
 Instrucao* ultima_instrucao = NULL;
 
@@ -218,7 +220,7 @@ void quadruplasParaAssembly() {
 
     int enderecoGlobal = 0;
     int enderecoLocal = COMECO_VAR_LOCAIS;
-    int quantidadeParametros = 0;
+    int quantidadeParametros = 0;               // TODO: usar no código!!!
 
     Quadrupla* quad=lista_quadruplas;
 
@@ -335,7 +337,7 @@ void quadruplasParaAssembly() {
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
 
-                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, FP, FP, decremento);
+                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, decremento);   // TODO: verificar qual registrador tem que ser decrementado aqui :(
                 }
 
                 labelAtual = NULL;
@@ -422,6 +424,7 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_LOAD:
+                // TODO: tratar caso especial de LDR de variável direto!!!!
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, quad->argumento3, quad->argumento1, quad->argumento2);
 
                 labelAtual = NULL;
