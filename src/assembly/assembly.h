@@ -57,9 +57,13 @@ typedef struct Instrucao {
     OperacaoInstrucao operacao;
     SufixoCondicional sufixo;
     char* label;
-    char* argumento1;
-    char* argumento2;
-    char* argumento3;
+
+    char* rd;
+    char* rn;
+    char* rm;
+    char* imediato;
+    char* endereco;
+    
     struct Instrucao* prox;
 } Instrucao;
 

@@ -92,42 +92,43 @@ void imprimirInstrucoes(FILE *arquivo) {
             case OP_ORR:
             case OP_EOR:
                 fprintf(arquivo, " %s, %s, %s\n",
-                    instrucao->argumento1,
-                    instrucao->argumento2,
-                    instrucao->argumento3
+                    instrucao->rd,
+                    instrucao->rn,
+                    instrucao->rm   // TODO: imediato
                 );
                 continue;
             
             case OP_NOT:
             case OP_MOV:
                 fprintf(arquivo, " %s, %s\n",
-                    instrucao->argumento1,
-                    instrucao->argumento3
+                    instrucao->rd,
+                    instrucao->rm   // TODO: imediato
                 );
                 continue;
             
             case OP_CMP:
                 fprintf(arquivo, " %s, %s\n",
-                    instrucao->argumento2,
-                    instrucao->argumento3
+                    instrucao->rn,
+                    instrucao->rm   // TODO: imediato
                 );
                 continue;
             
             case OP_B:
             case OP_BL:
                 fprintf(arquivo, " %s\n",
-                    instrucao->argumento3
+                    instrucao->endereco
                 );
                 continue;
 
             case OP_BX:
                 fprintf(arquivo, " %s\n",
-                    instrucao->argumento2
+                    instrucao->rn
                 );
                 continue;
 
             case OP_LDR:
             case OP_STR:
+                /*
                 if (instrucao->argumento1 == NULL) {
                     fprintf(arquivo, " %s, %s\n",
                         instrucao->argumento1,
@@ -145,17 +146,18 @@ void imprimirInstrucoes(FILE *arquivo) {
                         instrucao->argumento3
                     );
                 }
+                */
                 continue;
 
             case OP_IN:
                 fprintf(arquivo, " %s\n",
-                    instrucao->argumento1
+                    instrucao->rd
                 );
                 continue;
 
             case OP_OUT:
                 fprintf(arquivo, " %s\n",
-                    instrucao->argumento2
+                    instrucao->rn
                 );
                 continue;
 
@@ -175,32 +177,42 @@ void liberarInstrucoes() {
         Instrucao* instrAux = instrucao;
         instrucao=instrucao->prox;
 
-        if (instrAux->argumento1 != NULL) {
-            free(instrAux->argumento1);
+        if (instrAux->rd != NULL) {
+            free(instrAux->rd);
         }
 
-        if (instrAux->argumento2 != NULL) {
-            free(instrAux->argumento2);
+        if (instrAux->rn != NULL) {
+            free(instrAux->rn);
         }
 
-        if (instrAux->argumento3 != NULL) {
-            free(instrAux->argumento3);
+        if (instrAux->rm != NULL) {
+            free(instrAux->rm);
+        }
+
+        if (instrAux->imediato != NULL) {
+            free(instrAux->imediato);
+        }
+
+        if (instrAux->endereco != NULL) {
+            free(instrAux->endereco);
         }
 
         free(instrAux);
     }
 }
 
-void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char* l, const char *a1, const char *a2, const char *a3) {
+void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char* l, const char *rd, const char *rn, const char *rm, const char *im, const char *end) {
 
     Instrucao* novaInstrucao = (Instrucao*) malloc(sizeof(Instrucao));
 
-    novaInstrucao->operacao   = op;
-    novaInstrucao->sufixo     = suf;
-    novaInstrucao->label      = ((l != NULL) ? strdup(l) : NULL);
-    novaInstrucao->argumento1 = ((a1 != NULL) ? strdup(a1) : NULL);
-    novaInstrucao->argumento2 = ((a2 != NULL) ? strdup(a2) : NULL);
-    novaInstrucao->argumento3 = ((a3 != NULL) ? strdup(a3) : NULL);
+    novaInstrucao->operacao = op;
+    novaInstrucao->sufixo   = suf;
+    novaInstrucao->label    = ((l != NULL) ? strdup(l) : NULL);
+    novaInstrucao->rd       = ((rd != NULL) ? strdup(rd) : NULL);
+    novaInstrucao->rn       = ((rn != NULL) ? strdup(rn) : NULL);
+    novaInstrucao->rm       = ((rm != NULL) ? strdup(rm) : NULL);
+    novaInstrucao->imediato = ((im != NULL) ? strdup(im) : NULL);
+    novaInstrucao->endereco = ((end != NULL) ? strdup(end) : NULL);
     novaInstrucao->prox = NULL;
 
     if (ultima_instrucao == NULL) {
@@ -317,27 +329,27 @@ void quadruplasParaAssembly() {
 
                 labelAtual = NULL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP);   // MOV FP, SP
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");   // ADD SP, SP, #1
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP, NULL, NULL);   // MOV FP, SP
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);   // ADD SP, SP, #1
                 emitirInstrucao(OP_STR, sufixoAtual, labelAtual, SP, FP, NULL);   // STR SP, LR
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");   // ADD SP, SP, #1
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);   // ADD SP, SP, #1
 
                 break;
 
             case GCI_CALL:
                 if (strcmp(quad->argumento1, "input") == 0) {
-                    emitirInstrucao(OP_IN, sufixoAtual, labelAtual, quad->argumento3, NULL, NULL);
+                    emitirInstrucao(OP_IN, sufixoAtual, labelAtual, quad->argumento3, NULL, NULL, NULL, NULL);
                 } else if (strcmp(quad->argumento1, "output") == 0) {
-                    emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, RR, NULL);
+                    emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);
                 } else {
                     char decremento[20];
                     sprintf(decremento, "#%d", atoi(quad->argumento2) + 1);
-                    emitirInstrucao(OP_BL, sufixoAtual, labelAtual, NULL, NULL, quad->argumento1);
+                    emitirInstrucao(OP_BL, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento1);
 
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
 
-                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, decremento);   // TODO: verificar qual registrador tem que ser decrementado aqui :(
+                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, decremento, NULL);   // TODO: verificar qual registrador tem que ser decrementado aqui :(
                 }
 
                 labelAtual = NULL;
@@ -345,7 +357,7 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_ALLOC:
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);
 
                 if (funcaoAtual == NULL) {  // variável global
                     quad->simbolo->ehVarGlobal = true;
@@ -373,7 +385,7 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);
 
                 break;
 
@@ -394,25 +406,25 @@ void quadruplasParaAssembly() {
                     funcaoAtual = NULL;
                 }
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, FP, "#1");   // LDR LR, [FP, #1]
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, FP, NULL, "#1", NULL);   // LDR LR, [FP, #1]
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SP, NULL, FP);   // MOV SP, FP
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL);   // LDR FP, SP
-                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, FP, NULL);  // BX LR
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SP, NULL, FP, NULL, NULL);   // MOV SP, FP
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL, NULL, NULL);   // LDR FP, SP
+                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, FP, NULL, NULL, NULL);  // BX LR
                 break;
 
             case GCI_IFF:
-                emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, quad->argumento3);
+                emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento3);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
 
             case GCI_GOTO:
-                emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, quad->argumento3);
+                emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento3);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -439,7 +451,7 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_HALT:
-                emitirInstrucao(OP_HLT, sufixoAtual, labelAtual, NULL, NULL, NULL);
+                emitirInstrucao(OP_HLT, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -451,11 +463,11 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, "#1");
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);
                 break;
 
             case GCI_POP:
-                emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, "#1");
+                emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, "#1", NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -482,14 +494,14 @@ void quadruplasParaAssembly() {
 
 void gerarAssembly() {
 
-    emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL);     // NOP
+    emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, NULL);     // NOP
 
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, "#0");     // MOV R0, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, "#0");    // MOV R29, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, "#0");    // MOV R30, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, "#0");    // MOV R31, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, NULL, "#0", NULL);       // MOV R0, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, "#0", NULL);       // MOV R29, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, NULL, "#0", NULL);       // MOV R30, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, "#0", NULL);       // MOV R31, #0
 
-    emitirInstrucao(OP_B, SUFIXO_AL, NULL, NULL, NULL, "main");     // B main
+    emitirInstrucao(OP_B, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, "main");     // B main
 
     quadruplasParaAssembly();
 
