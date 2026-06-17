@@ -74,7 +74,7 @@ char* operacaoInstrucao(OperacaoInstrucao operacao);
 char* sufixoInstrucao(SufixoCondicional sufixo);
 void imprimirInstrucoes(FILE *arquivo);
 void liberarInstrucoes();
-void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char* l, const char *a1, const char *a2, const char *a3);
+void emitirInstrucao(OperacaoInstrucao op, SufixoCondicional suf, const char* l, const char *rd, const char *rn, const char *rm, const char *im, const char *end);
 void quadruplasParaAssembly();
 void gerarAssembly();
 

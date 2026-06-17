@@ -91,26 +91,48 @@ void imprimirInstrucoes(FILE *arquivo) {
             case OP_AND:
             case OP_ORR:
             case OP_EOR:
-                fprintf(arquivo, " %s, %s, %s\n",
-                    instrucao->rd,
-                    instrucao->rn,
-                    instrucao->rm   // TODO: imediato
-                );
+                if (instrucao->rm != NULL) {
+                    fprintf(arquivo, " %s, %s, %s\n",
+                        instrucao->rd,
+                        instrucao->rn,
+                        instrucao->rm
+                    );
+                } else {
+                    fprintf(arquivo, " %s, %s, #%s\n",
+                        instrucao->rd,
+                        instrucao->rn,
+                        instrucao->imediato
+                    );
+                }
                 continue;
             
             case OP_NOT:
             case OP_MOV:
-                fprintf(arquivo, " %s, %s\n",
-                    instrucao->rd,
-                    instrucao->rm   // TODO: imediato
-                );
+                if (instrucao->rm != NULL) {
+                    fprintf(arquivo, " %s, %s\n",
+                        instrucao->rd,
+                        instrucao->rm
+                    );
+                } else {
+                    fprintf(arquivo, " %s, #%s\n",
+                        instrucao->rd,
+                        instrucao->imediato
+                    );
+                }
                 continue;
             
             case OP_CMP:
-                fprintf(arquivo, " %s, %s\n",
-                    instrucao->rn,
-                    instrucao->rm   // TODO: imediato
-                );
+                if (instrucao->rm != NULL) {
+                    fprintf(arquivo, " %s, %s\n",
+                        instrucao->rn,
+                        instrucao->rm
+                    );
+                } else {
+                    fprintf(arquivo, " %s, %s\n",
+                        instrucao->rn,
+                        instrucao->imediato
+                    );
+                }
                 continue;
             
             case OP_B:
@@ -127,26 +149,55 @@ void imprimirInstrucoes(FILE *arquivo) {
                 continue;
 
             case OP_LDR:
-            case OP_STR:
-                /*
-                if (instrucao->argumento1 == NULL) {
-                    fprintf(arquivo, " %s, %s\n",
-                        instrucao->argumento1,
-                        instrucao->argumento3
+                if (instrucao->rn != NULL && instrucao->imediato != NULL) {
+                    // LDR deslocamento
+                    fprintf(arquivo, " %s, [%s, #%s]\n",
+                        instrucao->rd,
+                        instrucao->rn,
+                        instrucao->imediato
                     );
-                } else if (instrucao->argumento3 == NULL) {
+                } else if (instrucao->rn != NULL) {
+                    // LDR indireto
                     fprintf(arquivo, " %s, %s\n",
-                        instrucao->argumento1,
-                        instrucao->argumento2
+                        instrucao->rd,
+                        instrucao->rn
+                    );
+                } else if (instrucao->imediato != NULL) {
+                    // LDR imediato
+                    fprintf(arquivo, " %s, #%s\n",
+                        instrucao->rd,
+                        instrucao->imediato
                     );
                 } else {
-                    fprintf(arquivo, " %s, [%s, %s]\n",
-                        instrucao->argumento1,
-                        instrucao->argumento2,
-                        instrucao->argumento3
+                    // LDR direto
+                    fprintf(arquivo, " %s, =%s\n",
+                        instrucao->rd,
+                        instrucao->endereco
                     );
                 }
-                */
+                continue;
+
+            case OP_STR:
+                if (instrucao->rn != NULL && instrucao->imediato != NULL) {
+                    // STR deslocamento
+                    fprintf(arquivo, " %s, [%s, #%s]\n",
+                        instrucao->rm,
+                        instrucao->rn,
+                        instrucao->imediato
+                    );
+                } else if (instrucao->rn != NULL) {
+                    // LDR indireto
+                    fprintf(arquivo, " %s, %s\n",
+                        instrucao->rm,
+                        instrucao->rn
+                    );
+                } else if (instrucao->endereco != NULL) {
+                    // STR direto
+                    fprintf(arquivo, " %s, =%s\n",
+                        instrucao->rm,
+                        instrucao->endereco
+                    );
+                } 
                 continue;
 
             case OP_IN:
@@ -237,83 +288,88 @@ void quadruplasParaAssembly() {
     Quadrupla* quad=lista_quadruplas;
 
     while (quad != NULL) {
+        char* rd = NULL, rn = NULL, rm = NULL, imediato = NULL, endereco = NULL;
+
         switch (quad->operacao) {
             case GCI_ADD:
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, quad->argumento3, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_AL;
-                break;
-
             case GCI_SUB:
-                emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, quad->argumento3, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_AL;
-                break;
-
             case GCI_MUL:
-                emitirInstrucao(OP_MUL, sufixoAtual, labelAtual, quad->argumento3, quad->argumento1, quad->argumento2);
+            case GCI_DIV: {
+                OperacaoInstrucao operacao;
+
+                if (quad->operacao == GCI_ADD) {
+                    operacao = OP_ADD;
+                } else if (quad->operacao == GCI_SUB) {
+                    operacao = OP_SUB;
+                } else if (quad->operacao == GCI_MUL) {
+                    operacao = OP_MUL;
+                } else {
+                    operacao = OP_UDIV;
+                }
+                
+                bool bitI = ehTemporario(quad->argumento2);
+
+                rd = quad->argumento3;
+                rn = quad->argumento1;
+                rm = (bitI ? quad->argumento2 : NULL);
+                imediato = (bitI ? NULL : quad->argumento2);
+
+                emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
-            case GCI_DIV:
-                emitirInstrucao(OP_UDIV, sufixoAtual, labelAtual, quad->argumento3, quad->argumento1, quad->argumento2);
+            case GCI_ASSIGN: {
+                bool bitI = ehTemporario(quad->argumento1);
+
+                rd = quad->argumento3;
+                rm = (bitI ? quad->argumento2 : NULL);
+                imediato = (bitI ? NULL : quad->argumento2);
+
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
-            case GCI_ASSIGN:
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, quad->argumento3, NULL, quad->argumento1);
+            case GCI_LT:
+            case GCI_LE:
+            case GCI_GT:
+            case GCI_GE:
+            case GCI_EQ:
+            case GCI_NEQ: {
+                bool bitI = ehTemporario(quad->argumento2);
+                
+                rn = quad->argumento1;
+                rm = (bitI ? quad->argumento2 : NULL);
+                imediato = (bitI ? NULL : quad->argumento2);
 
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_AL;
-                break;
-
-            case GCI_LT:     
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_GE;
-                break;
-
-            case GCI_LE:     
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
+                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
 
                 labelAtual = NULL;
-                sufixoAtual = SUFIXO_GT;
+
+                SufixoCondicional sufixo;
+                
+                if (quad->operacao == GCI_LT) {
+                    sufixo = SUFIXO_GE;
+                } else if (quad->operacao == GCI_LE) {
+                    sufixo = SUFIXO_GT;
+                } else if (quad->operacao == GCI_GT) {
+                    sufixo = SUFIXO_LE;
+                }  else if (quad->operacao == GCI_GE) {
+                    sufixo = SUFIXO_LT;
+                } else if (quad->operacao == GCI_EQ) {
+                    sufixo = SUFIXO_NE;
+                } else {
+                    sufixo = SUFIXO_EQ;
+                }
+
+                sufixoAtual = sufixo;
                 break;
-
-            case GCI_GT:     
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_LE;
-                break;
-
-            case GCI_GE:     
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_LT;
-                break;
-
-            case GCI_EQ:     
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_NE;
-                break;
-
-            case GCI_NEQ:
-                emitirInstrucao(OP_CMP, sufixoAtual, labelAtual, NULL, quad->argumento1, quad->argumento2);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_EQ;
-                break;
+            }
 
             case GCI_FUNCTION:
                 // TODO: percorrer parametros e allocs

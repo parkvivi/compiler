@@ -20,6 +20,16 @@ Temporario temporarios[MAX_TEMPORARIOS];
 
 int label_cont = 0;
 
+bool ehTemporario(const char* temporario) {
+
+    if (temporario != NULL && temporario[0] == 't' && (temporario[1] >= '0' && temporario[1] <= '9')) {
+        // temporários são da forma t[0-9]...
+        return true;
+    }
+
+    return false;
+}
+
 void inicializaTemporarios() {
 
     for (int i=0; i<MAX_TEMPORARIOS; i++) {
@@ -35,7 +45,7 @@ char* novoTemporario(Simbolo* variavel, int nivelEscopo) {
     for (int i=0; i<MAX_TEMPORARIOS; i++) {
         if (temporarios[i].estado == Livre && temporarios[i].preservado == false) {
             char* novoTemporario = malloc(sizeof(char)*20);
-            sprintf(novoTemporario, "R%d", i + 1);
+            sprintf(novoTemporario, "t%d", i + 1);
 
             temporarios[i].nivelEscopo = nivelEscopo;
             temporarios[i].variavel = variavel;
@@ -60,7 +70,7 @@ void preservarTemporarios() {
     for (int i=0; i<MAX_TEMPORARIOS; i++) {
         if (temporarios[i].estado != Livre) {
             char buffer[20];
-            sprintf(buffer, "R%d", i + 1);
+            sprintf(buffer, "t%d", i + 1);
 
             temporarios[i].preservado = true;
             emitirQuadrupla(GCI_PUSH, NULL, NULL, buffer, NULL);
@@ -73,7 +83,7 @@ void restaurarTemporarios() {
     for (int i=MAX_TEMPORARIOS-1; i>=0; i--) {
         if (temporarios[i].preservado == true) {
             char buffer[20];
-            sprintf(buffer, "R%d", i + 1);
+            sprintf(buffer, "t%d", i + 1);
 
             emitirQuadrupla(GCI_POP, NULL, NULL, buffer, NULL);
             temporarios[i].preservado = false;
@@ -83,7 +93,9 @@ void restaurarTemporarios() {
 
 void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEscopo) {
 
-    if (temporario == NULL || temporario[0] != 'R' || variavel == NULL) return;
+    if (temporario == NULL || variavel == NULL) return;
+
+    if (ehTemporario(temporario) == false || strcmp(temporario, "t0") == 0) return;
 
     int indiceTemporario = temporarioParaNumero(temporario);
     if (indiceTemporario < 0 || indiceTemporario >= MAX_TEMPORARIOS) {
@@ -111,12 +123,13 @@ void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEs
 
 int liberarTemporario(const char* temporario, bool liberarTemporario) {
 
-    if (temporario == NULL || temporario[0] != 'R') return -1;
+    if (temporario == NULL) return 0;
+
+    if (ehTemporario(temporario) == false || strcmp(temporario, "t0") == 0) return 0;
 
     int indiceTemporario = temporarioParaNumero(temporario);
     if (indiceTemporario < 0 || indiceTemporario >= MAX_TEMPORARIOS) {
-        fprintf(stderr, "GCI :: Erro ao liberar temporarios\n");
-        return -1;
+        return 0;
     }
 
     EstadoTemporario estado = temporarios[indiceTemporario].estado;
@@ -169,8 +182,6 @@ void liberarTemporariosEscopoAtual(int nivelEscopo) {
 }
 
 int temporarioParaNumero(const char* temporario) {
-
-    if (temporario == NULL || temporario[0] != 'R') return -1;
 
     int tamanhoTemporario = strlen(temporario);
     int dezena = 0, unidade = 0;
@@ -470,14 +481,14 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             
         case TipoNum: 
             char numero[20];
-            sprintf(numero, "#%d", no->dado.valor);
+            sprintf(numero, "%d", no->dado.valor);
             
             arg = strdup(numero);
             break;
 
         case TipoChamadaFuncao:
             char* nomeFuncaoChamada = no->dado.nome;
-            char* destinoIntermediario = ((no->simbolo->tipo == TipoInt) ? "R0" : NULL);
+            char* destinoIntermediario = ((no->simbolo->tipo == TipoInt) ? "t0" : NULL);
 
             bool ehOutput = (strcmp(nomeFuncaoChamada, "output") == 0);
             bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false);
@@ -488,7 +499,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
 
             if (ehOutput == true) {
                 char* origemArgumento = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, false, nivelEscopo, true);
-                emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "R0", NULL);
+                emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "t0", NULL);
 
                 liberarTemporario(origemArgumento, true);
             } else {
@@ -516,7 +527,7 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* destinoValorRetornado = ((no->simbolo->tipo == TipoInt) ? novoTemporario(NULL, nivelEscopo) : NULL);
 
             if (no->simbolo->tipo == TipoInt) {
-                emitirQuadrupla(GCI_MOVE, "R0", NULL, destinoValorRetornado, NULL);
+                emitirQuadrupla(GCI_MOVE, "t0", NULL, destinoValorRetornado, NULL);
             }
 
             arg = destinoValorRetornado;
