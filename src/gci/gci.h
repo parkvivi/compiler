@@ -3,6 +3,8 @@
 
 #include "ast.h"
 
+#define MAX_TEMPORARIOS 28
+
 typedef enum { Livre, ValorTemporario, AssociadoVariavel } EstadoTemporario;
 
 typedef enum OperacaoQuadrupla {
@@ -55,6 +57,7 @@ typedef struct Quadrupla {
 extern int label_cont;
 extern Quadrupla* lista_quadruplas;
 
+bool ehTemporario(const char* temporario);
 void inicializaTemporarios();
 char* novoTemporario(Simbolo* variavel, int nivelEscopo);
 void reassociarTemporario(const char* temporario, Simbolo* variavel, int nivelEscopo);

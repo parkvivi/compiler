@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_TEMPORARIOS 28
-
 static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
 
     const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
