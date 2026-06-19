@@ -1,5 +1,5 @@
 void main(void) {
     int x;
-    
-    x = 9 < 10;
+    x = input();
+    output(x);
 }

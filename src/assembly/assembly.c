@@ -494,8 +494,10 @@ void quadruplasParaAssembly() {
                 if (strcmp(quad->argumento1, "input") == 0) {
                     rd = temporariosParaRegistradores(quad->argumento3);
                     emitirInstrucao(OP_IN, sufixoAtual, labelAtual, rd, NULL, NULL, NULL, NULL);
+                    emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, NULL);
                 } else if (strcmp(quad->argumento1, "output") == 0) {
                     emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);
+                    emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, NULL);
                 } else {
                     char decremento[20];
                     sprintf(decremento, "%d", atoi(quad->argumento2));
