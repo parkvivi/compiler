@@ -179,6 +179,26 @@ void liberarTemporariosEscopoAtual(int nivelEscopo) {
     }
 }
 
+void invalidarTemporariosAssociadosVariaveis() {
+
+    for (int i=0; i<MAX_TEMPORARIOS; i++) {
+        if (temporarios[i].estado == Livre || temporarios[i].preservado == true || temporarios[i].variavel == NULL) {
+            continue;
+        }
+
+        temporarios[i].estado = Livre;
+        temporarios[i].nivelEscopo = -1;
+
+        Simbolo* s = temporarios[i].variavel;
+        if (s != NULL && s->temporario != NULL) {
+            free(s->temporario);
+            s->temporario = NULL;
+        }
+
+        temporarios[i].variavel = NULL;
+    }
+}
+
 int temporarioParaNumero(const char* temporario) {
 
     int tamanhoTemporario = strlen(temporario);
@@ -365,6 +385,8 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             break;
 
         case TipoDeclaracaoIteracao:
+            invalidarTemporariosAssociadosVariaveis();
+
             char* labelComecoIteracao = novoLabel();
             char* labelFinalIteracao = novoLabel();
             emitirQuadrupla(GCI_LABEL, NULL, NULL, labelComecoIteracao, NULL);
