@@ -67,8 +67,14 @@ typedef struct Instrucao {
     struct Instrucao* prox;
 } Instrucao;
 
+typedef struct ListaSimbolos {
+    Simbolo* simbolo;
+    struct ListaSimbolos* prox;
+} ListaSimbolos;
+
 extern Instrucao* lista_instrucoes;
 extern Instrucao* ultima_instrucao;
+extern ListaSimbolos* lista_simbolos;
 
 char* operacaoInstrucao(OperacaoInstrucao operacao);
 char* sufixoInstrucao(SufixoCondicional sufixo);

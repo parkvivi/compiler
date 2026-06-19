@@ -638,6 +638,13 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             arg = destinoOperacao;  
             break;
         
+        case TipoParametro:
+            char* nomeParametro = no->simbolo->nome;
+            char* tipoParametro = ((no->simbolo->tipo == TipoInt) ? "int" : "void");
+
+            emitirQuadrupla(GCI_PARAM, nomeFuncaoAtual, nomeParametro, tipoParametro, no->simbolo);
+            break;
+        
         default:
             for (int i=0; i<MAXFILHOS; i++) {
                 AST* filho = no->filhos[i];

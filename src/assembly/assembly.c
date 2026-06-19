@@ -2,6 +2,7 @@
 
 Instrucao* lista_instrucoes = NULL;
 Instrucao* ultima_instrucao = NULL;
+ListaSimbolos* lista_simbolos = NULL;
 
 int mapeamentoTemporarios[MAX_TEMPORARIOS];     // mapeamento de t1 a t28
 bool registradoresDisponiveis[MAX_TEMPORARIOS];  // disponibilidade de R1 a R28
@@ -14,6 +15,43 @@ static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeAr
     }
 
     snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
+}
+
+void inserirListaSimbolos(Simbolo* simbolo) {
+
+    ListaSimbolos *s, *sAnt = lista_simbolos;
+    for (s=lista_simbolos; s!=NULL && s->simbolo!=simbolo; sAnt=s, s=s->prox);
+
+    if (s == NULL) {
+        ListaSimbolos* novo = (ListaSimbolos*) malloc(sizeof(ListaSimbolos));
+        novo->simbolo = simbolo;
+        novo->prox = NULL;
+
+        if (sAnt == NULL) {
+            lista_simbolos = novo;
+        } else {
+            sAnt->prox = novo;
+        }
+    }
+}
+
+void liberarListaSimbolos() {
+
+    ListaSimbolos* l = lista_simbolos;
+
+    while (l != NULL) {
+        ListaSimbolos* lAux = l;
+        l = l->prox;
+
+        if (lAux->simbolo->ehVarGlobal == false) {
+            lAux->simbolo->offset = 0;
+            lAux->simbolo->offsetNegativo = false;
+        }
+
+        free(lAux);
+    }
+
+    lista_simbolos = NULL;
 }
 
 void inicializarMapeamento() {
@@ -83,8 +121,9 @@ char* temporariosParaRegistradores(const char* temporario) {
     int indice = temporarioParaNumero(temporario);
     if (mapeamentoTemporarios[indice] == -1) {
         // associar temporário ainda não associado a registrador livre
-        int novoReg = 0;
-        for (novoReg = 0; registradoresDisponiveis[novoReg]==false && novoReg<MAX_TEMPORARIOS; novoReg++);
+        int novoReg;
+        for (novoReg=0; registradoresDisponiveis[novoReg]==false && novoReg<MAX_TEMPORARIOS; novoReg++);
+
         registradoresDisponiveis[novoReg] = false;
         mapeamentoTemporarios[indice] = novoReg;
     }
@@ -92,6 +131,27 @@ char* temporariosParaRegistradores(const char* temporario) {
     char* buffer = malloc(sizeof(char)*20);
     sprintf(buffer, "R%d", mapeamentoTemporarios[indice] + 1);
     return buffer;
+}
+
+char* reservarRegistrador() {
+    
+    int novoReg;
+    for (novoReg=0; registradoresDisponiveis[novoReg]==false && novoReg<MAX_TEMPORARIOS; novoReg++);
+
+    registradoresDisponiveis[novoReg] = false;
+    
+    char* buffer = malloc(sizeof(char)*20);
+    sprintf(buffer, "R%d", novoReg + 1);
+
+    return buffer;
+}
+
+void liberarRegistrador(char* registrador) {
+
+    int indice = temporarioParaNumero(registrador);
+    registradoresDisponiveis[indice] = true;
+
+    free(registrador);
 }
 
 void imprimirInstrucoes(FILE *arquivo) {
@@ -316,9 +376,8 @@ void quadruplasParaAssembly() {
     char* labelAtual = NULL;
     char* funcaoAtual = NULL;
 
-    int enderecoGlobal = 0;
     int enderecoLocal = COMECO_VAR_LOCAIS;
-    int quantidadeParametros = 0;               // TODO: usar no código!!!
+    int quantidadeParametros = 0;
 
     Quadrupla* quad=lista_quadruplas;
 
@@ -407,22 +466,26 @@ void quadruplasParaAssembly() {
             }
 
             case GCI_FUNCTION:
-                // TODO: percorrer parametros e allocs
                 labelAtual = quad->argumento1;
                 sufixoAtual = SUFIXO_AL;
                 funcaoAtual = quad->argumento1;
 
                 if (strcmp(quad->argumento1, "main") == 0) {
+                    emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP, NULL, NULL); // atualiza frame pointer da main
+                    labelAtual = NULL;
+                    enderecoLocal = 0;
                     break;
                 }
 
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, FP, SP, NULL, NULL);  // STR SP, FP
+                quantidadeParametros = quad->simbolo->quantidadeParametros;
+
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, SP, FP, NULL, NULL);  // STR FP, SP      -> guarda FP antigo
 
                 labelAtual = NULL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP, NULL, NULL);  // MOV FP, SP
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, FP, NULL, SP, NULL, NULL);  // MOV FP, SP      -> atualiza FP
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);   // ADD SP, SP, #1
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, LR, SP, NULL, NULL);  // STR SP, LR
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, SP, LR, NULL, NULL);  // STR LR, SP      -> guarda LR antigo
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);   // ADD SP, SP, #1
 
                 break;
@@ -435,7 +498,7 @@ void quadruplasParaAssembly() {
                     emitirInstrucao(OP_OUT, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);
                 } else {
                     char decremento[20];
-                    sprintf(decremento, "%d", atoi(quad->argumento2) + 1);
+                    sprintf(decremento, "%d", atoi(quad->argumento2));
                     emitirInstrucao(OP_BL, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento1);
 
                     labelAtual = NULL;
@@ -449,35 +512,57 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_ALLOC:
+                if (funcaoAtual == NULL) {
+                    // ignora alocação de variáveis globais
+                    labelAtual = NULL;
+                    sufixoAtual = SUFIXO_AL;
+                    break;
+                }
+
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
 
-                if (funcaoAtual == NULL) {  // variável global
-                    quad->simbolo->ehVarGlobal = true;
-                    quad->simbolo->offset = enderecoGlobal;
-                    enderecoGlobal++;
-                } else {                    // variável local
-                    quad->simbolo->offset = enderecoLocal;
-                    enderecoLocal++;
-                }
+                inserirListaSimbolos(quad->simbolo);
+
+                quad->simbolo->offset = enderecoLocal;
+                enderecoLocal++;
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
 
             case GCI_PARAM:
-                // TODO: ???
-
-                //labelAtual = NULL;
-                //sufixoAtual = SUFIXO_AL;
-                break;
-
-            case GCI_ARG:
-                rn = temporariosParaRegistradores(quad->argumento1);
-
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, rn, SP, NULL, NULL);
+                inserirListaSimbolos(quad->simbolo);
+                
+                quad->simbolo->offset = quantidadeParametros;
+                quad->simbolo->offsetNegativo = true;
+                quantidadeParametros--;
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
+                break;
+
+            case GCI_ARG:
+                rn = SP;
+                
+                if (ehTemporario(quad->argumento1) == true) {
+                    rm = temporariosParaRegistradores(quad->argumento1);
+
+                    emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, rn, rm, NULL, NULL);
+
+                    labelAtual = NULL;
+                    sufixoAtual = SUFIXO_AL;
+                } else {
+                    char* regAux = reservarRegistrador();
+
+                    emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, quad->argumento1, NULL);
+
+                    labelAtual = NULL;
+                    sufixoAtual = SUFIXO_AL;
+
+                    emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, rn, regAux, imediato, NULL);
+                    
+                    liberarRegistrador(regAux);
+                }
 
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
 
@@ -499,21 +584,23 @@ void quadruplasParaAssembly() {
                 } else if (quad->operacao == GCI_END && strcmp(quad->argumento1, "main") == 0) {
                     enderecoLocal = COMECO_VAR_LOCAIS;
                     funcaoAtual = NULL;
+                    liberarListaSimbolos();
                     break;
                 } else if (quad->operacao == GCI_END) {
                     enderecoLocal = COMECO_VAR_LOCAIS;
                     quantidadeParametros = 0;
                     funcaoAtual = NULL;
+                    liberarListaSimbolos();
                 }
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, FP, NULL, "1", NULL);   // LDR LR, [FP, #1]
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, LR, FP, NULL, "1", NULL);      // LDR LR, [FP, #1] -> atualiza endereço de retorno correto
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SP, NULL, FP, NULL, NULL);   // MOV SP, FP
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL, NULL, NULL);   // LDR FP, SP
-                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, FP, NULL, NULL, NULL);  // BX LR
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SP, NULL, FP, NULL, NULL);     // MOV SP, FP       -> torna topo da pilha = endereço do fp atual (que guarda endereço do fp antigo)
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL, NULL, NULL);     // LDR FP, SP       -> atualiza fp para fp antigo
+                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, LR, NULL, NULL, NULL);    // BX LR            -> retorna da função
                 break;
 
             case GCI_IFF:
@@ -534,39 +621,56 @@ void quadruplasParaAssembly() {
                 labelAtual = quad->argumento3;
                 sufixoAtual = SUFIXO_AL;
                 break;
-
-            case GCI_LOAD: // arg3 -> rd ; arg1 -> rn ; arg2 -> endereço/imediato
-                rd = temporariosParaRegistradores(quad->argumento3);
-                rn = temporariosParaRegistradores(quad->argumento1);
-                
-                if (quad->simbolo != NULL) {
-                    // TODO: calcular endereço e guardar em símbolo em alloc/param etc...
-                    // endereco = (ler endereço do simbolo)
-                    endereco = "[ENDERECO]"; 
-                } else {
-                    imediato = quad->argumento2;
-                }
-
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
-
-                labelAtual = NULL;
-                sufixoAtual = SUFIXO_AL;
-                break;
-
+            
             case GCI_STORE: // arg3 -> rm ; arg1 -> rn ; arg2 -> endereço/imediato
-                rm = temporariosParaRegistradores(quad->argumento3);
-                rn = temporariosParaRegistradores(quad->argumento1);
+            case GCI_LOAD:  // arg3 -> rd ; arg1 -> rn ; arg2 -> endereço/imediato
+                rd = ((quad->operacao == GCI_LOAD) ? temporariosParaRegistradores(quad->argumento3) : NULL);
+                rm = ((quad->operacao == GCI_STORE) ? temporariosParaRegistradores(quad->argumento3) : NULL);
+                OperacaoInstrucao operacao = ((quad->operacao == GCI_LOAD) ? OP_LDR : OP_STR);
+                
+                if (quad->simbolo != NULL && ehTemporario(quad->argumento1) == false) {
+                    if (quad->simbolo->ehVarGlobal == true) {
+                        // variável global é endereçada diretamente
+                        char* buffer = malloc(sizeof(char)*20);
+                        sprintf(buffer, "%d", quad->simbolo->offset);
+                        endereco = buffer;
+                    } else if (quad->simbolo->offsetNegativo == true) {
+                        // parâmetro é endereçado indiretamente
+                        char buffer[20];
+                        sprintf(buffer, "%d", quad->simbolo->offset);
 
-                if (quad->simbolo != NULL) {
-                    // TODO: calcular endereço e guardar em símbolo em alloc/param etc...
-                    // TODO: offset negativo: instrução SUB
-                    // endereco = (ler endereço do simbolo)
-                    endereco = "[ENDERECO]"; 
+                        char* regAux = reservarRegistrador();
+                        emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, regAux, FP, NULL, buffer, NULL);
+                        
+                        labelAtual = NULL;
+                        sufixoAtual = SUFIXO_AL;
+
+                        emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, regAux, rm, imediato, endereco);
+
+                        liberarRegistrador(regAux);
+                        break;
+                    } else {
+                        // variável local é endereçada por deslocamento
+                        rn = FP;
+                        
+                        char buffer[20];
+                        sprintf(buffer, "%d", quad->simbolo->offset);
+
+                        emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, buffer, endereco);
+
+                        labelAtual = NULL;
+                        sufixoAtual = SUFIXO_AL;
+                        break;
+                    }
                 } else {
-                    imediato = quad->argumento2;
+                    if (ehTemporario(quad->argumento1) == true) {
+                        rn = temporariosParaRegistradores(quad->argumento1);
+                    } else {
+                        imediato = quad->argumento1;
+                    }
                 }
 
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
+                emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -580,9 +684,10 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_PUSH:
-                rd = temporariosParaRegistradores(quad->argumento3);
+                rn = SP;
+                rm = temporariosParaRegistradores(quad->argumento3);
 
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, rd, SP, NULL, NULL);
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, rn, rm, NULL, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -635,7 +740,23 @@ void gerarAssembly() {
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, NULL, "0", NULL);       // MOV R0, #0
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, "0", NULL);       // MOV R29, #0
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, NULL, "0", NULL);       // MOV R30, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, "0", NULL);       // MOV R31, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, LR, NULL, NULL, "0", NULL);       // MOV R31, #0
+
+    bool ehGlobal = true;
+    int enderecoGlobal = 0;
+    for (Quadrupla* q=lista_quadruplas; q!=NULL; q=q->prox) {
+        if (q->operacao == GCI_FUNCTION) {
+            ehGlobal = false;
+        } else if (q->operacao == GCI_END) {
+            ehGlobal = true;
+        } else if (ehGlobal == true && q->operacao == GCI_ALLOC) {
+            emitirInstrucao(OP_ADD, SUFIXO_AL, NULL, SP, SP, NULL, "1", NULL);
+
+            q->simbolo->ehVarGlobal = true;
+            q->simbolo->offset = enderecoGlobal;
+            enderecoGlobal++;
+        }
+    }
 
     emitirInstrucao(OP_B, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, "main");    // B main
 

@@ -157,6 +157,7 @@ Simbolo* declararSimbolo(const char *nome, CategoriaSimbolo categoria, TipoSimbo
     s->quantidadeParametros = -1;
     s->temporario = NULL;
     s->ehVarGlobal = false;
+    s->offsetNegativo = false;
     s->offset = 0;
     s->prox = NULL;
 

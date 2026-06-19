@@ -31,6 +31,7 @@ typedef struct Simbolo {
     char* temporario;
 
     bool ehVarGlobal;
+    bool offsetNegativo;
     int offset;
 
     struct Simbolo* prox;
