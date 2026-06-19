@@ -16,6 +16,7 @@ int main(int argc, char **argv){
     gerarDOT(raizAST);
     gerarCodigoIntermediario();
     gerarAssembly();
+    gerarExecutavel();
 
     liberarTabSimbolos();
     liberaAST(raizAST);

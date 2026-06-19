@@ -3,6 +3,16 @@
 EnderecoLabel* lista_labels = NULL;
 EnderecoLabel* ultimo_label = NULL;
 
+static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
+
+    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
+    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
+        diretorioSaida = "build";
+    }
+
+    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
+}
+
 void adicionarLabel(const char* label, int endereco) {
     
     if (!label) return;
@@ -49,28 +59,30 @@ int enderecoLabel(const char* label) {
 char* geraCond(SufixoCondicional suf) {
 
     switch (suf) {
-        SUFIXO_EQ:  return "0000";
-        SUFIXO_NE:  return "0001";
-        SUFIXO_CS:  return "0010";
-        SUFIXO_CC:  return "0011";
-        SUFIXO_MI:  return "0100";
-        SUFIXO_PL:  return "0101";
-        SUFIXO_VS:  return "0110";
-        SUFIXO_VC:  return "0111";
-        SUFIXO_HI:  return "1000";
-        SUFIXO_LS:  return "1001";
-        SUFIXO_GE:  return "1010";
-        SUFIXO_LT:  return "1011";
-        SUFIXO_GT:  return "1100";
-        SUFIXO_LE:  return "1101";
-        SUFIXO_AL:  return "1110";
+        case SUFIXO_EQ:  return "0000";
+        case SUFIXO_NE:  return "0001";
+        case SUFIXO_CS:  return "0010";
+        case SUFIXO_CC:  return "0011";
+        case SUFIXO_MI:  return "0100";
+        case SUFIXO_PL:  return "0101";
+        case SUFIXO_VS:  return "0110";
+        case SUFIXO_VC:  return "0111";
+        case SUFIXO_HI:  return "1000";
+        case SUFIXO_LS:  return "1001";
+        case SUFIXO_GE:  return "1010";
+        case SUFIXO_LT:  return "1011";
+        case SUFIXO_GT:  return "1100";
+        case SUFIXO_LE:  return "1101";
+        case SUFIXO_AL:  return "1110";
         default:    return NULL;
     }
 }
 
 char* registradorParaBinario(const char* registrador) {
 
-    if (!registrador || registrador[0] != 'R' || registrador[1] < '0' || registrador[1] > '9') return NULL;
+    if (!registrador) return "00000";
+
+    if (registrador[0] != 'R' || registrador[1] < '0' || registrador[1] > '9') return NULL;
 
     if (strcmp(registrador, "R0") == 0) {
         return "00000";
@@ -138,7 +150,7 @@ char* registradorParaBinario(const char* registrador) {
         return "11111";
     }
     
-    return NULL;
+    return "00000";
 }
 
 char* geraOP0(OperacaoInstrucao operacao) {
@@ -213,10 +225,17 @@ char* geraOP1(OperacaoInstrucao operacao) {
     }
 }
 
-char* decimalParaBinarioNbits(unsigned int decimal, int quantidadeBits) {
+char* decimalParaBinario(char* decimalString, int quantidadeBits) {
 
     char* binario = (char*) malloc((quantidadeBits+1) * sizeof(char));
+    unsigned int decimal;
 
+    if (!decimalString) {
+        decimal = 0;
+    } else {
+        decimal = (unsigned int) atoi(decimalString);
+    }
+    
     for (int i=quantidadeBits-1; i>=0; i--) {
         binario[quantidadeBits - 1 - i] = ((decimal >> i) & 1) + '0';
     }
@@ -241,118 +260,107 @@ void assemblyParaBinario(FILE* arquivo) {
         char bitR = ((instrucao->rn != NULL) ? '1' : '0');
         char* op1 = geraOP1(instrucao->operacao);
 
+        char* rd = registradorParaBinario(instrucao->rd);
+        char* rn = registradorParaBinario(instrucao->rn);
+        char* rm = registradorParaBinario(instrucao->rm);
+
         switch (instrucao->operacao) {
-            case OP_ADD: {
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
+            case OP_ADD:
+            case OP_ADDS:
+            case OP_SUB:
+            case OP_SUBS:
+            case OP_RSB:
+            case OP_MUL:
+            case OP_UDIV:
+            case OP_NOT:
+            case OP_AND:
+            case OP_ORR:
+            case OP_EOR:
+            case OP_MOV:
+            case OP_CMP: 
+            {
+                fprintf(arquivo, "%s%c%s%s%s", op0, bitI, op1, rn, rd);
+                
+                if (instrucao->rm != NULL) {
+                    fprintf(arquivo, "%s00000", rm);
+                } else {
+                    char* imediato = decimalParaBinario(instrucao->imediato, TAM_IMEDIATO_TIPO_D);
+                    fprintf(arquivo, "%s", imediato);
+                    free(imediato);
+                }
+                
+                break;
+            }
+
+            case OP_B:
+            case OP_BL:
+            {   
+                int enderecoDecimal = enderecoLabel(instrucao->endereco);
+                char buffer[20];
+                sprintf(buffer, "%d", enderecoDecimal);
+
+                char* enderecoBinario = decimalParaBinario(buffer, TAM_IMEDIATO_TIPO_B);
+                fprintf(arquivo, "%s%s%s", op0, op1, enderecoBinario);
+                free(enderecoBinario);
 
                 break;
             }
 
-            case OP_ADDS:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_SUB:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_SUBS:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-
-            case OP_RSB:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_MUL:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_UDIV:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_NOT:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_AND:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_ORR:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_EOR:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_MOV:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_CMP:
-                fprintf(arquivo, "%s%c%s", op0, bitI, op1);
-
-                break;
-                
-            case OP_B:
-                fprintf(arquivo, "%s%s", op0, op1);
-
-                break;
-                
             case OP_BX:
-                fprintf(arquivo, "%s%s", op0, op1);
-
+            {
+                fprintf(arquivo, "%s%s%s%s", op0, op1, rn, "0000000000000000000");
                 break;
-                
-            case OP_BL:
-                fprintf(arquivo, "%s%s", op0, op1);
-
-                break;
+            }
                 
             case OP_LDR:
-                fprintf(arquivo, "%s%c%c%c", op0, bitS, bitI, bitR);
-
-                break;
-                
             case OP_STR:
-                fprintf(arquivo, "%s%c%c%c", op0, bitS, bitI, bitR);
+            {
+                fprintf(arquivo, "%s%c%c%c%s", op0, bitS, bitI, bitR, rn);
+
+                if (instrucao->operacao == OP_LDR) {
+                    fprintf(arquivo, "%s", rd);
+                } else {
+                    fprintf(arquivo, "%s", rm);
+                }
+
+                char* imediato = decimalParaBinario(instrucao->imediato, TAM_IMEDIATO_TIPO_M);
+                char* endereco = decimalParaBinario(instrucao->endereco, TAM_IMEDIATO_TIPO_M);
+
+                if (instrucao->imediato == NULL) {
+                    fprintf(arquivo, "%s", endereco);
+                } else {
+                    fprintf(arquivo, "%s", imediato);
+                }
+
+                free(imediato);
+                free(endereco);
 
                 break;
+            }
                 
             case OP_NOP:
-                fprintf(arquivo, "%s%s", op0, op1);
-
-                break;
-                
             case OP_HLT:
-                fprintf(arquivo, "%s%s", op0, op1);
+            {
+                fprintf(arquivo, "%s%s0000000000000000000000", op0, op1);
 
                 break;
+            }
                 
             case OP_IN:
-                fprintf(arquivo, "%s%s", op0, op1);
-
-                break;
-                
             case OP_OUT:
+            {
                 fprintf(arquivo, "%s%s", op0, op1);
 
+                if (instrucao->operacao == OP_IN) {
+                    fprintf(arquivo, "%s", rd);
+                } else {
+                    fprintf(arquivo, "%s", rn);
+                }
+
+                fprintf(arquivo, "00000000000000000");
+
                 break;
+            }
                 
             default:
                 break;

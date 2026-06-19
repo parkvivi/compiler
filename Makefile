@@ -1,7 +1,7 @@
 LEX      = flex
 BISON    = bison
 CC       = gcc
-CFLAGS   = -Wall -Wextra -Isrc/ast -Isrc/dot -Isrc/gci -Isrc/semantico -Isrc/main -Isrc/assembly
+CFLAGS   = -Wall -Wextra -Isrc/ast -Isrc/dot -Isrc/gci -Isrc/semantico -Isrc/main -Isrc/assembly -Isrc/executavel
 DOT      = dot
 
 LEX_SRC   = src/lexico/lexico.l
@@ -9,7 +9,7 @@ BISON_SRC = src/sintatico/sintatico.y
 BUILD_DIR = build
 INPUT_FILE = entrada/gcd.txt
 MAIN_INPUT_DIR = entrada/main
-MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/assembly/assembly.c src/main/main.c
+MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/assembly/assembly.c src/executavel/executavel.c src/main/main.c
 
 ifeq ($(OS),Windows_NT)
     MKDIR = if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
