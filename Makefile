@@ -70,32 +70,32 @@ ifeq ($(OS),Windows_NT)
 run-gcd: $(PARSER_BIN)
 	if not exist $(GCD_DIR) mkdir $(GCD_DIR)
 	set "COMPILER_OUTPUT_DIR=$(GCD_DIR)" && $(PARSER_BIN) $(GCD_INPUT)
-	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)\arvore.png
+	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)\gcd.png
 
 run-sort: $(PARSER_BIN)
 	if not exist $(SORT_DIR) mkdir $(SORT_DIR)
 	set "COMPILER_OUTPUT_DIR=$(SORT_DIR)" && $(PARSER_BIN) $(SORT_INPUT)
-	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)\arvore.png
+	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)\sort.png
 
 run-fatorial: $(PARSER_BIN)
 	if not exist $(FAT_DIR) mkdir $(FAT_DIR)
 	set "COMPILER_OUTPUT_DIR=$(FAT_DIR)" && $(PARSER_BIN) $(FAT_INPUT)
-	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)\arvore.png
+	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)\fatorial.png
 else
 run-gcd: $(PARSER_BIN)
 	mkdir -p $(GCD_DIR)
 	COMPILER_OUTPUT_DIR=$(GCD_DIR) $(PARSER_BIN) $(GCD_INPUT)
-	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)/arvore.png
+	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)/gcd.png
 
 run-sort: $(PARSER_BIN)
 	mkdir -p $(SORT_DIR)
 	COMPILER_OUTPUT_DIR=$(SORT_DIR) $(PARSER_BIN) $(SORT_INPUT)
-	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)/arvore.png
+	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)/sort.png
 
 run-fatorial: $(PARSER_BIN)
 	mkdir -p $(FAT_DIR)
 	COMPILER_OUTPUT_DIR=$(FAT_DIR) $(PARSER_BIN) $(FAT_INPUT)
-	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)/arvore.png
+	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)/fatorial.png
 endif
 
 scanner: CFLAGS += -DLEX_STANDALONE
