@@ -1,15 +1,7 @@
 #include "semantico.h"
+#include "caminho_saida.h"
+
 #include <stdlib.h>
-
-static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
-
-    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
-    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
-        diretorioSaida = "build";
-    }
-
-    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
-}
 
 TipoSimbolo retornaTipo(AST* no) {
 

@@ -1,16 +1,8 @@
 #include "gci.h"
+#include "caminho_saida.h"
+
 #include <stdlib.h>
 #include <string.h>
-
-static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
-
-    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
-    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
-        diretorioSaida = "build";
-    }
-
-    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
-}
 
 Quadrupla* lista_quadruplas = NULL;
 Quadrupla* ultima_quadrupla = NULL;

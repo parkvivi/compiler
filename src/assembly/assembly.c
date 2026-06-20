@@ -1,4 +1,5 @@
 #include "assembly.h"
+#include "caminho_saida.h"
 
 Instrucao* lista_instrucoes = NULL;
 Instrucao* ultima_instrucao = NULL;
@@ -6,16 +7,6 @@ ListaSimbolos* lista_simbolos = NULL;
 
 int mapeamentoTemporarios[MAX_TEMPORARIOS];     // mapeamento de t1 a t28
 bool registradoresDisponiveis[MAX_TEMPORARIOS];  // disponibilidade de R1 a R28
-
-static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
-
-    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
-    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
-        diretorioSaida = "build";
-    }
-
-    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
-}
 
 void inserirListaSimbolos(Simbolo* simbolo) {
 

@@ -1,17 +1,8 @@
 #include "executavel.h"
+#include "caminho_saida.h"
 
 EnderecoLabel* lista_labels = NULL;
 EnderecoLabel* ultimo_label = NULL;
-
-static void montarCaminhoSaida(char* destino, size_t tamanho, const char* nomeArquivo) {
-
-    const char* diretorioSaida = getenv("COMPILER_OUTPUT_DIR");
-    if (diretorioSaida == NULL || diretorioSaida[0] == '\0') {
-        diretorioSaida = "build";
-    }
-
-    snprintf(destino, tamanho, "%s/%s", diretorioSaida, nomeArquivo);
-}
 
 void adicionarLabel(const char* label, int endereco) {
     
