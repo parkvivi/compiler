@@ -7,7 +7,6 @@ DOT      = dot
 LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
 BUILD_DIR = build
-INPUT_FILE = entrada/gcd.txt
 MAIN_INPUT_DIR = entrada/main
 MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/assembly/assembly.c src/executavel/executavel.c src/main/main.c
 
@@ -29,10 +28,13 @@ ifeq ($(OS),Windows_NT)
     SCANNER    = $(BUILD_DIR)\scanner.exe
     GCD_INPUT  = $(MAIN_INPUT_DIR)\gcd.txt
     SORT_INPUT = $(MAIN_INPUT_DIR)\sort.txt
+    FAT_INPUT  = $(MAIN_INPUT_DIR)\fatorial.txt
     GCD_DIR    = $(BUILD_DIR)\gcd
     SORT_DIR   = $(BUILD_DIR)\sort
+    FAT_DIR    = $(BUILD_DIR)\fatorial
     GCD_DOT    = $(GCD_DIR)\arvore.dot
     SORT_DOT   = $(SORT_DIR)\arvore.dot
+    FAT_DOT    = $(FAT_DIR)\arvore.dot
 else
     MKDIR = mkdir -p $(BUILD_DIR)
     RM = rm -rf $(BUILD_DIR)
@@ -49,17 +51,20 @@ else
     SCANNER    = $(BUILD_DIR)/scanner
     GCD_INPUT  = $(MAIN_INPUT_DIR)/gcd.txt
     SORT_INPUT = $(MAIN_INPUT_DIR)/sort.txt
+    FAT_INPUT  = $(MAIN_INPUT_DIR)/fatorial.txt
     GCD_DIR    = $(BUILD_DIR)/gcd
     SORT_DIR   = $(BUILD_DIR)/sort
+    FAT_DIR    = $(BUILD_DIR)/fatorial
     GCD_DOT    = $(GCD_DIR)/arvore.dot
     SORT_DOT   = $(SORT_DIR)/arvore.dot
+    FAT_DOT    = $(FAT_DIR)/arvore.dot
 endif
 
 all: $(PARSER_BIN)
 
 parser: $(PARSER_BIN)
 
-run: run-gcd run-sort
+run: run-gcd run-sort run-fatorial
 
 ifeq ($(OS),Windows_NT)
 run-gcd: $(PARSER_BIN)
@@ -71,6 +76,11 @@ run-sort: $(PARSER_BIN)
 	if not exist $(SORT_DIR) mkdir $(SORT_DIR)
 	set "COMPILER_OUTPUT_DIR=$(SORT_DIR)" && $(PARSER_BIN) $(SORT_INPUT)
 	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)\arvore.png
+
+run-fatorial: $(PARSER_BIN)
+	if not exist $(FAT_DIR) mkdir $(FAT_DIR)
+	set "COMPILER_OUTPUT_DIR=$(FAT_DIR)" && $(PARSER_BIN) $(FAT_INPUT)
+	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)\arvore.png
 else
 run-gcd: $(PARSER_BIN)
 	mkdir -p $(GCD_DIR)
@@ -81,6 +91,11 @@ run-sort: $(PARSER_BIN)
 	mkdir -p $(SORT_DIR)
 	COMPILER_OUTPUT_DIR=$(SORT_DIR) $(PARSER_BIN) $(SORT_INPUT)
 	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)/arvore.png
+
+run-fatorial: $(PARSER_BIN)
+	mkdir -p $(FAT_DIR)
+	COMPILER_OUTPUT_DIR=$(FAT_DIR) $(PARSER_BIN) $(FAT_INPUT)
+	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)/arvore.png
 endif
 
 scanner: CFLAGS += -DLEX_STANDALONE
