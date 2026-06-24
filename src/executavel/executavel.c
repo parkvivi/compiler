@@ -41,7 +41,7 @@ int enderecoLabel(const char* label) {
     for (l=lista_labels; l!=NULL && strcmp(l->label, label)!=0; l=l->prox);
 
     if (!l) {
-        fprintf(stderr, "EXECUTAVEL :: Label '%s' não endereçado", label);
+        fprintf(stderr, "EXECUTAVEL :: Label '%s' nao enderecado", label);
     }
 
     return l->endereco;

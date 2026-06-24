@@ -612,6 +612,9 @@ void quadruplasParaAssembly() {
 
             case GCI_LABEL:
                 labelAtual = quad->argumento3;
+                emitirInstrucao(OP_NOP, SUFIXO_AL, labelAtual, NULL, NULL, NULL, NULL, NULL);    // NOP
+
+                labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
             
@@ -623,10 +626,16 @@ void quadruplasParaAssembly() {
                 
                 if (quad->simbolo != NULL && ehTemporario(quad->argumento1) == false) {
                     if (quad->simbolo->ehVarGlobal == true) {
-                        // variável global é endereçada diretamente
+                        // variáveis globais são endereçadas diretamente
                         char* buffer = malloc(sizeof(char)*20);
                         sprintf(buffer, "%d", quad->simbolo->offset);
-                        endereco = buffer;
+                        if (quad->simbolo->ehVetor == true) {
+                            // endereço da base do vetor é passada como imediato para cálculo da posição no vetor
+                            imediato = buffer;
+                        } else {
+                            // endereço da variável é passada como endereço para acesso direto
+                            endereco = buffer;
+                        }
                     } else if (quad->simbolo->offsetNegativo == true) {
                         // parâmetro é endereçado indiretamente
                         char buffer[20];
@@ -743,11 +752,14 @@ void gerarAssembly() {
         } else if (q->operacao == GCI_END) {
             ehGlobal = true;
         } else if (ehGlobal == true && q->operacao == GCI_ALLOC) {
-            emitirInstrucao(OP_ADD, SUFIXO_AL, NULL, SP, SP, NULL, "1", NULL);
+            char* tamanhoVetor = ((q->simbolo->ehVetor == true) ? q->argumento3 : "1");
+            int tamanhoAlocado = tamanhoAlocado = atoi(tamanhoVetor);
+
+            emitirInstrucao(OP_ADD, SUFIXO_AL, NULL, SP, SP, NULL, tamanhoVetor, NULL);
 
             q->simbolo->ehVarGlobal = true;
             q->simbolo->offset = enderecoGlobal;
-            enderecoGlobal++;
+            enderecoGlobal += tamanhoAlocado;
         }
     }
 
