@@ -101,7 +101,6 @@ char* sufixoInstrucao(SufixoCondicional sufixo) {
 }
 
 char* temporariosParaRegistradores(const char* temporario) {
-    // reassociar temporarios para registradores
 
     if (!ehTemporario(temporario)) return NULL;
 
@@ -111,7 +110,6 @@ char* temporariosParaRegistradores(const char* temporario) {
 
     int indice = temporarioParaNumero(temporario);
     if (mapeamentoTemporarios[indice] == -1) {
-        // associar temporário ainda não associado a registrador livre
         int novoReg;
         for (novoReg=0; registradoresDisponiveis[novoReg]==false && novoReg<MAX_TEMPORARIOS; novoReg++);
 
@@ -497,7 +495,7 @@ void quadruplasParaAssembly() {
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
 
-                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, decremento, NULL);   // TODO: verificar qual registrador tem que ser decrementado aqui :(
+                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, decremento, NULL);
                 }
 
                 labelAtual = NULL;

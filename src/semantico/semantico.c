@@ -13,7 +13,7 @@ TipoSimbolo retornaTipo(AST* no) {
     return TipoInt;
 }
 
-void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo) {
+void criarTabSimbolos(AST* no, FILE* arquivo, int nivelEscopo, int* proximoIdEscopo) {
 
     if (no == NULL) return;
 
@@ -104,7 +104,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
             continue;
         }
 
-        criarTabSimbolosInterno(filho, arquivo, escopoCriado ? nivelEscopo + 1 : nivelEscopo, proximoIdEscopo);
+        criarTabSimbolos(filho, arquivo, (escopoCriado ? (nivelEscopo + 1) : nivelEscopo), proximoIdEscopo);
     }
 
     if (escopoCriado == true) {
@@ -112,13 +112,7 @@ void criarTabSimbolosInterno(AST* no, FILE* arquivo, int nivelEscopo, int* proxi
         sairEscopo();
     }
 
-    criarTabSimbolosInterno(no->irmao, arquivo, nivelEscopo, proximoIdEscopo);
-}
-
-void criarTabSimbolos(AST* no, FILE* arquivo) {
-
-    int proximoIdEscopo = 1;
-    criarTabSimbolosInterno(no, arquivo, 1, &proximoIdEscopo);
+    criarTabSimbolos(no->irmao, arquivo, nivelEscopo, proximoIdEscopo);
 }
 
 TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouReturnVoid) {
@@ -352,7 +346,8 @@ void analisarSemantica() {
     pOutput->prox = NULL;
     s->parametros = pOutput;
 
-    criarTabSimbolos(raizAST, saida);
+    int proximoIdEscopo = 1;
+    criarTabSimbolos(raizAST, saida, 1, &proximoIdEscopo);
 
     imprimirEscopoAtual(saida, 0, 0);
     sairEscopo();
