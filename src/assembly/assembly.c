@@ -510,12 +510,24 @@ void quadruplasParaAssembly() {
                     break;
                 }
 
-                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
+                char espacoAlocado[20];
+                if (quad->simbolo->ehVetor == true) {
+                    sprintf(espacoAlocado, "%d", quad->simbolo->tamanhoVetor);
+                } else {
+                    strcpy(espacoAlocado, "1");
+                }
+
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, espacoAlocado, NULL);
 
                 inserirListaSimbolos(quad->simbolo);
 
                 quad->simbolo->offset = enderecoLocal;
-                enderecoLocal++;
+
+                if (quad->simbolo->ehVetor == true) {
+                    enderecoLocal += quad->simbolo->tamanhoVetor;
+                } else {
+                    enderecoLocal++;
+                }
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -656,7 +668,20 @@ void quadruplasParaAssembly() {
                         char buffer[20];
                         sprintf(buffer, "%d", quad->simbolo->offset);
 
-                        emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, buffer, endereco);
+                        if (quad->simbolo->ehVetor) {
+                            if (quad->argumento2 != NULL && !ehTemporario(quad->argumento2)) {
+                                sprintf(buffer, "%d", quad->simbolo->offset + atoi(quad->argumento2));
+                                emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, buffer, endereco);
+                            } else {
+                                if (!rd) {
+                                    rd = rm;
+                                    rm = NULL;
+                                }
+                                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, rd, rn, rm, buffer, endereco);
+                            }
+                        } else {
+                            emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, rn, rm, buffer, endereco);
+                        }
 
                         labelAtual = NULL;
                         sufixoAtual = SUFIXO_AL;
@@ -665,6 +690,17 @@ void quadruplasParaAssembly() {
                 } else {
                     if (ehTemporario(quad->argumento1) == true) {
                         rn = temporariosParaRegistradores(quad->argumento1);
+
+                        if (quad->argumento2 != NULL && !ehTemporario(quad->argumento2)) {
+                            char* regAux = reservarRegistrador();
+                            emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, regAux, rn, NULL, quad->argumento2, NULL);
+
+                            labelAtual = NULL;
+                            sufixoAtual = SUFIXO_AL;
+                            emitirInstrucao(operacao, sufixoAtual, labelAtual, rd, regAux, rm, NULL, endereco);
+                            liberarRegistrador(regAux);
+                            break;
+                        }
                     } else {
                         imediato = quad->argumento1;
                     }
