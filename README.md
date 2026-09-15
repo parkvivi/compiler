@@ -1,6 +1,6 @@
 # Compilador `C-`
 
-Esta é uma continuação do projeto [compiler-v0](https://github.com/parkvivi/compiler-v0). O compilador para a linguagem `C-`, conforme especificada por Louden (2004), foi modificado para a geração de linguagem de máquina com base no projeto [ARM-32bit](https://github.com/parkvivi/ARM-32bit).
+Este repositório contém um compilador para a linguagem `C-`, conforme especificada por Louden (2004), modificado para a geração de linguagem de máquina com base no projeto [ARM-32bit](https://github.com/parkvivi/ARM-32bit).
 
 ## Requisitos
 
@@ -20,16 +20,19 @@ compiler/
 |   ├── semantico/              # teste do analisador semântico
 |   ├── auxiliar/               # auxiliares
 |   └── main/                   # principais
-└── src/            # CÓDIGO-FONTE
-    ├── lexico/                 # analisador léxico
-    ├── sintatico/              # analisador sintático
-    ├── ast/                    # tratamento da AST
-    ├── dot/                    # criação do png da AST
-    ├── semantico/              # analisador semântico
-    ├── gci/                    # gerador de código intermediário
-    ├── assembly/               # gerador de código assembly
-    ├── executavel/             # gerador de código binário
-    └── main/                   # código principal
+├── src/            # CÓDIGO-FONTE
+|   ├── lexico/                 # analisador léxico
+|   ├── sintatico/              # analisador sintático
+|   ├── ast/                    # tratamento da AST
+|   ├── dot/                    # criação do png da AST
+|   ├── semantico/              # analisador semântico
+|   ├── gci/                    # gerador de código intermediário
+|   ├── assembly/               # gerador de código assembly
+|   ├── executavel/             # gerador de código binário
+|   └── main/                   # código principal
+├── .gitignore
+├── Makefile        # automação da compilação
+└── README.md       # documentação do repositório
 ```
 
 ## Uso
