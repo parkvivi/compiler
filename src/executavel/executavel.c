@@ -206,10 +206,10 @@ char* geraOP1(OperacaoInstrucao operacao) {
         case OP_BL:     return "10";
 
         // instruções do tipo A
-        case OP_NOP:    return "0000";
-        case OP_HLT:    return "0001";
-        case OP_IN:     return "0010";
-        case OP_OUT:    return "0011";
+        case OP_NOP:    return "00000";
+        case OP_HLT:    return "00001";
+        case OP_IN:     return "00010";
+        case OP_OUT:    return "00011";
 
         // instruções do tipo M
         default:        return NULL;
@@ -331,24 +331,11 @@ void assemblyParaBinario(FILE* arquivo) {
                 
             case OP_NOP:
             case OP_HLT:
-            {
-                fprintf(arquivo, "%s%s0000000000000000000000", op0, op1);
-
-                break;
-            }
-                
             case OP_IN:
             case OP_OUT:
             {
-                fprintf(arquivo, "%s%s", op0, op1);
-
-                if (instrucao->operacao == OP_IN) {
-                    fprintf(arquivo, "%s", rd);
-                } else {
-                    fprintf(arquivo, "%s", rn);
-                }
-
-                fprintf(arquivo, "00000000000000000");
+                char* imediato = decimalParaBinario(instrucao->imediato, TAM_IMEDIATO_TIPO_A);
+                fprintf(arquivo, "%s%s%s%s%s%s", op0, op1, rn, rd, rm, imediato);
 
                 break;
             }
