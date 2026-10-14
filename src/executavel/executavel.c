@@ -351,7 +351,7 @@ void assemblyParaBinario(FILE* arquivo) {
 void gerarExecutavel() {
 
     // calcula endereços absolutos dos labels
-    int endereco = 0;
+    int endereco = COMECO_PROGRAMA;
     for (Instrucao* i=lista_instrucoes; i!=NULL; i=i->prox) {
         if (i->label != NULL) {
             adicionarLabel(i->label, endereco);
