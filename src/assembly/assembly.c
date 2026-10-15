@@ -76,6 +76,7 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
         case OP_HLT:    return "HLT";
         case OP_IN:     return "IN";
         case OP_OUT:    return "OUT";
+        case OP_RIR2:   return "RIR2";
         default:        return NULL;
     }
 }
@@ -281,6 +282,7 @@ void imprimirInstrucoes(FILE *arquivo) {
                 continue;
 
             case OP_IN:
+            case OP_RIR2:
                 fprintf(arquivo, " %s\n",
                     instrucao->rd
                 );
@@ -713,10 +715,14 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_HALT:
-                emitirInstrucao(OP_HLT, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);
-
+                // lógica para programas de usuário (up - 'user program')
+                char* regKernel = reservarRegistrador();
+                emitirInstrucao(OP_RIR2, sufixoAtual, labelAtual, regKernel, NULL, NULL, NULL, NULL);
+                
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
+                emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, regKernel, NULL, NULL, NULL);
+                liberarRegistrador(regKernel);
                 break;
 
             case GCI_PUSH:

@@ -32,7 +32,8 @@ typedef enum {
     OP_NOP,
     OP_HLT,
     OP_IN,
-    OP_OUT
+    OP_OUT,
+    OP_RIR2
 } OperacaoInstrucao;
 
 typedef enum {
