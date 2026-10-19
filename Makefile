@@ -10,6 +10,7 @@ PROGRAMS_DIR = user_programs
 LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
 MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/assembly/assembly.c src/executavel/executavel.c src/main/caminho_saida.c src/main/main.c
+MODULE_HDRS = src/ast/ast.h src/dot/dot.h src/gci/gci.h src/semantico/semantico.h src/semantico/tabsimbolos.h src/assembly/assembly.h src/executavel/executavel.h src/main/caminho_saida.h src/main/main.h
 
 PROGRAM_SRCS := $(wildcard $(PROGRAMS_DIR)/*/*.c)
 PROGRAM_DIRS := $(sort $(dir $(PROGRAM_SRCS)))
@@ -43,7 +44,7 @@ run: run-user-programs
 
 run-user-programs: $(PROGRAM_TARGETS)
 
-$(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
+$(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS) $(MODULE_HDRS)
 	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
 
 $(LEX_OUTPUT): $(LEX_SRC) $(BISON_HEADER) | $(BUILD_DIR)

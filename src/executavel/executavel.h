@@ -8,7 +8,7 @@
 #define TAM_IMEDIATO_TIPO_M 13
 #define TAM_IMEDIATO_TIPO_A 6
 
-#define COMECO_PROGRAMA 100 // offset do programa na memória de instruções
+#define COMECO_PROGRAMA 500 // offset do programa na memória de instruções
 
 typedef struct EnderecoLabel {
     char* label;
