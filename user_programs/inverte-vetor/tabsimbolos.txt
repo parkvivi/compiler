@@ -1,0 +1,21 @@
+Relatorio de escopos e simbolos
+
+Escopo #2 (nivel 2)
+  (sem simbolos)
+
+Escopo #3 (nivel 2)
+  (sem simbolos)
+
+Escopo #4 (nivel 2)
+  (sem simbolos)
+
+Escopo #1 (nivel 1)
+  - aux | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+  - x | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+

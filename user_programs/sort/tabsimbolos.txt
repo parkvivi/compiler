@@ -1,0 +1,43 @@
+Relatorio de escopos e simbolos
+
+Escopo #3 (nivel 3)
+  (sem simbolos)
+
+Escopo #2 (nivel 2)
+  (sem simbolos)
+
+Escopo #1 (nivel 1)
+  - k | categoria=variavel | tipo=int | vetor=nao
+  - x | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+  - high | categoria=variavel | tipo=int | vetor=nao
+  - low | categoria=variavel | tipo=int | vetor=nao
+  - a | categoria=variavel | tipo=int | vetor=sim
+
+Escopo #5 (nivel 2)
+  - t | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #4 (nivel 1)
+  - k | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+  - high | categoria=variavel | tipo=int | vetor=nao
+  - low | categoria=variavel | tipo=int | vetor=nao
+  - a | categoria=variavel | tipo=int | vetor=sim
+
+Escopo #7 (nivel 2)
+  (sem simbolos)
+
+Escopo #8 (nivel 2)
+  (sem simbolos)
+
+Escopo #6 (nivel 1)
+  - i | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - sort | categoria=funcao | tipo=void | vetor=nao
+  - minloc | categoria=funcao | tipo=int | vetor=nao
+  - x | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+

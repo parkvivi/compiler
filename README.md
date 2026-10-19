@@ -13,13 +13,6 @@ Este repositório contém um compilador para a linguagem `C-`, conforme especifi
 ## Estrutura do Repositório
 ```
 compiler/
-├── documentacao/   # documentação do compilador
-├── entrada/        # CÓDIGOS TESTE
-|   ├── lexico/                 # teste do analisador léxico
-|   ├── sintatico/              # teste do analisador sintático
-|   ├── semantico/              # teste do analisador semântico
-|   ├── auxiliar/               # auxiliares
-|   └── main/                   # principais
 ├── src/            # CÓDIGO-FONTE
 |   ├── lexico/                 # analisador léxico
 |   ├── sintatico/              # analisador sintático
@@ -30,6 +23,7 @@ compiler/
 |   ├── assembly/               # gerador de código assembly
 |   ├── executavel/             # gerador de código binário
 |   └── main/                   # código principal
+├── user_programs/  # ENTRADAS (PROGRAMAS DE USUÁRIO)
 ├── .gitignore
 ├── Makefile        # automação da compilação
 └── README.md       # documentação do repositório
@@ -45,23 +39,23 @@ make
 
 Esse comando gera o executável do compilador em `build/parser.exe` (Windows) ou `build/parser` (Linux/macOS).
 
-### 2. Rodar os testes principais (`fatorial`, `gcd` e `sort`)
+### 2. Compilar os programas de usuário
 
 ```powershell
 make run
 ```
 
-O alvo `run` executa:
+O alvo `run` compila o parser e processa todos os arquivos `.c` encontrados
+em `user_programs/<nome-do-programa>/`. Os artefatos de cada programa são
+salvos na própria pasta do programa.
 
-- `entrada/main/fatorial.txt`
-- `entrada/main/gcd.txt`
-- `entrada/main/sort.txt`
+Para processar apenas um programa:
 
-E salva os artefatos separadamente em:
+```powershell
+make run-fibonacci
+```
 
-- `build/fatorial`
-- `build/gcd`
-- `build/sort`
+O nome usado no alvo corresponde ao nome da pasta dentro de `user_programs`.
 
 Cada pasta contém:
 
@@ -83,11 +77,8 @@ Esse comando remove todo o diretório `build`.
 
 - `make` ou `make all`: compila o parser
 - `make parser`: compila o parser
-- `make run`: compila (se necessário) e executa `fatorial`, `gcd` e `sort`
-- `make run-fatorial`: executa somente `entrada/main/fatorial.txt`
-- `make run-gcd`: executa somente `entrada/main/gcd.txt`
-- `make run-sort`: executa somente `entrada/main/sort.txt`
-- `make scanner`: compila o scanner em modo standalone
+- `make run`: compila o parser e todos os programas em `user_programs`
+- `make run-<nome>`: compila somente o programa da pasta indicada
 - `make clean`: remove `build`
 
 ## Referências

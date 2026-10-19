@@ -4,119 +4,75 @@ CC       = gcc
 CFLAGS   = -Wall -Wextra -Isrc/ast -Isrc/dot -Isrc/gci -Isrc/semantico -Isrc/main -Isrc/assembly -Isrc/executavel
 DOT      = dot
 
+BUILD_DIR = build
+PROGRAMS_DIR = user_programs
+
 LEX_SRC   = src/lexico/lexico.l
 BISON_SRC = src/sintatico/sintatico.y
-BUILD_DIR = build
-MAIN_INPUT_DIR = entrada/main
 MODULE_SRCS = src/ast/ast.c src/dot/dot.c src/gci/gci.c src/semantico/semantico.c src/semantico/tabsimbolos.c src/assembly/assembly.c src/executavel/executavel.c src/main/caminho_saida.c src/main/main.c
 
+PROGRAM_SRCS := $(wildcard $(PROGRAMS_DIR)/*/*.c)
+PROGRAM_DIRS := $(sort $(dir $(PROGRAM_SRCS)))
+PROGRAM_NAMES := $(notdir $(patsubst %/,%,$(PROGRAM_DIRS)))
+PROGRAM_TARGETS := $(addprefix run-,$(PROGRAM_NAMES))
+
 ifeq ($(OS),Windows_NT)
-    MKDIR = if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
-    RM = if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
-
-    BISON = C:\FLEXWI~1\bison\bin\bison.exe
-
-    LEX_OUTPUT   = $(BUILD_DIR)\lex.yy.c
-    BISON_OUTPUT = $(BUILD_DIR)\sintatico.tab.c
-    BISON_HEADER = $(BUILD_DIR)\sintatico.tab.h
-
-    MOVE_LEX   = move /Y lex.yy.c $(LEX_OUTPUT)
-    MOVE_BISON = move /Y sintatico.tab.c $(BISON_OUTPUT)
-    MOVE_HDR   = move /Y sintatico.tab.h $(BISON_HEADER)
-
-    PARSER_BIN = $(BUILD_DIR)\parser.exe
-    SCANNER    = $(BUILD_DIR)\scanner.exe
-    GCD_INPUT  = $(MAIN_INPUT_DIR)\gcd.txt
-    SORT_INPUT = $(MAIN_INPUT_DIR)\sort.txt
-    FAT_INPUT  = $(MAIN_INPUT_DIR)\fatorial.txt
-    GCD_DIR    = $(BUILD_DIR)\gcd
-    SORT_DIR   = $(BUILD_DIR)\sort
-    FAT_DIR    = $(BUILD_DIR)\fatorial
-    GCD_DOT    = $(GCD_DIR)\arvore.dot
-    SORT_DOT   = $(SORT_DIR)\arvore.dot
-    FAT_DOT    = $(FAT_DIR)\arvore.dot
+	BISON = C:\FLEXWI~1\bison\bin\bison.exe
+	MKDIR = if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
+	PROGRAM_OUTPUT_DIR = $(BUILD_DIR)\user_programs
+	PARSER_BIN = $(BUILD_DIR)\parser.exe
+	LEX_OUTPUT = $(BUILD_DIR)\lex.yy.c
+	BISON_OUTPUT = $(BUILD_DIR)\sintatico.tab.c
+	BISON_HEADER = $(BUILD_DIR)\sintatico.tab.h
 else
-    MKDIR = mkdir -p $(BUILD_DIR)
-    RM = rm -rf $(BUILD_DIR)
-
-    LEX_OUTPUT   = $(BUILD_DIR)/lex.yy.c
-    BISON_OUTPUT = $(BUILD_DIR)/sintatico.tab.c
-    BISON_HEADER = $(BUILD_DIR)/sintatico.tab.h
-
-    MOVE_LEX   = mv lex.yy.c $(LEX_OUTPUT)
-    MOVE_BISON = mv sintatico.tab.c $(BISON_OUTPUT)
-    MOVE_HDR   = mv sintatico.tab.h $(BISON_HEADER)
-
-    PARSER_BIN = $(BUILD_DIR)/parser
-    SCANNER    = $(BUILD_DIR)/scanner
-    GCD_INPUT  = $(MAIN_INPUT_DIR)/gcd.txt
-    SORT_INPUT = $(MAIN_INPUT_DIR)/sort.txt
-    FAT_INPUT  = $(MAIN_INPUT_DIR)/fatorial.txt
-    GCD_DIR    = $(BUILD_DIR)/gcd
-    SORT_DIR   = $(BUILD_DIR)/sort
-    FAT_DIR    = $(BUILD_DIR)/fatorial
-    GCD_DOT    = $(GCD_DIR)/arvore.dot
-    SORT_DOT   = $(SORT_DIR)/arvore.dot
-    FAT_DOT    = $(FAT_DIR)/arvore.dot
+	MKDIR = mkdir -p $(BUILD_DIR)
+	PROGRAM_OUTPUT_DIR = $(BUILD_DIR)/user_programs
+	PARSER_BIN = $(BUILD_DIR)/parser
+	LEX_OUTPUT = $(BUILD_DIR)/lex.yy.c
+	BISON_OUTPUT = $(BUILD_DIR)/sintatico.tab.c
+	BISON_HEADER = $(BUILD_DIR)/sintatico.tab.h
 endif
+
+.PHONY: all parser run run-user-programs clean $(PROGRAM_TARGETS)
 
 all: $(PARSER_BIN)
 
 parser: $(PARSER_BIN)
 
-run: run-gcd run-sort run-fatorial
+run: run-user-programs
 
-ifeq ($(OS),Windows_NT)
-run-gcd: $(PARSER_BIN)
-	if not exist $(GCD_DIR) mkdir $(GCD_DIR)
-	set "COMPILER_OUTPUT_DIR=$(GCD_DIR)" && $(PARSER_BIN) $(GCD_INPUT)
-	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)\gcd.png
-
-run-sort: $(PARSER_BIN)
-	if not exist $(SORT_DIR) mkdir $(SORT_DIR)
-	set "COMPILER_OUTPUT_DIR=$(SORT_DIR)" && $(PARSER_BIN) $(SORT_INPUT)
-	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)\sort.png
-
-run-fatorial: $(PARSER_BIN)
-	if not exist $(FAT_DIR) mkdir $(FAT_DIR)
-	set "COMPILER_OUTPUT_DIR=$(FAT_DIR)" && $(PARSER_BIN) $(FAT_INPUT)
-	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)\fatorial.png
-else
-run-gcd: $(PARSER_BIN)
-	mkdir -p $(GCD_DIR)
-	COMPILER_OUTPUT_DIR=$(GCD_DIR) $(PARSER_BIN) $(GCD_INPUT)
-	$(DOT) -Tpng $(GCD_DOT) -o $(GCD_DIR)/gcd.png
-
-run-sort: $(PARSER_BIN)
-	mkdir -p $(SORT_DIR)
-	COMPILER_OUTPUT_DIR=$(SORT_DIR) $(PARSER_BIN) $(SORT_INPUT)
-	$(DOT) -Tpng $(SORT_DOT) -o $(SORT_DIR)/sort.png
-
-run-fatorial: $(PARSER_BIN)
-	mkdir -p $(FAT_DIR)
-	COMPILER_OUTPUT_DIR=$(FAT_DIR) $(PARSER_BIN) $(FAT_INPUT)
-	$(DOT) -Tpng $(FAT_DOT) -o $(FAT_DIR)/fatorial.png
-endif
-
-scanner: CFLAGS += -DLEX_STANDALONE
-scanner: $(SCANNER)
-
+run-user-programs: $(PROGRAM_TARGETS)
 
 $(PARSER_BIN): $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
 	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT) $(BISON_OUTPUT) $(MODULE_SRCS)
 
-$(SCANNER): $(LEX_OUTPUT)
-	$(CC) $(CFLAGS) -o $@ $(LEX_OUTPUT)
+$(LEX_OUTPUT): $(LEX_SRC) $(BISON_HEADER) | $(BUILD_DIR)
+	$(LEX) -o$@ $<
 
-$(LEX_OUTPUT): $(LEX_SRC) $(BISON_HEADER)
-	$(MKDIR)
-	$(LEX) -o$(LEX_OUTPUT) $<
-
-$(BISON_OUTPUT) $(BISON_HEADER): $(BISON_SRC)
-	$(MKDIR)
+$(BISON_OUTPUT) $(BISON_HEADER) &: $(BISON_SRC) | $(BUILD_DIR)
 	$(BISON) -d -o $(BISON_OUTPUT) --defines=$(BISON_HEADER) $(BISON_SRC)
 
-clean:
-	$(RM)
+$(BUILD_DIR):
+	$(MKDIR)
 
-.PHONY: all clean parser scanner run run-gcd run-sort
+define PROGRAM_template
+run-$(1): $(PARSER_BIN)
+ifeq ($(OS),Windows_NT)
+	if not exist $(PROGRAMS_DIR)\$(1) mkdir $(PROGRAMS_DIR)\$(1)
+	set "COMPILER_OUTPUT_DIR=$(PROGRAMS_DIR)\$(1)" && $(PARSER_BIN) $(2)
+	$(DOT) -Tpng $(PROGRAMS_DIR)\$(1)\arvore.dot -o $(PROGRAMS_DIR)\$(1)\$(1).png
+else
+	mkdir -p $(PROGRAMS_DIR)/$(1)
+	COMPILER_OUTPUT_DIR=$(PROGRAMS_DIR)/$(1) $(PARSER_BIN) $(2)
+	$(DOT) -Tpng $(PROGRAMS_DIR)/$(1)/arvore.dot -o $(PROGRAMS_DIR)/$(1)/$(1).png
+endif
+endef
+
+$(foreach src,$(PROGRAM_SRCS),$(eval $(call PROGRAM_template,$(notdir $(patsubst %/,%,$(dir $(src)))),$(src))))
+
+clean:
+ifeq ($(OS),Windows_NT)
+	if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
+else
+	rm -rf $(BUILD_DIR)
+endif

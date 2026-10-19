@@ -1,0 +1,16 @@
+Relatorio de escopos e simbolos
+
+Escopo #1 (nivel 1)
+  - b | categoria=variavel | tipo=int | vetor=nao
+  - a | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #2 (nivel 1)
+  - b | categoria=variavel | tipo=int | vetor=nao
+  - a | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - resto | categoria=funcao | tipo=int | vetor=nao
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+

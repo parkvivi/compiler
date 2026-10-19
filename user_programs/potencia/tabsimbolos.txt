@@ -1,0 +1,21 @@
+Relatorio de escopos e simbolos
+
+Escopo #2 (nivel 2)
+  (sem simbolos)
+
+Escopo #1 (nivel 1)
+  - potencia | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+  - n | categoria=variavel | tipo=int | vetor=nao
+  - x | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #3 (nivel 1)
+  - n | categoria=variavel | tipo=int | vetor=nao
+  - x | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - potencia | categoria=funcao | tipo=int | vetor=nao
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+
