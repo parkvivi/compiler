@@ -1,0 +1,44 @@
+Relatorio de escopos e simbolos
+
+Escopo #3 (nivel 3)
+  (sem simbolos)
+
+Escopo #2 (nivel 2)
+  (sem simbolos)
+
+Escopo #1 (nivel 1)
+  - programa | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #5 (nivel 2)
+  (sem simbolos)
+
+Escopo #4 (nivel 1)
+  - indicePrograma | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #8 (nivel 3)
+  (sem simbolos)
+
+Escopo #7 (nivel 2)
+  (sem simbolos)
+
+Escopo #6 (nivel 1)
+  - opcao | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #10 (nivel 2)
+  (sem simbolos)
+
+Escopo #9 (nivel 1)
+  - i | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - shellprompt | categoria=funcao | tipo=void | vetor=nao
+  - executarSemPreempcao | categoria=funcao | tipo=void | vetor=nao
+  - escolherPrograma | categoria=funcao | tipo=int | vetor=nao
+  - tamanhoArquivo | categoria=variavel | tipo=int | vetor=nao
+  - posicaoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - programasHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+

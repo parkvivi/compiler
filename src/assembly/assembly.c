@@ -638,7 +638,7 @@ void quadruplasParaAssembly() {
                     if (quad->simbolo->ehVarGlobal == true) {
                         // variáveis globais são endereçadas diretamente
                         char* buffer = malloc(sizeof(char)*20);
-                        sprintf(buffer, "%d", quad->simbolo->offset);
+                        sprintf(buffer, "%d", quad->simbolo->offset + TAMANHO_BCP);
                         if (quad->simbolo->ehVetor == true) {
                             // endereço da base do vetor é passada como imediato para cálculo da posição no vetor
                             imediato = buffer;
@@ -773,10 +773,13 @@ void gerarAssembly() {
 
     emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, NULL);    // NOP
 
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, NULL, "0", NULL);       // MOV R0, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, "0", NULL);       // MOV R29, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, NULL, "0", NULL);       // MOV R30, #0
-    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, LR, NULL, NULL, "0", NULL);       // MOV R31, #0
+    char tamanhoBCP[20];
+    sprintf(tamanhoBCP, "%d", TAMANHO_BCP);
+
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, NULL, "0", NULL);            // MOV R0, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, tamanhoBCP, NULL);     // MOV R29, #TAM_BCP
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, NULL, tamanhoBCP, NULL);     // MOV R30, #TAM_BCP
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, LR, NULL, NULL, tamanhoBCP, NULL);     // MOV R31, #TAM_BCP
 
     bool ehGlobal = true;
     int enderecoGlobal = 0;

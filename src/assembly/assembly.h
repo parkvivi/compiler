@@ -9,6 +9,7 @@
 #define LR "R31" // link register
 
 #define COMECO_VAR_LOCAIS 2
+#define TAMANHO_BCP 34
 
 typedef enum {
     OP_ADD,
