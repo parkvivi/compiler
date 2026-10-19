@@ -48,7 +48,7 @@ void executarSemPreempcao(void) {
 void shellprompt(void) {
     int opcao;
 
-    while (1) {
+    while (1 == 1) {
         opcao = 0;
         opcao = input();
 

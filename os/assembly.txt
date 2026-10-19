@@ -88,7 +88,9 @@ shellprompt:
 	ADD R30, R30, #1
 L4:
 	NOP
-	B L5
+	LDR R1, #1
+	CMP R1, #1
+	BNE L5
 	LDR R1, #0
 	STR R1, [R29, #2]
 	IN R0
