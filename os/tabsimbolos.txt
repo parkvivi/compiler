@@ -37,8 +37,14 @@ Escopo #0 (nivel 0)
   - executarSemPreempcao | categoria=funcao | tipo=void | vetor=nao
   - escolherPrograma | categoria=funcao | tipo=int | vetor=nao
   - tamanhoArquivo | categoria=variavel | tipo=int | vetor=nao
+  - tamanhoSO | categoria=variavel | tipo=int | vetor=nao
   - posicaoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - programasHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - configurarBase | categoria=funcao | tipo=void | vetor=nao
+  - restaurarContexto | categoria=funcao | tipo=void | vetor=nao
+  - executarPrograma | categoria=funcao | tipo=void | vetor=nao
+  - preservarContexto | categoria=funcao | tipo=void | vetor=nao
+  - carregarPrograma | categoria=funcao | tipo=void | vetor=nao
   - output | categoria=funcao | tipo=void | vetor=nao
   - input | categoria=funcao | tipo=int | vetor=nao
 

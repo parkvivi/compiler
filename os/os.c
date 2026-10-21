@@ -1,6 +1,7 @@
 int programasHD[10];
 int posicaoHD[10];
 
+int tamanhoSO;
 int tamanhoArquivo;
 
 int escolherPrograma(void) {
@@ -29,8 +30,17 @@ void executarSemPreempcao(void) {
     if (indicePrograma == 11) {
         return;
     }
+    
+    output(indicePrograma);
 
     /*
+        carregarPrograma(posicaoHD[indicePrograma]);
+        preservarContexto();
+        configurarBase(50);
+        executarPrograma();
+        configurarBase(0);
+        restaurarContexto();
+
         // carregar programa
         // carregarPrograma(posicaoHD[indicePrograma]);
 
@@ -62,12 +72,16 @@ void shellprompt(void) {
 void main(void) {
     int i;
 
+    tamanhoSO = 800;
     tamanhoArquivo = 200;
 
     i = 0;
     while (i < 10) {
         programasHD[i] = i + 1;
-        posicaoHD[i] = i * tamanhoArquivo;
+        output(programasHD[i]);
+        posicaoHD[i] = tamanhoSO + i * tamanhoArquivo;
+        output(posicaoHD[i]);
+        i = i + 1;
     }
 
     shellprompt();
