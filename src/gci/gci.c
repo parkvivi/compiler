@@ -269,6 +269,11 @@ char* operacaoQuadrupla(OperacaoQuadrupla tipo) {
         case GCI_PUSH:      return  "PUSH";
         case GCI_POP:       return  "POP";
         case GCI_MOVE:      return  "MOVE";
+        case GCI_CARREGARPROGRAMA:  return "CARREGAR_PROGRAMA";
+        case GCI_PRESERVARCONTEXTO: return "PRESERVAR_CONTEXTO";
+        case GCI_EXECUTARPROGRAMA:  return "EXECUTAR_PROGRAMA";
+        case GCI_RESTAURARCONTEXTO: return "RESTAURAR_CONTEXTO";
+        case GCI_CONFIGURARBASE:    return "CONFIGURAR_BASE";
         default:            return  NULL;
     }
 }
@@ -503,13 +508,19 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char* destinoIntermediario = ((no->simbolo->tipo == TipoInt) ? "t0" : NULL);
 
             bool ehOutput = (strcmp(nomeFuncaoChamada, "output") == 0);
-            bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false);
+            // qualquer função reservada para o SO
+            bool ehFuncaoSO = ((strcmp(nomeFuncaoChamada, "preservarContexto") == 0) || (strcmp(nomeFuncaoChamada, "executarPrograma") == 0) ||
+                               (strcmp(nomeFuncaoChamada, "restaurarContexto") == 0) || (strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) ||
+                               (strcmp(nomeFuncaoChamada, "configurarBase") == 0));
+            bool ehFuncaoSOComArgumentos = ((strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) || (strcmp(nomeFuncaoChamada, "configurarBase") == 0));
+            bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false && ehFuncaoSO == false);
 
             if (mudarContexto == true) {
                 preservarTemporarios();
             }
 
-            if (ehOutput == true) {
+            if (ehOutput == true || ehFuncaoSOComArgumentos == true) {
+                // somente output e funções reservadas do SO que tem argumentos
                 char* origemArgumento = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, false, nivelEscopo, true);
                 emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "t0", NULL);
 
@@ -530,7 +541,19 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             char quantidadeArgumentos[20];
             sprintf(quantidadeArgumentos, "%d", no->simbolo->quantidadeParametros);
 
-            emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, no->simbolo);
+            if (strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) {
+                emitirQuadrupla(GCI_CARREGARPROGRAMA, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "preservarContexto") == 0) {
+                emitirQuadrupla(GCI_PRESERVARCONTEXTO, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "configurarBase") == 0) {
+                emitirQuadrupla(GCI_CONFIGURARBASE, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "executarPrograma") == 0) {
+                emitirQuadrupla(GCI_EXECUTARPROGRAMA, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "restaurarContexto") == 0) {
+                emitirQuadrupla(GCI_RESTAURARCONTEXTO, NULL, NULL, NULL, no->simbolo);
+            } else {
+                emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, no->simbolo);
+            }
 
             if (mudarContexto == true) {
                 restaurarTemporarios();

@@ -165,6 +165,7 @@ char* geraOP0(OperacaoInstrucao operacao) {
         case OP_B:
         case OP_BX:
         case OP_BL:
+        case OP_BUP:
             return "01";
 
         case OP_LDR:
@@ -175,6 +176,10 @@ char* geraOP0(OperacaoInstrucao operacao) {
         case OP_HLT:
         case OP_IN:
         case OP_OUT:
+        case OP_RCPSR:
+        case OP_WCPSR:
+        case OP_LDHD:
+        case OP_WB:
             return "11";
 
         default:
@@ -204,12 +209,17 @@ char* geraOP1(OperacaoInstrucao operacao) {
         case OP_B:      return "00";
         case OP_BX:     return "01";
         case OP_BL:     return "10";
+        case OP_BUP:    return "11";
 
         // instruções do tipo A
         case OP_NOP:    return "00000";
         case OP_HLT:    return "00001";
         case OP_IN:     return "00010";
         case OP_OUT:    return "00011";
+        case OP_RCPSR:  return "00100";
+        case OP_WCPSR:  return "00101";
+        case OP_LDHD:   return "00111";
+        case OP_WB:     return "01011";
 
         // instruções do tipo M
         default:        return NULL;
@@ -302,6 +312,14 @@ void assemblyParaBinario(FILE* arquivo) {
                 fprintf(arquivo, "%s%s%s%s", op0, op1, rn, "0000000000000000000");
                 break;
             }
+
+            case OP_BUP:
+            {
+                char* enderecoBinario = decimalParaBinario(instrucao->endereco, TAM_IMEDIATO_TIPO_B);
+                fprintf(arquivo, "%s%s%s", op0, op1, enderecoBinario);
+                free(enderecoBinario);
+                break;
+            }
                 
             case OP_LDR:
             case OP_STR:
@@ -333,6 +351,10 @@ void assemblyParaBinario(FILE* arquivo) {
             case OP_HLT:
             case OP_IN:
             case OP_OUT:
+            case OP_RCPSR:
+            case OP_WCPSR:
+            case OP_LDHD:
+            case OP_WB:
             {
                 char* imediato = decimalParaBinario(instrucao->imediato, TAM_IMEDIATO_TIPO_A);
                 fprintf(arquivo, "%s%s%s%s%s%s", op0, op1, rn, rd, rm, imediato);

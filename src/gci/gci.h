@@ -35,7 +35,12 @@ typedef enum OperacaoQuadrupla {
     GCI_PUSH,
     GCI_POP,
     GCI_MOVE,
-    GCI_NONE
+    GCI_NONE,
+    GCI_CARREGARPROGRAMA,
+    GCI_PRESERVARCONTEXTO,
+    GCI_EXECUTARPROGRAMA,
+    GCI_RESTAURARCONTEXTO,
+    GCI_CONFIGURARBASE
 } OperacaoQuadrupla;
 
 typedef struct Temporario {

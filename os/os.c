@@ -33,14 +33,14 @@ void executarSemPreempcao(void) {
     
     output(indicePrograma);
 
-    /*
-        carregarPrograma(posicaoHD[indicePrograma]);
-        preservarContexto();
-        configurarBase(50);
-        executarPrograma();
-        configurarBase(0);
-        restaurarContexto();
-
+    carregarPrograma(posicaoHD[indicePrograma]);
+    preservarContexto();
+    configurarBase(50);
+    executarPrograma();
+    configurarBase(0);
+    restaurarContexto();
+    
+        /*
         // carregar programa
         // carregarPrograma(posicaoHD[indicePrograma]);
 

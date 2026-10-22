@@ -70,12 +70,17 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
         case OP_B:      return "B";
         case OP_BX:     return "BX";
         case OP_BL:     return "BL";
+        case OP_BUP:    return "BUP";
         case OP_LDR:    return "LDR";
         case OP_STR:    return "STR";
         case OP_NOP:    return "NOP";
         case OP_HLT:    return "HLT";
         case OP_IN:     return "IN";
         case OP_OUT:    return "OUT";
+        case OP_RCPSR:  return "RCPSR";
+        case OP_WCPSR:  return "WCPSR";
+        case OP_LDHD:   return "LDHD";
+        case OP_WB:     return "WB";
         default:        return NULL;
     }
 }
@@ -221,6 +226,14 @@ void imprimirInstrucoes(FILE *arquivo) {
                     instrucao->endereco
                 );
                 continue;
+            
+            /*
+            case OP_BUP:
+                fprintf(arquivo, " #%s\n",
+                    instrucao->endereco
+                );
+                continue;
+            */
 
             case OP_BX:
                 fprintf(arquivo, " %s\n",
@@ -281,14 +294,24 @@ void imprimirInstrucoes(FILE *arquivo) {
                 continue;
 
             case OP_IN:
+            case OP_RCPSR:
                 fprintf(arquivo, " %s\n",
                     instrucao->rd
                 );
                 continue;
 
             case OP_OUT:
+            case OP_WCPSR:
+            case OP_WB:
                 fprintf(arquivo, " %s\n",
                     instrucao->rn
+                );
+                continue;
+            
+            case OP_LDHD:
+                fprintf(arquivo, " %s %s\n",
+                    instrucao->rn,
+                    instrucao->rm
                 );
                 continue;
 
@@ -752,6 +775,146 @@ void quadruplasParaAssembly() {
                 }
 
                 emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, rd, rn, rm, imediato, endereco);
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+                break;
+
+            case GCI_CARREGARPROGRAMA:
+                char* labelInicio = novoLabel();
+                char* labelFim = novoLabel();
+                char* regBaseMemInstrucoes = reservarRegistrador();
+                char* regContador = reservarRegistrador();
+
+                char offsetMemInstrucoes[20];
+                sprintf(offsetMemInstrucoes, "%d", COMECO_PROGRAMA_USUARIO);
+
+                char tamArquivo[20];
+                sprintf(tamArquivo, "%d", TAMANHO_ARQUIVO);
+
+                // LDR RX, #800
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regBaseMemInstrucoes, NULL, NULL, offsetMemInstrucoes, NULL);
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                // LDR RY, #0
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regContador, NULL, NULL, "0", NULL);
+                // LX: CMP RY, #200 
+                emitirInstrucao(OP_CMP, sufixoAtual, labelInicio, NULL, regContador, NULL, tamArquivo, NULL);
+                // BGE LY
+                emitirInstrucao(OP_B, SUFIXO_GE, labelAtual, NULL, NULL, NULL, NULL, labelFim);
+                // LDHD RX, R0
+                emitirInstrucao(OP_LDHD, sufixoAtual, labelAtual, NULL, regBaseMemInstrucoes, RR, NULL, NULL);
+                // ADD R0, R0, #1
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, RR, RR, NULL, "1", NULL);
+                // ADD RX, RX, #1
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, regBaseMemInstrucoes, regBaseMemInstrucoes, NULL, "1", NULL);
+                // ADD RY, RY, #1
+                emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, regContador, regContador, NULL, "1", NULL);
+                // LY: NOP
+                emitirInstrucao(OP_NOP, sufixoAtual, labelFim, NULL, NULL, NULL, NULL, NULL);
+
+                liberarRegistrador(regBaseMemInstrucoes);
+                liberarRegistrador(regContador);
+                break;
+
+            case GCI_PRESERVARCONTEXTO:
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, RR, NULL, "0");        // STR R0, =0
+                
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R1", NULL, "1");      // STR R1, =1
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R2", NULL, "2");      // STR R2, =2
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R3", NULL, "3");      // STR R3, =3
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R4", NULL, "4");      // STR R4, =4
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R5", NULL, "5");      // STR R5, =5
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R6", NULL, "6");      // STR R6, =6
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R7", NULL, "7");      // STR R7, =7
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R8", NULL, "8");      // STR R8, =8
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R9", NULL, "9");      // STR R9, =9
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R10", NULL, "10");    // STR R10, =10
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R11", NULL, "11");    // STR R11, =11
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R12", NULL, "12");    // STR R12, =12
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R13", NULL, "13");    // STR R13, =13
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R14", NULL, "14");    // STR R14, =14
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R15", NULL, "15");    // STR R15, =15
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R16", NULL, "16");    // STR R16, =16
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R17", NULL, "17");    // STR R17, =17
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R18", NULL, "18");    // STR R18, =18
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R19", NULL, "19");    // STR R19, =19
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R20", NULL, "20");    // STR R20, =20
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R21", NULL, "21");    // STR R21, =21
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R22", NULL, "22");    // STR R22, =22
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R23", NULL, "23");    // STR R23, =23
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R24", NULL, "24");    // STR R24, =24
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R25", NULL, "25");    // STR R25, =25
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R26", NULL, "26");    // STR R26, =26
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R27", NULL, "27");    // STR R27, =27
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R28", NULL, "28");    // STR R28, =28
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R29", NULL, "29");    // STR R29, =29
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R30", NULL, "30");    // STR R30, =30
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R31", NULL, "31");    // STR R31, =31
+
+                emitirInstrucao(OP_RCPSR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, NULL);     // RCPSR R0
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, RR, NULL, "32");       // STR R0, =32
+                break;
+
+            case GCI_EXECUTARPROGRAMA:
+                char enderecoProgramaUsuario[20];
+                sprintf(enderecoProgramaUsuario, "%d", COMECO_PROGRAMA_USUARIO);
+
+                emitirInstrucao(OP_BUP, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, enderecoProgramaUsuario);
+                
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+                break;
+
+            case GCI_RESTAURARCONTEXTO:
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, "32");       // LDR R0, =32
+                
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_WCPSR, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);     // WCPSR R0
+
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, "0");        // LDR R0, =0
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R1", NULL, NULL, NULL, "1");      // LDR R1, =1
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R2", NULL, NULL, NULL, "2");      // LDR R2, =2
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R3", NULL, NULL, NULL, "3");      // LDR R3, =3
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R4", NULL, NULL, NULL, "4");      // LDR R4, =4
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R5", NULL, NULL, NULL, "5");      // LDR R5, =5
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R6", NULL, NULL, NULL, "6");      // LDR R6, =6
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R7", NULL, NULL, NULL, "7");      // LDR R7, =7
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R8", NULL, NULL, NULL, "8");      // LDR R8, =8
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R9", NULL, NULL, NULL, "9");      // LDR R9, =9
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R10", NULL, NULL, NULL, "10");    // LDR R10, =10
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R11", NULL, NULL, NULL, "11");    // LDR R11, =11
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R12", NULL, NULL, NULL, "12");    // LDR R12, =12
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R13", NULL, NULL, NULL, "13");    // LDR R13, =13
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R14", NULL, NULL, NULL, "14");    // LDR R14, =14
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R15", NULL, NULL, NULL, "15");    // LDR R15, =15
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R16", NULL, NULL, NULL, "16");    // LDR R16, =16
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R17", NULL, NULL, NULL, "17");    // LDR R17, =17
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R18", NULL, NULL, NULL, "18");    // LDR R18, =18
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R19", NULL, NULL, NULL, "19");    // LDR R19, =19
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R20", NULL, NULL, NULL, "20");    // LDR R20, =20
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R21", NULL, NULL, NULL, "21");    // LDR R21, =21
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R22", NULL, NULL, NULL, "22");    // LDR R22, =22
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R23", NULL, NULL, NULL, "23");    // LDR R23, =23
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R24", NULL, NULL, NULL, "24");    // LDR R24, =24
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R25", NULL, NULL, NULL, "25");    // LDR R25, =25
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R26", NULL, NULL, NULL, "26");    // LDR R26, =26
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R27", NULL, NULL, NULL, "27");    // LDR R27, =27
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R28", NULL, NULL, NULL, "28");    // LDR R28, =28
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R29", NULL, NULL, NULL, "29");    // LDR R29, =29
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R30", NULL, NULL, NULL, "30");    // LDR R30, =30
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R31", NULL, NULL, NULL, "31");    // LDR R31, =31
+                break;
+
+            case GCI_CONFIGURARBASE:
+                emitirInstrucao(OP_WB, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;

@@ -9,7 +9,15 @@
 #define LR "R31" // link register
 
 #define COMECO_VAR_LOCAIS 2
+
+// === SISTEMA OPERACIONAL ===
+// tamanho do bloco de controle de processo
 #define TAMANHO_BCP 34
+// endereço em que começa o programa de usuário na memória de instruções
+#define COMECO_PROGRAMA_USUARIO 800
+// tamanho de um arquivo no HD
+#define TAMANHO_ARQUIVO 200
+// === FIM SISTEMA OPERACIONAL ===
 
 typedef enum {
     OP_ADD,
@@ -28,12 +36,17 @@ typedef enum {
     OP_B,
     OP_BX,
     OP_BL,
+    OP_BUP,
     OP_LDR,
     OP_STR,
     OP_NOP,
     OP_HLT,
     OP_IN,
-    OP_OUT
+    OP_OUT,
+    OP_RCPSR,
+    OP_WCPSR,
+    OP_LDHD,
+    OP_WB
 } OperacaoInstrucao;
 
 typedef enum {

@@ -346,6 +346,27 @@ void analisarSemantica() {
     pOutput->prox = NULL;
     s->parametros = pOutput;
 
+    // Funções reservadas do SO
+    s = declararSimbolo("carregarPrograma", Funcao, TipoVoid, false, -1);
+    // 1 parâmetro do tipo inteiro (índice do programa no HD)
+    Parametro* pCarregarPrograma = (Parametro*) malloc(sizeof(Parametro));
+    pCarregarPrograma->tipoParam = TipoInt;
+    pCarregarPrograma->paramVetor = false;
+    pCarregarPrograma->prox = NULL;
+    s->parametros = pCarregarPrograma;
+
+    declararSimbolo("preservarContexto", Funcao, TipoVoid, false, -1);
+    declararSimbolo("executarPrograma", Funcao, TipoVoid, false, -1);
+    declararSimbolo("restaurarContexto", Funcao, TipoVoid, false, -1);
+    
+    s = declararSimbolo("configurarBase", Funcao, TipoVoid, false, -1);
+    // 1 parâmetro do tipo inteiro (endereco base do programa na memória de dados)
+    Parametro* pConfigurarBase = (Parametro*) malloc(sizeof(Parametro));
+    pConfigurarBase->tipoParam = TipoInt;
+    pConfigurarBase->paramVetor = false;
+    pConfigurarBase->prox = NULL;
+    s->parametros = pConfigurarBase;
+
     int proximoIdEscopo = 1;
     criarTabSimbolos(raizAST, saida, 1, &proximoIdEscopo);
 
