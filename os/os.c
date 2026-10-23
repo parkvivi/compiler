@@ -14,6 +14,7 @@ int escolherPrograma(void) {
     i = 0;
     while (i < 10) {
         if (programasHD[i] == programa) {
+            output(programa); /* printa nome do programa */
             return i; /* retorna índice do programa */
         }
 
@@ -30,29 +31,13 @@ void executarSemPreempcao(void) {
     if (indicePrograma == 11) {
         return;
     }
-    
-    output(indicePrograma);
 
     carregarPrograma(posicaoHD[indicePrograma]);
     preservarContexto();
-    configurarBase(50);
+    configurarBase(200); /* offset corresponde ao espaço de endereçamento do SO */
     executarPrograma();
     configurarBase(0);
     restaurarContexto();
-    
-        /*
-        // carregar programa
-        // carregarPrograma(posicaoHD[indicePrograma]);
-
-        // preservar R0-R31 no PCB do SO
-        // preservarContexto();
-
-        // altera valor do registrador base pro programa de usuário
-        // BUP
-        // executarPrograma(valor da base + 34);
-
-        // restaurar R0-R31
-    */
 }
 
 void shellprompt(void) {

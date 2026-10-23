@@ -35,6 +35,10 @@ L0:
 	LDR R3, [R29, #3]
 	CMP R4, R3
 	BNE L2
+	LDR R3, [R29, #3]
+	MOV R0, R3
+	OUT R0
+	NOP
 	MOV R0, R1
 	LDR R31, [R29, #1]
 	MOV R30, R29
@@ -76,12 +80,8 @@ executarSemPreempcao:
 	BX R31
 L3:
 	NOP
-	MOV R0, R1
-	OUT R0
-	NOP
-	LDR R1, #44
-	LDR R2, [R29, #2]
-	ADD R3, R1, R2
+	LDR R2, #44
+	ADD R3, R2, R1
 	LDR R4, R3
 	MOV R0, R4
 	LDR R5, #800
@@ -93,6 +93,7 @@ L9:
 	ADD R0, R0, #1
 	ADD R5, R5, #1
 	ADD R6, R6, #1
+	B L9
 L10:
 	NOP
 	STR R0, =0
@@ -129,7 +130,7 @@ L10:
 	STR R31, =31
 	RCPSR R0
 	STR R0, =32
-	MOV R0, #50
+	MOV R0, #200
 	WB R0
 	BUP
 	MOV R0, #0

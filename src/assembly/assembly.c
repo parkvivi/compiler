@@ -812,6 +812,8 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, regBaseMemInstrucoes, regBaseMemInstrucoes, NULL, "1", NULL);
                 // ADD RY, RY, #1
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, regContador, regContador, NULL, "1", NULL);
+                // B LX
+                emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, labelInicio);
                 // LY: NOP
                 emitirInstrucao(OP_NOP, sufixoAtual, labelFim, NULL, NULL, NULL, NULL, NULL);
 
