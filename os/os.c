@@ -1,8 +1,8 @@
-int programasHD[10];
-int posicaoHD[10];
+int programasHD[10];    /* guarda nome dos programas no HD */
+int posicaoHD[10];      /* guarda posição inicial dos programas no HD */
 
-int tamanhoSO;
-int tamanhoArquivo;
+int tamanhoSO;          /* guarda tamanho do kernel do SO */
+int tamanhoArquivo;     /* guarda tamanho de um programa de usuário (fixo) */
 
 int escolherPrograma(void) {
     int i;
