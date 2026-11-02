@@ -307,17 +307,10 @@ void assemblyParaBinario(FILE* arquivo) {
                 break;
             }
 
+            case OP_BUP:
             case OP_BX:
             {
                 fprintf(arquivo, "%s%s%s%s", op0, op1, rn, "0000000000000000000");
-                break;
-            }
-
-            case OP_BUP:
-            {
-                char* enderecoBinario = decimalParaBinario(instrucao->endereco, TAM_IMEDIATO_TIPO_B);
-                fprintf(arquivo, "%s%s%s", op0, op1, enderecoBinario);
-                free(enderecoBinario);
                 break;
             }
                 

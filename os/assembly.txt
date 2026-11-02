@@ -132,7 +132,8 @@ L10:
 	STR R0, =32
 	MOV R0, #200
 	WB R0
-	BUP
+	LDR R5, #800
+	BUP R5
 	MOV R0, #0
 	WB R0
 	LDR R0, =32

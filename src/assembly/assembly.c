@@ -227,14 +227,7 @@ void imprimirInstrucoes(FILE *arquivo) {
                 );
                 continue;
             
-            /*
             case OP_BUP:
-                fprintf(arquivo, " #%s\n",
-                    instrucao->endereco
-                );
-                continue;
-            */
-
             case OP_BX:
                 fprintf(arquivo, " %s\n",
                     instrucao->rn
@@ -864,13 +857,18 @@ void quadruplasParaAssembly() {
                 break;
 
             case GCI_EXECUTARPROGRAMA:
+                char* regAux = reservarRegistrador();
                 char enderecoProgramaUsuario[20];
                 sprintf(enderecoProgramaUsuario, "%d", COMECO_PROGRAMA_USUARIO);
 
-                emitirInstrucao(OP_BUP, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, enderecoProgramaUsuario);
-                
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, enderecoProgramaUsuario, NULL);
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_BUP, sufixoAtual, labelAtual, NULL, regAux, NULL, NULL, NULL);
+                
+                liberarRegistrador(regAux);
+                
                 break;
 
             case GCI_RESTAURARCONTEXTO:
