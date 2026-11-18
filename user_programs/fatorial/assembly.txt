@@ -1,5 +1,7 @@
 	NOP
 	MOV R0, #0
+	MOV R27, #0
+	MOV R28, #0
 	MOV R29, #34
 	MOV R30, #34
 	MOV R31, #34
@@ -60,5 +62,6 @@ main:
 	MOV R0, R2
 	OUT R0
 	NOP
+	MOV R28, #1
 	RIR2 R3
 	BX R3

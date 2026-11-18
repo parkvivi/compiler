@@ -3,10 +3,12 @@
 
 #include "gci.h"
 
-#define RR "R0"  // return register
-#define FP "R29" // frame pointer
-#define SP "R30" // stack pointer
-#define LR "R31" // link register
+#define RR "R0"     // return register
+#define OSR "R27"   // operating system register -> reg especial para uso em meio de trocas de contexto
+#define SR "R28"    // status register
+#define FP "R29"    // frame pointer
+#define SP "R30"    // stack pointer
+#define LR "R31"    // link register
 
 #define COMECO_VAR_LOCAIS 2
 #define TAMANHO_BCP 34

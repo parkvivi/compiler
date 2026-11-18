@@ -1,5 +1,7 @@
 	NOP
 	MOV R0, #0
+	MOV R27, #0
+	MOV R28, #0
 	MOV R29, #34
 	MOV R30, #34
 	MOV R31, #34
@@ -170,5 +172,6 @@ L7:
 	B L7
 L8:
 	NOP
+	MOV R28, #1
 	RIR2 R8
 	BX R8

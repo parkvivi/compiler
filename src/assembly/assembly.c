@@ -717,10 +717,12 @@ void quadruplasParaAssembly() {
             case GCI_HALT:
                 // lógica para programas de usuário (up - 'user program')
                 char* regKernel = reservarRegistrador();
-                emitirInstrucao(OP_RIR2, sufixoAtual, labelAtual, regKernel, NULL, NULL, NULL, NULL);
                 
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, SR, NULL, NULL, "1", NULL);            // MOV R28, #1
+
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
+                emitirInstrucao(OP_RIR2, sufixoAtual, labelAtual, regKernel, NULL, NULL, NULL, NULL);
                 emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, regKernel, NULL, NULL, NULL);
                 liberarRegistrador(regKernel);
                 break;
@@ -783,6 +785,8 @@ void gerarAssembly() {
     sprintf(tamanhoBCP, "%d", TAMANHO_BCP);
 
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, RR, NULL, NULL, "0", NULL);            // MOV R0, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, OSR, NULL, NULL, "0", NULL);           // MOV R27, #0
+    emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SR, NULL, NULL, "0", NULL);            // MOV R28, #0
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, FP, NULL, NULL, tamanhoBCP, NULL);     // MOV R29, #TAM_BCP
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, SP, NULL, NULL, tamanhoBCP, NULL);     // MOV R30, #TAM_BCP
     emitirInstrucao(OP_MOV, SUFIXO_AL, NULL, LR, NULL, NULL, tamanhoBCP, NULL);     // MOV R31, #TAM_BCP
