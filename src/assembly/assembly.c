@@ -1059,7 +1059,7 @@ void quadruplasParaAssembly() {
 
             case GCI_GUARDARSTATUSFINALIZACAO:
             {
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, NULL, SR, NULL, NULL, "28");    // LDR R28, =28
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, SR, NULL, "28");    // STR R28, =28
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;

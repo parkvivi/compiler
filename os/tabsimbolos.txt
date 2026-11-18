@@ -22,7 +22,7 @@ Escopo #8 (nivel 3)
 Escopo #7 (nivel 2)
   (sem simbolos)
 
-Escopo #11 (nivel 4)
+Escopo #9 (nivel 2)
   (sem simbolos)
 
 Escopo #12 (nivel 4)
@@ -34,10 +34,13 @@ Escopo #13 (nivel 4)
 Escopo #14 (nivel 4)
   (sem simbolos)
 
-Escopo #10 (nivel 3)
+Escopo #15 (nivel 4)
   (sem simbolos)
 
-Escopo #9 (nivel 2)
+Escopo #11 (nivel 3)
+  (sem simbolos)
+
+Escopo #10 (nivel 2)
   (sem simbolos)
 
 Escopo #6 (nivel 1)
@@ -48,22 +51,22 @@ Escopo #6 (nivel 1)
   - indicesProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
   - i | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #17 (nivel 3)
-  (sem simbolos)
-
 Escopo #18 (nivel 3)
   (sem simbolos)
 
-Escopo #16 (nivel 2)
+Escopo #19 (nivel 3)
   (sem simbolos)
 
-Escopo #15 (nivel 1)
+Escopo #17 (nivel 2)
+  (sem simbolos)
+
+Escopo #16 (nivel 1)
   - opcao | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #20 (nivel 2)
+Escopo #21 (nivel 2)
   (sem simbolos)
 
-Escopo #19 (nivel 1)
+Escopo #20 (nivel 1)
   - i | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #0 (nivel 0)

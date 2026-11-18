@@ -59,12 +59,13 @@ void executarSemPreempcao(void) {
         return;
     }
 
+    escreverLCD(24, 32);    /* espaço em branco */
     /* inserir nome do programa em execução aqui */
 
     carregarPrograma(posicaoHD[indicePrograma]);
     preservarContexto();
     configurarBase(tamanhoDadosSO);
-    configurarPCInicial(800);
+    configurarPCInicial(1800);
     executarPrograma();
     configurarBase(0);
     restaurarContexto();
@@ -110,6 +111,15 @@ void executarComPreempcao(void) {
 
         baseProgramas[i] = tamanhoDadosSO + i * tamanhoDados;
         programasFinalizados[i] = 0;
+        i = i + 1;
+    }
+
+    /* inicializar PC aqui (alterar base -> escrever 1800 na posição 33 da memória)*/
+    i = 0;
+    while (i < 3) {
+        configurarBase(baseProgramas[i]);
+        configurarPCInicial(1800);
+        configurarBase(0);
         i = i + 1;
     }
 
@@ -186,7 +196,7 @@ void shellprompt(void) {
 void main(void) {
     int i;
 
-    tamanhoKernelSO = 800;
+    tamanhoKernelSO = 1800;
     tamanhoArquivo = 200;
 
     tamanhoDadosSO = 500;
@@ -195,7 +205,9 @@ void main(void) {
     i = 0;
     while (i < 10) {
         programasHD[i] = i + 1;
+        output(programasHD[i]);
         posicaoHD[i] = tamanhoKernelSO + i * tamanhoArquivo;
+        output(posicaoHD[i]);
         i = i + 1;
     }
 
