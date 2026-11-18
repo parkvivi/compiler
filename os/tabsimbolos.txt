@@ -16,16 +16,18 @@ Escopo #5 (nivel 2)
 Escopo #4 (nivel 1)
   - indicePrograma | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #8 (nivel 3)
+Escopo #6 (nivel 1)
+  - programaEscalonado | categoria=variavel | tipo=int | vetor=nao
+  - maximoProgramas | categoria=variavel | tipo=int | vetor=nao
+  - programaAtual | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #9 (nivel 3)
   (sem simbolos)
 
-Escopo #7 (nivel 2)
+Escopo #8 (nivel 2)
   (sem simbolos)
 
-Escopo #9 (nivel 2)
-  (sem simbolos)
-
-Escopo #12 (nivel 4)
+Escopo #10 (nivel 2)
   (sem simbolos)
 
 Escopo #13 (nivel 4)
@@ -37,13 +39,16 @@ Escopo #14 (nivel 4)
 Escopo #15 (nivel 4)
   (sem simbolos)
 
-Escopo #11 (nivel 3)
+Escopo #16 (nivel 4)
   (sem simbolos)
 
-Escopo #10 (nivel 2)
+Escopo #12 (nivel 3)
   (sem simbolos)
 
-Escopo #6 (nivel 1)
+Escopo #11 (nivel 2)
+  (sem simbolos)
+
+Escopo #7 (nivel 1)
   - quantidadeProgramasFinalizados | categoria=variavel | tipo=int | vetor=nao
   - flagFim | categoria=variavel | tipo=int | vetor=nao
   - programasFinalizados | categoria=variavel | tipo=int | vetor=sim | tamanho=3
@@ -51,29 +56,64 @@ Escopo #6 (nivel 1)
   - indicesProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
   - i | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #18 (nivel 3)
+Escopo #18 (nivel 2)
   (sem simbolos)
 
-Escopo #19 (nivel 3)
+Escopo #20 (nivel 3)
   (sem simbolos)
 
-Escopo #17 (nivel 2)
+Escopo #19 (nivel 2)
   (sem simbolos)
 
-Escopo #16 (nivel 1)
+Escopo #17 (nivel 1)
+  - i | categoria=variavel | tipo=int | vetor=nao
+  - novoNome | categoria=variavel | tipo=int | vetor=nao
+  - indicePrograma | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #23 (nivel 3)
+  (sem simbolos)
+
+Escopo #24 (nivel 3)
+  (sem simbolos)
+
+Escopo #25 (nivel 3)
+  (sem simbolos)
+
+Escopo #26 (nivel 3)
+  (sem simbolos)
+
+Escopo #28 (nivel 4)
+  (sem simbolos)
+
+Escopo #29 (nivel 4)
+  (sem simbolos)
+
+Escopo #30 (nivel 4)
+  (sem simbolos)
+
+Escopo #27 (nivel 3)
+  (sem simbolos)
+
+Escopo #22 (nivel 2)
+  (sem simbolos)
+
+Escopo #21 (nivel 1)
+  - codigoRetorno | categoria=variavel | tipo=int | vetor=nao
   - opcao | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #21 (nivel 2)
+Escopo #32 (nivel 2)
   (sem simbolos)
 
-Escopo #20 (nivel 1)
+Escopo #31 (nivel 1)
   - i | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #0 (nivel 0)
   - main | categoria=funcao | tipo=void | vetor=nao
   - shellprompt | categoria=funcao | tipo=void | vetor=nao
-  - executarComPreempcao | categoria=funcao | tipo=void | vetor=nao
-  - executarSemPreempcao | categoria=funcao | tipo=void | vetor=nao
+  - renomearPrograma | categoria=funcao | tipo=int | vetor=nao
+  - executarComPreempcao | categoria=funcao | tipo=int | vetor=nao
+  - roundRobin | categoria=funcao | tipo=int | vetor=nao
+  - executarSemPreempcao | categoria=funcao | tipo=int | vetor=nao
   - escolherPrograma | categoria=funcao | tipo=int | vetor=nao
   - tamanhoDadosSO | categoria=variavel | tipo=int | vetor=nao
   - tamanhoDados | categoria=variavel | tipo=int | vetor=nao
