@@ -1,5 +1,6 @@
 int programasHD[10];    /* guarda nome dos programas no HD */
 int posicaoHD[10];      /* guarda posição inicial dos programas no HD */
+int ocupadoHD[10];      /* há um programa ocupando aquela posição do HD (1) ou não (0)*/
 
 int tamanhoKernelSO;    /* guarda tamanho do kernel do SO */
 int tamanhoArquivo;     /* guarda tamanho de um programa de usuário (fixo) */
@@ -13,14 +14,16 @@ int escolherPrograma(void) {
 
     programa = 0;
     programa = input();
-    
-    i = 0;
-    while (i < 10) {
-        if (programasHD[i] == programa) {
-            return i; /* retorna índice do programa */
-        }
 
-        i = i + 1;
+    if (programa != 0) {    /* 0 não é um nome permitido */
+        i = 0;
+        while (i < 10) {
+            if (programasHD[i] == programa) {
+                return i;   /* retorna índice do programa */
+            }
+    
+            i = i + 1;
+        }
     }
 
     return 11;
@@ -235,6 +238,10 @@ int renomearPrograma(void) {
     
     novoNome = input();
 
+    if (novoNome == 0) {
+        return 2;   /* 0 não é um nome permitido */
+    }
+
     i = 0;
     while (i < 10) {
         if (programasHD[i] == novoNome) {
@@ -245,6 +252,43 @@ int renomearPrograma(void) {
     }
 
     programasHD[indicePrograma] = novoNome;
+
+    return 0;
+}
+
+int deletarPrograma(void) {
+    int indicePrograma;
+
+    limparLCD();
+    escreverLCD(1, 100);    /* d */
+    escreverLCD(2, 101);    /* e */
+    escreverLCD(3, 108);    /* l */
+    escreverLCD(4, 101);    /* e */
+    escreverLCD(5, 116);    /* t */
+    escreverLCD(6, 97);     /* a */
+    escreverLCD(7, 114);    /* r */
+
+    escreverLCD(16, 91);    /* [ */
+    escreverLCD(17, 105);   /* i */
+    escreverLCD(18, 110);   /* n */
+    escreverLCD(19, 93);    /* ] */
+
+    escreverLCD(21, 112);   /* p */
+    escreverLCD(22, 114);   /* r */
+    escreverLCD(23, 111);   /* o */
+    escreverLCD(24, 103);   /* g */
+    escreverLCD(25, 114);   /* r */
+    escreverLCD(26, 97);    /* a */
+    escreverLCD(27, 109);   /* m */
+    escreverLCD(28, 97);    /* a */
+
+    indicePrograma = escolherPrograma();
+    if (indicePrograma == 11) {
+        return 1;
+    }
+
+    programasHD[indicePrograma] = 0;
+    ocupadoHD[indicePrograma] = 0;
 
     return 0;
 }
@@ -274,7 +318,11 @@ void shellprompt(void) {
 
         escreverLCD(16, 51);    /* 3 */
         escreverLCD(17, 126);   /* -> */
-        escreverLCD(18, 82);    /* 3R */
+        escreverLCD(18, 82);    /* R */
+
+        escreverLCD(20, 52);    /* 4 */
+        escreverLCD(21, 126);   /* -> */
+        escreverLCD(22, 68);    /* D */
 
         opcao = input();
 
@@ -284,6 +332,8 @@ void shellprompt(void) {
             codigoRetorno = executarComPreempcao();
         } else if (opcao == 3) {
             codigoRetorno = renomearPrograma();
+        } else if (opcao == 4) {
+            codigoRetorno = deletarPrograma();
         } else {
             codigoRetorno = 10;
         }
@@ -300,7 +350,7 @@ void shellprompt(void) {
             if (codigoRetorno == 1) {               /* programa não encontrado */
                 escreverLCD(13, 112);   /* p */
                 escreverLCD(14, 103);   /* g */
-            } else if (codigoRetorno == 2) {        /* programa com esse nome já existe */
+            } else if (codigoRetorno == 2) {        /* programa com esse nome já existe ou nome não é permitido */
                 escreverLCD(13, 110);   /* n */
                 escreverLCD(14, 109);   /* m */ 
             } else if (codigoRetorno == 10) {       /* opção escolhida não é válida */
@@ -327,6 +377,7 @@ void main(void) {
     while (i < 10) {
         programasHD[i] = i + 1;
         posicaoHD[i] = tamanhoKernelSO + i * tamanhoArquivo;
+        ocupadoHD[i] = 1;
         i = i + 1;
     }
 
