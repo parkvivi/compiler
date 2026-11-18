@@ -22,24 +22,68 @@ Escopo #8 (nivel 3)
 Escopo #7 (nivel 2)
   (sem simbolos)
 
-Escopo #6 (nivel 1)
-  - opcao | categoria=variavel | tipo=int | vetor=nao
-
-Escopo #10 (nivel 2)
+Escopo #11 (nivel 4)
   (sem simbolos)
 
-Escopo #9 (nivel 1)
+Escopo #12 (nivel 4)
+  (sem simbolos)
+
+Escopo #13 (nivel 4)
+  (sem simbolos)
+
+Escopo #14 (nivel 4)
+  (sem simbolos)
+
+Escopo #10 (nivel 3)
+  (sem simbolos)
+
+Escopo #9 (nivel 2)
+  (sem simbolos)
+
+Escopo #6 (nivel 1)
+  - quantidadeProgramasFinalizados | categoria=variavel | tipo=int | vetor=nao
+  - flagFim | categoria=variavel | tipo=int | vetor=nao
+  - programasFinalizados | categoria=variavel | tipo=int | vetor=sim | tamanho=3
+  - baseProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
+  - indicesProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
+  - i | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #17 (nivel 3)
+  (sem simbolos)
+
+Escopo #18 (nivel 3)
+  (sem simbolos)
+
+Escopo #16 (nivel 2)
+  (sem simbolos)
+
+Escopo #15 (nivel 1)
+  - opcao | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #20 (nivel 2)
+  (sem simbolos)
+
+Escopo #19 (nivel 1)
   - i | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #0 (nivel 0)
   - main | categoria=funcao | tipo=void | vetor=nao
   - shellprompt | categoria=funcao | tipo=void | vetor=nao
+  - executarComPreempcao | categoria=funcao | tipo=void | vetor=nao
   - executarSemPreempcao | categoria=funcao | tipo=void | vetor=nao
   - escolherPrograma | categoria=funcao | tipo=int | vetor=nao
+  - tamanhoDadosSO | categoria=variavel | tipo=int | vetor=nao
+  - tamanhoDados | categoria=variavel | tipo=int | vetor=nao
   - tamanhoArquivo | categoria=variavel | tipo=int | vetor=nao
-  - tamanhoSO | categoria=variavel | tipo=int | vetor=nao
+  - tamanhoKernelSO | categoria=variavel | tipo=int | vetor=nao
   - posicaoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - programasHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - configurarPCInicial | categoria=funcao | tipo=void | vetor=nao
+  - lerStatusFinalizacao | categoria=funcao | tipo=int | vetor=nao
+  - guardarStatusFinalizacao | categoria=funcao | tipo=void | vetor=nao
+  - configurarQuantum | categoria=funcao | tipo=void | vetor=nao
+  - escreverLCD | categoria=funcao | tipo=void | vetor=nao
+  - limparLCD | categoria=funcao | tipo=void | vetor=nao
   - configurarBase | categoria=funcao | tipo=void | vetor=nao
   - restaurarContexto | categoria=funcao | tipo=void | vetor=nao
   - executarPrograma | categoria=funcao | tipo=void | vetor=nao

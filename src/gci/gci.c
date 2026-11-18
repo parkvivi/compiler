@@ -274,6 +274,12 @@ char* operacaoQuadrupla(OperacaoQuadrupla tipo) {
         case GCI_EXECUTARPROGRAMA:  return "EXECUTAR_PROGRAMA";
         case GCI_RESTAURARCONTEXTO: return "RESTAURAR_CONTEXTO";
         case GCI_CONFIGURARBASE:    return "CONFIGURAR_BASE";
+        case GCI_LIMPARLCD:         return "LIMPAR_LCD";
+        case GCI_ESCREVERLCD:       return "ESCREVER_LCD";
+        case GCI_CONFIGURARQUANTUM: return "CONFIGURAR_QUANTUM";
+        case GCI_GUARDARSTATUSFINALIZACAO:  return "GUARDAR_STATUS_FINALIZACAO";
+        case GCI_LERSTATUSFINALIZACAO:      return "LER_STATUS_FINALIZACAO";
+        case GCI_CONFIGURARPCINICIAL:       return "CONFIGURAR_PC_INICIAL";
         default:            return  NULL;
     }
 }
@@ -511,7 +517,10 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
             // qualquer função reservada para o SO
             bool ehFuncaoSO = ((strcmp(nomeFuncaoChamada, "preservarContexto") == 0) || (strcmp(nomeFuncaoChamada, "executarPrograma") == 0) ||
                                (strcmp(nomeFuncaoChamada, "restaurarContexto") == 0) || (strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) ||
-                               (strcmp(nomeFuncaoChamada, "configurarBase") == 0));
+                               (strcmp(nomeFuncaoChamada, "configurarBase") == 0) || (strcmp(nomeFuncaoChamada, "limparLCD") == 0) ||
+                               (strcmp(nomeFuncaoChamada, "escreverLCD") == 0) || (strcmp(nomeFuncaoChamada, "configurarQuantum") == 0) ||
+                               (strcmp(nomeFuncaoChamada, "guardarStatusFinalizacao") == 0) || (strcmp(nomeFuncaoChamada, "lerStatusFinalizacao") == 0) ||
+                               (strcmp(nomeFuncaoChamada, "configurarPCInicial") == 0));
             bool ehFuncaoSOComArgumentos = ((strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) || (strcmp(nomeFuncaoChamada, "configurarBase") == 0));
             bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false && ehFuncaoSO == false);
 
@@ -525,7 +534,8 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 emitirQuadrupla(GCI_MOVE, origemArgumento, NULL, "t0", NULL);
 
                 liberarTemporario(origemArgumento, true);
-            } else {
+            } else if ((strcmp(nomeFuncaoChamada, "escreverLCD") != 0) && (strcmp(nomeFuncaoChamada, "configurarQuantum") != 0) &&
+                       (strcmp(nomeFuncaoChamada, "configurarPCInicial") != 0)) {
                 for (AST* argumento=no->filhos[0]; argumento!=NULL; argumento=argumento->irmao) {
                     char* origemArgumento = gerarQuadruplas(argumento, nomeFuncaoAtual, false, nivelEscopo + 1, true);
                     emitirQuadrupla(GCI_ARG, origemArgumento, NULL, NULL, NULL);
@@ -551,6 +561,35 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 emitirQuadrupla(GCI_EXECUTARPROGRAMA, NULL, NULL, NULL, no->simbolo);
             } else if (strcmp(nomeFuncaoChamada, "restaurarContexto") == 0) {
                 emitirQuadrupla(GCI_RESTAURARCONTEXTO, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "limparLCD") == 0) {
+                emitirQuadrupla(GCI_LIMPARLCD, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "escreverLCD") == 0) {
+                char* enderecoLCD = gerarQuadruplas(no->filhos[0], nomeFuncaoAtual, false, nivelEscopo, true);
+                char* dadoLCD = gerarQuadruplas(no->filhos[0]->irmao, nomeFuncaoAtual, false, nivelEscopo, true);
+
+                emitirQuadrupla(GCI_ESCREVERLCD, dadoLCD, NULL, enderecoLCD, no->simbolo);
+
+                if (liberarTemporario(enderecoLCD, false) == 2) {
+                    liberarTemporario(enderecoLCD, true);
+                }
+
+                if (liberarTemporario(dadoLCD, false) == 2) {
+                    liberarTemporario(dadoLCD, true);
+                }
+            } else if (strcmp(nomeFuncaoChamada, "configurarQuantum") == 0) {
+                char valorQuantum[80];
+                sprintf(valorQuantum, "%d", no->filhos[0]->dado.valor);
+
+                emitirQuadrupla(GCI_CONFIGURARQUANTUM, NULL, NULL, valorQuantum, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "guardarStatusFinalizacao") == 0) {
+                emitirQuadrupla(GCI_GUARDARSTATUSFINALIZACAO, NULL, NULL, NULL, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "lerStatusFinalizacao") == 0) {
+                emitirQuadrupla(GCI_LERSTATUSFINALIZACAO, NULL, NULL, "t0", no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "configurarPCInicial") == 0) {
+                char PCInicial[80];
+                sprintf(PCInicial, "%d", no->filhos[0]->dado.valor);
+
+                emitirQuadrupla(GCI_CONFIGURARPCINICIAL, NULL, NULL, PCInicial, no->simbolo);
             } else {
                 emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, no->simbolo);
             }

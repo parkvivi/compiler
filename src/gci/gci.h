@@ -3,7 +3,7 @@
 
 #include "ast.h"
 
-#define MAX_TEMPORARIOS 28
+#define MAX_TEMPORARIOS 26
 
 typedef enum { Livre, ValorTemporario, AssociadoVariavel } EstadoTemporario;
 
@@ -40,7 +40,13 @@ typedef enum OperacaoQuadrupla {
     GCI_PRESERVARCONTEXTO,
     GCI_EXECUTARPROGRAMA,
     GCI_RESTAURARCONTEXTO,
-    GCI_CONFIGURARBASE
+    GCI_CONFIGURARBASE,
+    GCI_LIMPARLCD,
+    GCI_ESCREVERLCD,
+    GCI_CONFIGURARQUANTUM,
+    GCI_GUARDARSTATUSFINALIZACAO,
+    GCI_LERSTATUSFINALIZACAO,
+    GCI_CONFIGURARPCINICIAL
 } OperacaoQuadrupla;
 
 typedef struct Temporario {

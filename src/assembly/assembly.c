@@ -5,8 +5,8 @@ Instrucao* lista_instrucoes = NULL;
 Instrucao* ultima_instrucao = NULL;
 ListaSimbolos* lista_simbolos = NULL;
 
-int mapeamentoTemporarios[MAX_TEMPORARIOS];     // mapeamento de t1 a t28
-bool registradoresDisponiveis[MAX_TEMPORARIOS];  // disponibilidade de R1 a R28
+int mapeamentoTemporarios[MAX_TEMPORARIOS];     // mapeamento de t1 a t27
+bool registradoresDisponiveis[MAX_TEMPORARIOS];  // disponibilidade de R1 a R27
 
 void inserirListaSimbolos(Simbolo* simbolo) {
 
@@ -79,8 +79,11 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
         case OP_OUT:    return "OUT";
         case OP_RCPSR:  return "RCPSR";
         case OP_WCPSR:  return "WCPSR";
+        case OP_WLCD:   return "WLCD";
         case OP_LDHD:   return "LDHD";
+        case OP_RIR1:   return "RIR1";
         case OP_WB:     return "WB";
+        case OP_QTM:    return "QTM";
         default:        return NULL;
     }
 }
@@ -288,6 +291,7 @@ void imprimirInstrucoes(FILE *arquivo) {
 
             case OP_IN:
             case OP_RCPSR:
+            case OP_RIR1:
                 fprintf(arquivo, " %s\n",
                     instrucao->rd
                 );
@@ -296,15 +300,23 @@ void imprimirInstrucoes(FILE *arquivo) {
             case OP_OUT:
             case OP_WCPSR:
             case OP_WB:
+            case OP_QTM:
                 fprintf(arquivo, " %s\n",
                     instrucao->rn
                 );
                 continue;
             
             case OP_LDHD:
-                fprintf(arquivo, " %s %s\n",
+                fprintf(arquivo, " %s, %s\n",
                     instrucao->rn,
                     instrucao->rm
+                );
+                continue;
+            
+            case OP_WLCD:
+                fprintf(arquivo, " %s, #%s\n",
+                    instrucao->rn,
+                    instrucao->imediato
                 );
                 continue;
 
@@ -393,7 +405,8 @@ void quadruplasParaAssembly() {
             case GCI_ADD:
             case GCI_SUB:
             case GCI_MUL:
-            case GCI_DIV: {
+            case GCI_DIV:
+            {
                 OperacaoInstrucao operacao;
 
                 if (quad->operacao == GCI_ADD) {
@@ -420,7 +433,8 @@ void quadruplasParaAssembly() {
                 break;
             }
 
-            case GCI_ASSIGN: {
+            case GCI_ASSIGN:
+            {
                 bool bitI = ehTemporario(quad->argumento1);
 
                 rd = temporariosParaRegistradores(quad->argumento3);
@@ -439,7 +453,8 @@ void quadruplasParaAssembly() {
             case GCI_GT:
             case GCI_GE:
             case GCI_EQ:
-            case GCI_NEQ: {
+            case GCI_NEQ:
+            {
                 bool bitI = ehTemporario(quad->argumento2);
                 
                 rn = temporariosParaRegistradores(quad->argumento1);
@@ -471,6 +486,7 @@ void quadruplasParaAssembly() {
             }
 
             case GCI_FUNCTION:
+            {
                 labelAtual = quad->argumento1;
                 sufixoAtual = SUFIXO_AL;
                 funcaoAtual = quad->argumento1;
@@ -494,8 +510,10 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);   // ADD SP, SP, #1
 
                 break;
+            }
 
             case GCI_CALL:
+            {
                 if (strcmp(quad->argumento1, "input") == 0) {
                     rd = temporariosParaRegistradores(quad->argumento3);
                     emitirInstrucao(OP_IN, sufixoAtual, labelAtual, rd, NULL, NULL, NULL, NULL);
@@ -505,20 +523,25 @@ void quadruplasParaAssembly() {
                     emitirInstrucao(OP_NOP, SUFIXO_AL, NULL, NULL, NULL, NULL, NULL, NULL);
                 } else {
                     char decremento[20];
-                    sprintf(decremento, "%d", atoi(quad->argumento2));
+                    int decrementoInteiro = atoi(quad->argumento2);
+                    sprintf(decremento, "%d", decrementoInteiro);
                     emitirInstrucao(OP_BL, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento1);
 
                     labelAtual = NULL;
                     sufixoAtual = SUFIXO_AL;
 
-                    emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, decremento, NULL);
+                    if (decrementoInteiro != 0) {
+                        emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, decremento, NULL);
+                    }
                 }
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_ALLOC:
+            {
                 if (funcaoAtual == NULL) {
                     // ignora alocação de variáveis globais
                     labelAtual = NULL;
@@ -548,8 +571,10 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_PARAM:
+            {
                 inserirListaSimbolos(quad->simbolo);
                 
                 quad->simbolo->offset = quantidadeParametros;
@@ -559,8 +584,10 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_ARG:
+            {
                 rn = SP;
                 
                 if (ehTemporario(quad->argumento1) == true) {
@@ -586,9 +613,11 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
 
                 break;
+            }
 
             case GCI_RETURN:
             case GCI_END:
+            {
                 if (quad->operacao == GCI_RETURN && quad->argumento1 != NULL) {
                     if (ehTemporario(quad->argumento1) == true) {
                         rm = temporariosParaRegistradores(quad->argumento1);
@@ -621,31 +650,39 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, FP, SP, NULL, NULL, NULL);     // LDR FP, SP       -> atualiza fp para fp antigo
                 emitirInstrucao(OP_BX, sufixoAtual, labelAtual, NULL, LR, NULL, NULL, NULL);    // BX LR            -> retorna da função
                 break;
+            }
 
             case GCI_IFF:
+            {
                 emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento3);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_GOTO:
+            {
                 emitirInstrucao(OP_B, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, quad->argumento3);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_LABEL:
+            {    
                 labelAtual = quad->argumento3;
                 emitirInstrucao(OP_NOP, SUFIXO_AL, labelAtual, NULL, NULL, NULL, NULL, NULL);    // NOP
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
             
             case GCI_STORE: // arg3 -> rm ; arg1 -> rn ; arg2 -> endereço/imediato
             case GCI_LOAD:  // arg3 -> rd ; arg1 -> rn ; arg2 -> endereço/imediato
+            {
                 rd = ((quad->operacao == GCI_LOAD) ? temporariosParaRegistradores(quad->argumento3) : NULL);
                 rm = ((quad->operacao == GCI_STORE) ? temporariosParaRegistradores(quad->argumento3) : NULL);
                 OperacaoInstrucao operacao = ((quad->operacao == GCI_LOAD) ? OP_LDR : OP_STR);
@@ -727,15 +764,19 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_HALT:
+            {
                 emitirInstrucao(OP_HLT, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_PUSH:
+            {
                 rn = SP;
                 rm = temporariosParaRegistradores(quad->argumento3);
 
@@ -746,8 +787,10 @@ void quadruplasParaAssembly() {
 
                 emitirInstrucao(OP_ADD, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
                 break;
+            }
 
             case GCI_POP:
+            {
                 emitirInstrucao(OP_SUB, sufixoAtual, labelAtual, SP, SP, NULL, "1", NULL);
 
                 labelAtual = NULL;
@@ -757,8 +800,10 @@ void quadruplasParaAssembly() {
 
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, rd, SP, NULL, NULL, NULL);
                 break;
+            }
 
             case GCI_MOVE:
+            {
                 rd = temporariosParaRegistradores(quad->argumento3);
 
                 if (ehTemporario(quad->argumento1) == true) {
@@ -772,8 +817,10 @@ void quadruplasParaAssembly() {
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
             case GCI_CARREGARPROGRAMA:
+            {
                 char* labelInicio = novoLabel();
                 char* labelFim = novoLabel();
                 char* regBaseMemInstrucoes = reservarRegistrador();
@@ -813,9 +860,11 @@ void quadruplasParaAssembly() {
                 liberarRegistrador(regBaseMemInstrucoes);
                 liberarRegistrador(regContador);
                 break;
+            }
 
             case GCI_PRESERVARCONTEXTO:
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, RR, NULL, "0");        // STR R0, =0
+            {
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R0", NULL, "0");      // STR R0, =0
                 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
@@ -852,34 +901,36 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R30", NULL, "30");    // STR R30, =30
                 emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, "R31", NULL, "31");    // STR R31, =31
 
-                emitirInstrucao(OP_RCPSR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, NULL);     // RCPSR R0
-                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, RR, NULL, "32");       // STR R0, =32
+                emitirInstrucao(OP_RCPSR, sufixoAtual, labelAtual, OSR, NULL, NULL, NULL, NULL);     // RCPSR R27
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, OSR, NULL, "32");       // STR R27, =32
+
+                emitirInstrucao(OP_RIR1, sufixoAtual, labelAtual, OSR, NULL, NULL, NULL, NULL);      // RIR1 R27
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, OSR, NULL, "33");       // STR R27, =33
                 break;
+            }
 
             case GCI_EXECUTARPROGRAMA:
-                char* regAux = reservarRegistrador();
-                char enderecoProgramaUsuario[20];
-                sprintf(enderecoProgramaUsuario, "%d", COMECO_PROGRAMA_USUARIO);
+            {
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, OSR, NULL, NULL, NULL, "33");   // LDR R27, =33
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, enderecoProgramaUsuario, NULL);
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_BUP, sufixoAtual, labelAtual, NULL, regAux, NULL, NULL, NULL);
-                
-                liberarRegistrador(regAux);
-                
+                emitirInstrucao(OP_BUP, sufixoAtual, labelAtual, NULL, OSR, NULL, NULL, NULL);      // BUP R27
+                emitirInstrucao(OP_NOP, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);     // NOP
                 break;
+            }
 
             case GCI_RESTAURARCONTEXTO:
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, "32");       // LDR R0, =32
+            {
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, OSR, NULL, NULL, NULL, "32");      // LDR R27, =32
                 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
 
-                emitirInstrucao(OP_WCPSR, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);     // WCPSR R0
+                emitirInstrucao(OP_WCPSR, sufixoAtual, labelAtual, NULL, OSR, NULL, NULL, NULL);    // WCPSR R27
 
-                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, RR, NULL, NULL, NULL, "0");        // LDR R0, =0
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R0", NULL, NULL, NULL, "0");      // LDR R0, =0
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R1", NULL, NULL, NULL, "1");      // LDR R1, =1
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R2", NULL, NULL, NULL, "2");      // LDR R2, =2
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R3", NULL, NULL, NULL, "3");      // LDR R3, =3
@@ -912,18 +963,137 @@ void quadruplasParaAssembly() {
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R30", NULL, NULL, NULL, "30");    // LDR R30, =30
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, "R31", NULL, NULL, NULL, "31");    // LDR R31, =31
                 break;
+            }
 
             case GCI_CONFIGURARBASE:
+            {
                 emitirInstrucao(OP_WB, sufixoAtual, labelAtual, NULL, RR, NULL, NULL, NULL);
 
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
 
-            default:
+            case GCI_LIMPARLCD:
+            {
+                char* regAux = reservarRegistrador();
+
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, "162", NULL);   // LDR RX, #162
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "0", NULL);   // WLCD RX, #0
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, "32", NULL);   // LDR RX, #32 (espaço em branco)
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "1", NULL);   // WLCD RX, #1
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "2", NULL);   // WLCD RX, #2
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "3", NULL);   // WLCD RX, #3
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "4", NULL);   // WLCD RX, #4
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "5", NULL);   // WLCD RX, #5
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "6", NULL);   // WLCD RX, #6
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "7", NULL);   // WLCD RX, #7
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "8", NULL);   // WLCD RX, #8
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "9", NULL);   // WLCD RX, #9
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "10", NULL);  // WLCD RX, #10
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "11", NULL);  // WLCD RX, #11
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "12", NULL);  // WLCD RX, #12
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "13", NULL);  // WLCD RX, #13
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "14", NULL);  // WLCD RX, #14
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "15", NULL);  // WLCD RX, #15
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "16", NULL);  // WLCD RX, #16
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "17", NULL);  // WLCD RX, #17
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "18", NULL);  // WLCD RX, #18
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "19", NULL);  // WLCD RX, #19
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "20", NULL);  // WLCD RX, #20
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "21", NULL);  // WLCD RX, #21
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "22", NULL);  // WLCD RX, #22
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "23", NULL);  // WLCD RX, #23
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "24", NULL);  // WLCD RX, #24
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "25", NULL);  // WLCD RX, #25
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "26", NULL);  // WLCD RX, #26
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "27", NULL);  // WLCD RX, #27
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "28", NULL);  // WLCD RX, #28
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "29", NULL);  // WLCD RX, #29
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "30", NULL);  // WLCD RX, #30
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, "163", NULL);  // LDR RX, #163
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, regAux, NULL, "31", NULL);  // WLCD RX, #31
+
+                liberarRegistrador(regAux);
+                break;
+            }
+
+            case GCI_ESCREVERLCD:
+            {
+                char* regAux = reservarRegistrador();
+
+                if (ehTemporario(quad->argumento1) == true) {
+                    rn = temporariosParaRegistradores(quad->argumento1);
+                } else {
+                    emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regAux, NULL, NULL, quad->argumento1, NULL);
+
+                    labelAtual = NULL;
+                    sufixoAtual = SUFIXO_AL;
+
+                    rn = regAux;
+                }
+
+                emitirInstrucao(OP_WLCD, sufixoAtual, labelAtual, NULL, rn, NULL, quad->argumento3, NULL);
+
+                liberarRegistrador(regAux);
+
                 labelAtual = NULL;
                 sufixoAtual = SUFIXO_AL;
                 break;
+            }
+
+            case GCI_CONFIGURARQUANTUM:
+            {
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, OSR, NULL, NULL, quad->argumento3, NULL);
+                
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_QTM, sufixoAtual, labelAtual, NULL, OSR, NULL, NULL, NULL);
+                break;
+            }
+
+            case GCI_GUARDARSTATUSFINALIZACAO:
+            {
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, NULL, SR, NULL, NULL, "28");    // LDR R28, =28
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+                break;
+            }
+
+            case GCI_LERSTATUSFINALIZACAO:
+            {
+                char* destino = temporariosParaRegistradores(quad->argumento3);
+
+                emitirInstrucao(OP_MOV, sufixoAtual, labelAtual, destino, NULL, SR, NULL, NULL);  // MOV R0, R28
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+                break;
+            }
+
+            case GCI_CONFIGURARPCINICIAL:
+            {
+                emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, OSR, NULL, NULL, quad->argumento3, NULL);
+                
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, OSR, NULL, "33");
+                break;
+            }
+
+            default:
+            {
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+                break;
+            }
         }
 
         quad=quad->prox;

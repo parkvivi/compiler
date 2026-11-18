@@ -215,6 +215,30 @@ TipoSimbolo verificarTipos(AST* no, bool* encontrouReturnInt, bool* encontrouRet
                 erroSemantico(buffer);
             }
 
+            if (strcmp(no->dado.nome, "escreverLCD") == 0) {
+                if (no->filhos[0]->tipo != TipoNum) {
+                    char buffer[80];
+                    sprintf(buffer, "Funcao 'escreverLCD' deve receber endereco numerico");
+                    erroSemantico(buffer);
+                } else if (no->filhos[0]->dado.valor >= 32) {
+                    char buffer[80];
+                    sprintf(buffer, "Funcao 'escreverLCD' deve receber endereco entre 0 e 31");
+                    erroSemantico(buffer);
+                }
+            } else if (strcmp(no->dado.nome, "configurarQuantum") == 0) {
+                if (no->filhos[0]->tipo != TipoNum) {
+                    char buffer[80];
+                    sprintf(buffer, "Funcao 'configurarQuantum' deve receber valor numerico");
+                    erroSemantico(buffer);
+                }
+            } else if (strcmp(no->dado.nome, "configurarPCInicial") == 0) {
+                if (no->filhos[0]->tipo != TipoNum) {
+                    char buffer[80];
+                    sprintf(buffer, "Funcao 'configurarPCInicial' deve receber valor numerico");
+                    erroSemantico(buffer);
+                }
+            }
+
             tipo = no->simbolo->tipo;
             break;
 
@@ -356,7 +380,9 @@ void analisarSemantica() {
     s->parametros = pCarregarPrograma;
 
     declararSimbolo("preservarContexto", Funcao, TipoVoid, false, -1);
-    declararSimbolo("executarPrograma", Funcao, TipoVoid, false, -1);
+    // 1 parâmetro do tipo inteiro -> 0 ou 1 para saber destino do PC
+    s = declararSimbolo("executarPrograma", Funcao, TipoVoid, false, -1);
+
     declararSimbolo("restaurarContexto", Funcao, TipoVoid, false, -1);
     
     s = declararSimbolo("configurarBase", Funcao, TipoVoid, false, -1);
@@ -366,6 +392,37 @@ void analisarSemantica() {
     pConfigurarBase->paramVetor = false;
     pConfigurarBase->prox = NULL;
     s->parametros = pConfigurarBase;
+
+    declararSimbolo("limparLCD", Funcao, TipoVoid, false, -1);
+    s = declararSimbolo("escreverLCD", Funcao, TipoVoid, false, -1);
+    // 2 parâmetros do tipo inteiro: endereço de escrita + dado
+    Parametro* pEnderecoLCD = (Parametro*) malloc(sizeof(Parametro));
+    Parametro* pDadoLCD = (Parametro*) malloc(sizeof(Parametro));
+    pEnderecoLCD->tipoParam = TipoInt;
+    pDadoLCD->tipoParam = TipoInt;
+    pEnderecoLCD->paramVetor = false;
+    pDadoLCD->paramVetor = false;
+    pEnderecoLCD->prox = pDadoLCD;
+    pDadoLCD->prox = NULL;
+    s->parametros = pEnderecoLCD;
+
+    s = declararSimbolo("configurarQuantum", Funcao, TipoVoid, false, -1);
+    // 1 parâmetro do tipo inteiro (tamanho do quantum)
+    Parametro* pQuantum = (Parametro*) malloc(sizeof(Parametro));
+    pQuantum->tipoParam = TipoInt;
+    pQuantum->paramVetor = false;
+    pQuantum->prox = NULL;
+    s->parametros = pQuantum;
+
+    declararSimbolo("guardarStatusFinalizacao", Funcao, TipoVoid, false, -1);
+    declararSimbolo("lerStatusFinalizacao", Funcao, TipoInt, false, -1);
+
+    s = declararSimbolo("configurarPCInicial", Funcao, TipoVoid, false, -1);
+    Parametro* pPCInicial = (Parametro*) malloc(sizeof(Parametro));
+    pPCInicial->tipoParam = TipoInt;
+    pPCInicial->paramVetor = false;
+    pPCInicial->prox = NULL;
+    s->parametros = pPCInicial;
 
     int proximoIdEscopo = 1;
     criarTabSimbolos(raizAST, saida, 1, &proximoIdEscopo);

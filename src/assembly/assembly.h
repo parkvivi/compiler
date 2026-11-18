@@ -3,10 +3,12 @@
 
 #include "gci.h"
 
-#define RR "R0"  // return register
-#define FP "R29" // frame pointer
-#define SP "R30" // stack pointer
-#define LR "R31" // link register
+#define RR "R0"     // return register
+#define OSR "R27"   // operating system register -> reg especial para uso em meio de trocas de contexto
+#define SR "R28"    // status register
+#define FP "R29"    // frame pointer
+#define SP "R30"    // stack pointer
+#define LR "R31"    // link register
 
 #define COMECO_VAR_LOCAIS 2
 
@@ -14,7 +16,7 @@
 // tamanho do bloco de controle de processo
 #define TAMANHO_BCP 34
 // endereço em que começa o programa de usuário na memória de instruções
-#define COMECO_PROGRAMA_USUARIO 800
+#define COMECO_PROGRAMA_USUARIO 1800
 // tamanho de um arquivo no HD
 #define TAMANHO_ARQUIVO 200
 // === FIM SISTEMA OPERACIONAL ===
@@ -45,8 +47,11 @@ typedef enum {
     OP_OUT,
     OP_RCPSR,
     OP_WCPSR,
+    OP_WLCD,
     OP_LDHD,
-    OP_WB
+    OP_RIR1,
+    OP_WB,
+    OP_QTM
 } OperacaoInstrucao;
 
 typedef enum {

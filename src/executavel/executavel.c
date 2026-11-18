@@ -178,8 +178,11 @@ char* geraOP0(OperacaoInstrucao operacao) {
         case OP_OUT:
         case OP_RCPSR:
         case OP_WCPSR:
+        case OP_WLCD:
         case OP_LDHD:
+        case OP_RIR1:
         case OP_WB:
+        case OP_QTM:
             return "11";
 
         default:
@@ -218,8 +221,11 @@ char* geraOP1(OperacaoInstrucao operacao) {
         case OP_OUT:    return "00011";
         case OP_RCPSR:  return "00100";
         case OP_WCPSR:  return "00101";
+        case OP_WLCD:   return "00110";
         case OP_LDHD:   return "00111";
+        case OP_RIR1:   return "01001";
         case OP_WB:     return "01011";
+        case OP_QTM:    return "01100";
 
         // instruções do tipo M
         default:        return NULL;
@@ -346,8 +352,11 @@ void assemblyParaBinario(FILE* arquivo) {
             case OP_OUT:
             case OP_RCPSR:
             case OP_WCPSR:
+            case OP_WLCD:
             case OP_LDHD:
+            case OP_RIR1:
             case OP_WB:
+            case OP_QTM:
             {
                 char* imediato = decimalParaBinario(instrucao->imediato, TAM_IMEDIATO_TIPO_A);
                 fprintf(arquivo, "%s%s%s%s%s%s", op0, op1, rn, rd, rm, imediato);
