@@ -93,10 +93,10 @@ int roundRobin(int programaAtual, int maximoProgramas) {
 
 int executarComPreempcao(void) {
     int i;
-    int indicesProgramas[3];
-    int baseProgramas[3];
-    int programasFinalizados[3];
     int flagFim;
+    int baseProgramas[3];
+    int indicesProgramas[3];
+    int programasFinalizados[3];
     int quantidadeProgramasFinalizados;
 
     limparLCD();
@@ -123,10 +123,17 @@ int executarComPreempcao(void) {
     escreverLCD(26, 97);    /* a */
     escreverLCD(27, 109);   /* m */
     escreverLCD(28, 97);    /* a */
-    escreverLCD(29, 115);   /* s */
 
     i = 0;
     while (i < 3) {
+        if (i == 0) {
+            escreverLCD(30, 49);    /* 1 */
+        } else if (i == 1) {
+            escreverLCD(30, 50);    /* 2 */
+        } else {
+            escreverLCD(30, 51);    /* 3 */
+        }
+        
         indicesProgramas[i] = escolherPrograma();
         if (indicesProgramas[i] == 11) {
             return 1;
@@ -155,8 +162,6 @@ int executarComPreempcao(void) {
     i = 0;
     quantidadeProgramasFinalizados = 0;
     while (quantidadeProgramasFinalizados < 3) {
-        i = roundRobin(i, 3);   /* escalonamento */
-
         if (programasFinalizados[i] == 0) {
             if (i == 0) {
                 escreverLCD(30, 49);    /* 1 */
@@ -185,15 +190,17 @@ int executarComPreempcao(void) {
                 programasFinalizados[i] = 1;
             }
         }
+
+        i = roundRobin(i, 3);   /* escalonamento */
     }
 
     return 0;
 }
 
 int renomearPrograma(void) {
-    int indicePrograma;
-    int novoNome;
     int i;
+    int novoNome;
+    int indicePrograma;
 
     limparLCD();
     escreverLCD(1, 114);    /* r */

@@ -180,15 +180,15 @@ L4:
 	MOV R0, R4
 	LDR R5, #1800
 	LDR R6, #0
-L42:
+L46:
 	CMP R6, #200
-	BGE L43
+	BGE L47
 	LDHD R5, R0
 	ADD R0, R0, #1
 	ADD R5, R5, #1
 	ADD R6, R6, #1
-	B L42
-L43:
+	B L46
+L47:
 	NOP
 	STR R0, =0
 	STR R1, =1
@@ -313,10 +313,10 @@ executarComPreempcao:
 	STR R31, R30
 	ADD R30, R30, #1
 	ADD R30, R30, #1
-	ADD R30, R30, #3
-	ADD R30, R30, #3
-	ADD R30, R30, #3
 	ADD R30, R30, #1
+	ADD R30, R30, #3
+	ADD R30, R30, #3
+	ADD R30, R30, #3
 	ADD R30, R30, #1
 	LDR R5, #162
 	WLCD R5, #0
@@ -395,8 +395,6 @@ executarComPreempcao:
 	WLCD R5, #27
 	LDR R5, #97
 	WLCD R5, #28
-	LDR R5, #115
-	WLCD R5, #29
 	LDR R1, #0
 	STR R1, [R29, #2]
 L5:
@@ -404,34 +402,54 @@ L5:
 	LDR R1, [R29, #2]
 	CMP R1, #3
 	BGE L6
+	CMP R1, #0
+	BNE L7
+	LDR R5, #49
+	WLCD R5, #30
+	B L8
+L7:
+	NOP
+	CMP R1, #1
+	BNE L9
+	LDR R5, #50
+	WLCD R5, #30
+	B L10
+L9:
+	NOP
+	LDR R5, #51
+	WLCD R5, #30
+L10:
+	NOP
+L8:
+	NOP
 	STR R1, R30
 	ADD R30, R30, #1
 	BL escolherPrograma
 	SUB R30, R30, #1
 	LDR R1, R30
 	MOV R2, R0
-	ADD R3, R29, #3
+	ADD R3, R29, #7
 	ADD R4, R3, R1
 	STR R2, R4
 	ADD R2, R3, R1
 	LDR R4, R2
 	CMP R4, #11
-	BNE L7
+	BNE L11
 	MOV R0, #1
 	LDR R31, [R29, #1]
 	MOV R30, R29
 	LDR R29, R30
 	BX R31
-L7:
+L11:
 	NOP
 	LDR R2, =67
 	LDR R4, =66
 	MUL R5, R1, R4
 	ADD R5, R2, R5
-	ADD R6, R29, #6
+	ADD R6, R29, #4
 	ADD R7, R6, R1
 	STR R5, R7
-	ADD R5, R29, #9
+	ADD R5, R29, #10
 	LDR R7, #0
 	ADD R8, R5, R1
 	STR R7, R8
@@ -442,12 +460,12 @@ L6:
 	NOP
 	LDR R1, #0
 	STR R1, [R29, #2]
-L8:
+L12:
 	NOP
 	LDR R1, [R29, #2]
 	CMP R1, #3
-	BGE L9
-	ADD R2, R29, #6
+	BGE L13
+	ADD R2, R29, #4
 	ADD R3, R2, R1
 	LDR R4, R3
 	MOV R0, R4
@@ -458,8 +476,8 @@ L8:
 	WB R0
 	ADD R3, R1, #1
 	STR R3, [R29, #2]
-	B L8
-L9:
+	B L12
+L13:
 	NOP
 	LDR R9, #91
 	WLCD R9, #16
@@ -475,70 +493,57 @@ L9:
 	STR R1, [R29, #2]
 	LDR R2, #0
 	STR R2, [R29, #13]
-L10:
+L14:
 	NOP
 	LDR R1, [R29, #13]
 	CMP R1, #3
-	BGE L11
-	STR R1, R30
-	ADD R30, R30, #1
-	LDR R2, [R29, #2]
-	STR R2, R30
-	ADD R30, R30, #1
-	LDR R9, #3
-	STR R9, R30
-	ADD R30, R30, #1
-	BL roundRobin
-	SUB R30, R30, #2
-	SUB R30, R30, #1
-	LDR R1, R30
-	MOV R2, R0
-	STR R2, [R29, #2]
-	ADD R3, R29, #9
-	ADD R4, R3, R2
+	BGE L15
+	ADD R2, R29, #10
+	LDR R3, [R29, #2]
+	ADD R4, R2, R3
 	LDR R5, R4
 	CMP R5, #0
-	BNE L12
-	CMP R2, #0
-	BNE L13
+	BNE L16
+	CMP R3, #0
+	BNE L17
 	LDR R9, #49
 	WLCD R9, #30
-	B L14
-L13:
+	B L18
+L17:
 	NOP
-	CMP R2, #1
-	BNE L15
+	CMP R3, #1
+	BNE L19
 	LDR R9, #50
 	WLCD R9, #30
-	B L16
-L15:
+	B L20
+L19:
 	NOP
 	LDR R9, #51
 	WLCD R9, #30
-L16:
+L20:
 	NOP
-L14:
+L18:
 	NOP
 	LDR R4, #0
-	STR R4, [R29, #12]
+	STR R4, [R29, #3]
 	LDR R5, #44
-	ADD R6, R29, #3
-	ADD R7, R6, R2
+	ADD R6, R29, #7
+	ADD R7, R6, R3
 	LDR R8, R7
 	ADD R8, R5, R8
 	LDR R7, R8
 	MOV R0, R7
 	LDR R9, #1800
 	LDR R10, #0
-L44:
+L48:
 	CMP R10, #200
-	BGE L45
+	BGE L49
 	LDHD R9, R0
 	ADD R0, R0, #1
 	ADD R9, R9, #1
 	ADD R10, R10, #1
-	B L44
-L45:
+	B L48
+L49:
 	NOP
 	STR R0, =0
 	STR R1, =1
@@ -576,8 +581,8 @@ L45:
 	STR R27, =32
 	RIR1 R27
 	STR R27, =33
-	ADD R7, R29, #6
-	ADD R8, R7, R2
+	ADD R7, R29, #4
+	ADD R8, R7, R3
 	LDR R9, R8
 	MOV R0, R9
 	WB R0
@@ -695,20 +700,37 @@ L45:
 	LDR R31, =31
 	MOV R0, R28
 	MOV R8, R0
-	STR R8, [R29, #12]
+	STR R8, [R29, #3]
 	CMP R8, #1
-	BNE L17
+	BNE L21
 	ADD R4, R1, #1
 	STR R4, [R29, #13]
 	LDR R1, #1
-	ADD R9, R3, R2
+	ADD R9, R2, R3
 	STR R1, R9
-L17:
+L21:
 	NOP
-L12:
+L16:
 	NOP
-	B L10
-L11:
+	STR R2, R30
+	ADD R30, R30, #1
+	STR R3, R30
+	ADD R30, R30, #1
+	STR R3, R30
+	ADD R30, R30, #1
+	LDR R10, #3
+	STR R10, R30
+	ADD R30, R30, #1
+	BL roundRobin
+	SUB R30, R30, #2
+	SUB R30, R30, #1
+	LDR R3, R30
+	SUB R30, R30, #1
+	LDR R2, R30
+	MOV R1, R0
+	STR R1, [R29, #2]
+	B L14
+L15:
 	NOP
 	MOV R0, #0
 	LDR R31, [R29, #1]
@@ -805,15 +827,15 @@ renomearPrograma:
 	WLCD R10, #28
 	BL escolherPrograma
 	MOV R1, R0
-	STR R1, [R29, #2]
+	STR R1, [R29, #4]
 	CMP R1, #11
-	BNE L18
+	BNE L22
 	MOV R0, #1
 	LDR R31, [R29, #1]
 	MOV R30, R29
 	LDR R29, R30
 	BX R31
-L18:
+L22:
 	NOP
 	LDR R10, #110
 	WLCD R10, #21
@@ -838,42 +860,42 @@ L18:
 	MOV R2, R0
 	STR R2, [R29, #3]
 	CMP R2, #0
-	BNE L19
+	BNE L23
 	MOV R0, #2
 	LDR R31, [R29, #1]
 	MOV R30, R29
 	LDR R29, R30
 	BX R31
-L19:
+L23:
 	NOP
 	LDR R3, #0
-	STR R3, [R29, #4]
-L20:
+	STR R3, [R29, #2]
+L24:
 	NOP
-	LDR R1, [R29, #4]
+	LDR R1, [R29, #2]
 	CMP R1, #10
-	BGE L21
+	BGE L25
 	LDR R2, #34
 	ADD R3, R2, R1
 	LDR R4, R3
 	LDR R3, [R29, #3]
 	CMP R4, R3
-	BNE L22
+	BNE L26
 	MOV R0, #2
 	LDR R31, [R29, #1]
 	MOV R30, R29
 	LDR R29, R30
 	BX R31
-L22:
+L26:
 	NOP
 	ADD R3, R1, #1
-	STR R3, [R29, #4]
-	B L20
-L21:
+	STR R3, [R29, #2]
+	B L24
+L25:
 	NOP
 	LDR R1, [R29, #3]
 	LDR R2, #34
-	LDR R3, [R29, #2]
+	LDR R3, [R29, #4]
 	ADD R4, R2, R3
 	STR R1, R4
 	MOV R0, #0
@@ -938,9 +960,9 @@ deletarPrograma:
 	LDR R10, #116
 	WLCD R10, #5
 	LDR R10, #97
-	WLCD R10, #7
+	WLCD R10, #6
 	LDR R10, #114
-	WLCD R10, #8
+	WLCD R10, #7
 	LDR R10, #91
 	WLCD R10, #16
 	LDR R10, #105
@@ -969,13 +991,13 @@ deletarPrograma:
 	MOV R1, R0
 	STR R1, [R29, #2]
 	CMP R1, #11
-	BNE L23
+	BNE L27
 	MOV R0, #1
 	LDR R31, [R29, #1]
 	MOV R30, R29
 	LDR R29, R30
 	BX R31
-L23:
+L27:
 	NOP
 	LDR R2, #34
 	LDR R3, #0
@@ -1002,11 +1024,11 @@ shellprompt:
 	ADD R30, R30, #1
 	ADD R30, R30, #1
 	ADD R30, R30, #1
-L24:
+L28:
 	NOP
 	LDR R1, #1
 	CMP R1, #1
-	BNE L25
+	BNE L29
 	LDR R1, #0
 	STR R1, [R29, #2]
 	LDR R2, #0
@@ -1085,7 +1107,7 @@ L24:
 	MOV R3, R0
 	STR R3, [R29, #2]
 	CMP R3, #1
-	BNE L26
+	BNE L30
 	STR R2, R30
 	ADD R30, R30, #1
 	STR R3, R30
@@ -1097,11 +1119,11 @@ L24:
 	LDR R2, R30
 	MOV R1, R0
 	STR R1, [R29, #3]
-	B L27
-L26:
+	B L31
+L30:
 	NOP
 	CMP R3, #2
-	BNE L28
+	BNE L32
 	STR R3, R30
 	ADD R30, R30, #1
 	BL executarComPreempcao
@@ -1109,11 +1131,11 @@ L26:
 	LDR R3, R30
 	MOV R1, R0
 	STR R1, [R29, #3]
-	B L29
-L28:
+	B L33
+L32:
 	NOP
 	CMP R3, #3
-	BNE L30
+	BNE L34
 	STR R3, R30
 	ADD R30, R30, #1
 	BL renomearPrograma
@@ -1121,11 +1143,11 @@ L28:
 	LDR R3, R30
 	MOV R1, R0
 	STR R1, [R29, #3]
-	B L31
-L30:
+	B L35
+L34:
 	NOP
 	CMP R3, #4
-	BNE L32
+	BNE L36
 	STR R3, R30
 	ADD R30, R30, #1
 	BL deletarPrograma
@@ -1133,22 +1155,22 @@ L30:
 	LDR R3, R30
 	MOV R1, R0
 	STR R1, [R29, #3]
-	B L33
-L32:
+	B L37
+L36:
 	NOP
 	LDR R1, #10
 	STR R1, [R29, #3]
+L37:
+	NOP
+L35:
+	NOP
 L33:
 	NOP
 L31:
 	NOP
-L29:
-	NOP
-L27:
-	NOP
 	LDR R1, [R29, #3]
 	CMP R1, #0
-	BEQ L34
+	BEQ L38
 	LDR R10, #162
 	WLCD R10, #0
 	LDR R10, #32
@@ -1197,42 +1219,42 @@ L27:
 	LDR R10, #93
 	WLCD R10, #15
 	CMP R1, #1
-	BNE L35
+	BNE L39
 	LDR R10, #112
 	WLCD R10, #13
 	LDR R10, #103
 	WLCD R10, #14
-	B L36
-L35:
+	B L40
+L39:
 	NOP
 	CMP R1, #2
-	BNE L37
+	BNE L41
 	LDR R10, #110
 	WLCD R10, #13
 	LDR R10, #109
 	WLCD R10, #14
-	B L38
-L37:
+	B L42
+L41:
 	NOP
 	CMP R1, #10
-	BNE L39
+	BNE L43
 	LDR R10, #111
 	WLCD R10, #13
 	LDR R10, #112
 	WLCD R10, #14
-L39:
+L43:
 	NOP
-L38:
+L42:
 	NOP
-L36:
+L40:
 	NOP
 	MOV R0, #0
 	OUT R0
 	NOP
-L34:
+L38:
 	NOP
-	B L24
-L25:
+	B L28
+L29:
 	NOP
 	LDR R31, [R29, #1]
 	MOV R30, R29
@@ -1251,11 +1273,11 @@ main:
 	STR R4, =66
 	LDR R5, #0
 	STR R5, [R29, #0]
-L40:
+L44:
 	NOP
 	LDR R1, [R29, #0]
 	CMP R1, #10
-	BGE L41
+	BGE L45
 	ADD R2, R1, #1
 	LDR R3, #34
 	ADD R4, R3, R1
@@ -1273,8 +1295,8 @@ L40:
 	STR R7, R8
 	ADD R7, R1, #1
 	STR R7, [R29, #0]
-	B L40
-L41:
+	B L44
+L45:
 	NOP
 	LDR R10, #162
 	WLCD R10, #0

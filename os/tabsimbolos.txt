@@ -27,69 +27,69 @@ Escopo #7 (nivel 1)
 Escopo #10 (nivel 3)
   (sem simbolos)
 
-Escopo #9 (nivel 2)
+Escopo #11 (nivel 3)
   (sem simbolos)
 
-Escopo #11 (nivel 2)
-  (sem simbolos)
-
-Escopo #14 (nivel 4)
-  (sem simbolos)
-
-Escopo #15 (nivel 4)
-  (sem simbolos)
-
-Escopo #16 (nivel 4)
-  (sem simbolos)
-
-Escopo #17 (nivel 4)
+Escopo #12 (nivel 3)
   (sem simbolos)
 
 Escopo #13 (nivel 3)
   (sem simbolos)
 
-Escopo #12 (nivel 2)
+Escopo #9 (nivel 2)
+  (sem simbolos)
+
+Escopo #14 (nivel 2)
+  (sem simbolos)
+
+Escopo #17 (nivel 4)
+  (sem simbolos)
+
+Escopo #18 (nivel 4)
+  (sem simbolos)
+
+Escopo #19 (nivel 4)
+  (sem simbolos)
+
+Escopo #20 (nivel 4)
+  (sem simbolos)
+
+Escopo #16 (nivel 3)
+  (sem simbolos)
+
+Escopo #15 (nivel 2)
   (sem simbolos)
 
 Escopo #8 (nivel 1)
   - quantidadeProgramasFinalizados | categoria=variavel | tipo=int | vetor=nao
-  - flagFim | categoria=variavel | tipo=int | vetor=nao
   - programasFinalizados | categoria=variavel | tipo=int | vetor=sim | tamanho=3
-  - baseProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
   - indicesProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
+  - baseProgramas | categoria=variavel | tipo=int | vetor=sim | tamanho=3
+  - flagFim | categoria=variavel | tipo=int | vetor=nao
   - i | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #19 (nivel 2)
+Escopo #22 (nivel 2)
   (sem simbolos)
 
-Escopo #20 (nivel 2)
+Escopo #23 (nivel 2)
   (sem simbolos)
 
-Escopo #22 (nivel 3)
+Escopo #25 (nivel 3)
   (sem simbolos)
-
-Escopo #21 (nivel 2)
-  (sem simbolos)
-
-Escopo #18 (nivel 1)
-  - i | categoria=variavel | tipo=int | vetor=nao
-  - novoNome | categoria=variavel | tipo=int | vetor=nao
-  - indicePrograma | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #24 (nivel 2)
   (sem simbolos)
 
-Escopo #23 (nivel 1)
+Escopo #21 (nivel 1)
   - indicePrograma | categoria=variavel | tipo=int | vetor=nao
+  - novoNome | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #27 (nivel 3)
+Escopo #27 (nivel 2)
   (sem simbolos)
 
-Escopo #28 (nivel 3)
-  (sem simbolos)
-
-Escopo #29 (nivel 3)
-  (sem simbolos)
+Escopo #26 (nivel 1)
+  - indicePrograma | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #30 (nivel 3)
   (sem simbolos)
@@ -97,29 +97,38 @@ Escopo #30 (nivel 3)
 Escopo #31 (nivel 3)
   (sem simbolos)
 
-Escopo #33 (nivel 4)
-  (sem simbolos)
-
-Escopo #34 (nivel 4)
-  (sem simbolos)
-
-Escopo #35 (nivel 4)
-  (sem simbolos)
-
 Escopo #32 (nivel 3)
   (sem simbolos)
 
-Escopo #26 (nivel 2)
+Escopo #33 (nivel 3)
   (sem simbolos)
 
-Escopo #25 (nivel 1)
+Escopo #34 (nivel 3)
+  (sem simbolos)
+
+Escopo #36 (nivel 4)
+  (sem simbolos)
+
+Escopo #37 (nivel 4)
+  (sem simbolos)
+
+Escopo #38 (nivel 4)
+  (sem simbolos)
+
+Escopo #35 (nivel 3)
+  (sem simbolos)
+
+Escopo #29 (nivel 2)
+  (sem simbolos)
+
+Escopo #28 (nivel 1)
   - codigoRetorno | categoria=variavel | tipo=int | vetor=nao
   - opcao | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #37 (nivel 2)
+Escopo #40 (nivel 2)
   (sem simbolos)
 
-Escopo #36 (nivel 1)
+Escopo #39 (nivel 1)
   - i | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #0 (nivel 0)
