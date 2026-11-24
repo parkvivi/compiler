@@ -432,6 +432,16 @@ void analisarSemantica() {
     inputPrograma->prox = NULL;
     s->parametros = inputPrograma;
 
+    s = declararSimbolo("carregarSO", Funcao, TipoVoid, false, -1);
+    // 1 parâmetro do tipo inteiro (índice do programa no HD)
+    Parametro* pCarregarSO = (Parametro*) malloc(sizeof(Parametro));
+    pCarregarSO->tipoParam = TipoInt;
+    pCarregarSO->paramVetor = false;
+    pCarregarSO->prox = NULL;
+    s->parametros = pCarregarSO;
+
+    declararSimbolo("executarSO", Funcao, TipoVoid, false, -1);
+
     int proximoIdEscopo = 1;
     criarTabSimbolos(raizAST, saida, 1, &proximoIdEscopo);
 

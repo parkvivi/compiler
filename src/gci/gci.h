@@ -47,7 +47,9 @@ typedef enum OperacaoQuadrupla {
     GCI_GUARDARSTATUSFINALIZACAO,
     GCI_LERSTATUSFINALIZACAO,
     GCI_CONFIGURARPCINICIAL,
-    GCI_INPUTPROGRAMA
+    GCI_INPUTPROGRAMA,
+    GCI_CARREGARSO,
+    GCI_EXECUTARSO
 } OperacaoQuadrupla;
 
 typedef struct Temporario {

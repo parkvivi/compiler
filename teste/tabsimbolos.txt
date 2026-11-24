@@ -1,11 +1,12 @@
 Relatorio de escopos e simbolos
 
 Escopo #1 (nivel 1)
-  - b | categoria=variavel | tipo=int | vetor=nao
-  - a | categoria=variavel | tipo=int | vetor=nao
+  (sem simbolos)
 
 Escopo #0 (nivel 0)
   - main | categoria=funcao | tipo=void | vetor=nao
+  - executarSO | categoria=funcao | tipo=void | vetor=nao
+  - carregarSO | categoria=funcao | tipo=void | vetor=nao
   - inputPrograma | categoria=funcao | tipo=void | vetor=nao
   - configurarPCInicial | categoria=funcao | tipo=void | vetor=nao
   - lerStatusFinalizacao | categoria=funcao | tipo=int | vetor=nao

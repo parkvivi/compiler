@@ -382,9 +382,7 @@ void main(void) {
     codigoRetorno = testePartida();
 
     if (codigoRetorno == SUCESSO) {
-        /*
-        carregarPrograma();
-        executarSO();
-        */
+        carregarSO(0);
+        executarSO();        
     }
 }

@@ -967,6 +967,21 @@ main:
 	STR R8, [R29, #0]
 	CMP R8, R1
 	BNE L24
+	MOV R0, #0
+	LDR R9, #0
+	LDR R10, #0
+	LDR R11, #1800
+L25:
+	CMP R10, R11
+	BGE L26
+	LDHD R9, R0
+	ADD R0, R0, #1
+	ADD R9, R9, #1
+	ADD R10, R10, #1
+	B L25
+L26:
+	NOP
+	SWB
 L24:
 	NOP
 	HLT

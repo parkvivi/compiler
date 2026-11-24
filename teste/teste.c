@@ -1,9 +1,6 @@
 void main(void) {
-    int a;
-    int b;
-
-    a = input();
-    b = input();
-
-    output(a + b);
+    output(10);
+    carregarSO(0);
+    output(10);
+    executarSO();
 }

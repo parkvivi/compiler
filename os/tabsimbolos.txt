@@ -185,6 +185,8 @@ Escopo #0 (nivel 0)
   - ocupadoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - posicaoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - programasHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - executarSO | categoria=funcao | tipo=void | vetor=nao
+  - carregarSO | categoria=funcao | tipo=void | vetor=nao
   - inputPrograma | categoria=funcao | tipo=void | vetor=nao
   - configurarPCInicial | categoria=funcao | tipo=void | vetor=nao
   - lerStatusFinalizacao | categoria=funcao | tipo=int | vetor=nao

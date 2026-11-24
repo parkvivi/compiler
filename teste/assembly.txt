@@ -6,18 +6,25 @@
 	B main
 main:
 	MOV R29, R30
-	ADD R30, R30, #1
-	ADD R30, R30, #1
-	IN R0
-	NOP
-	MOV R1, R0
-	STR R1, [R29, #0]
-	IN R0
-	NOP
-	MOV R2, R0
-	STR R2, [R29, #1]
-	ADD R3, R1, R2
-	MOV R0, R3
+	MOV R0, #10
 	OUT R0
 	NOP
+	MOV R0, #0
+	LDR R1, #0
+	LDR R2, #0
+	LDR R3, #1800
+L0:
+	CMP R2, R3
+	BGE L1
+	LDHD R1, R0
+	ADD R0, R0, #1
+	ADD R1, R1, #1
+	ADD R2, R2, #1
+	B L0
+L1:
+	NOP
+	MOV R0, #10
+	OUT R0
+	NOP
+	SWB
 	HLT

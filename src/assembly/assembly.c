@@ -824,20 +824,22 @@ void quadruplasParaAssembly() {
                 break;
             }
 
+            case GCI_CARREGARSO:
             case GCI_CARREGARPROGRAMA:
             {
                 char* labelInicio = novoLabel();
                 char* labelFim = novoLabel();
                 char* regBaseMemInstrucoes = reservarRegistrador();
                 char* regContador = reservarRegistrador();
+                char* regTamSO = reservarRegistrador();
 
                 char offsetMemInstrucoes[20];
-                sprintf(offsetMemInstrucoes, "%d", COMECO_PROGRAMA_USUARIO);
+                sprintf(offsetMemInstrucoes, "%d", ((quad->operacao == GCI_CARREGARSO) ? 0 : COMECO_PROGRAMA_USUARIO));
 
                 char tamArquivo[20];
-                sprintf(tamArquivo, "%d", TAMANHO_ARQUIVO);
+                sprintf(tamArquivo, "%d", ((quad->operacao == GCI_CARREGARSO) ? COMECO_PROGRAMA_USUARIO : TAMANHO_ARQUIVO));
 
-                // LDR RX, #800
+                // LDR RX, #1800
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regBaseMemInstrucoes, NULL, NULL, offsetMemInstrucoes, NULL);
 
                 labelAtual = NULL;
@@ -845,8 +847,11 @@ void quadruplasParaAssembly() {
 
                 // LDR RY, #0
                 emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regContador, NULL, NULL, "0", NULL);
-                // LX: CMP RY, #200 
-                emitirInstrucao(OP_CMP, sufixoAtual, labelInicio, NULL, regContador, NULL, tamArquivo, NULL);
+                if (quad->operacao == GCI_CARREGARSO) {
+                    emitirInstrucao(OP_LDR, sufixoAtual, labelAtual, regTamSO, NULL, NULL, tamArquivo, NULL);
+                }
+                // LX: CMP RY, #200 ou RX
+                emitirInstrucao(OP_CMP, sufixoAtual, labelInicio, NULL, regContador, ((quad->operacao == GCI_CARREGARSO) ? regTamSO : NULL), ((quad->operacao == GCI_CARREGARSO) ? NULL : tamArquivo), NULL);
                 // BGE LY
                 emitirInstrucao(OP_B, SUFIXO_GE, labelAtual, NULL, NULL, NULL, NULL, labelFim);
                 // LDHD RX, R0
@@ -862,6 +867,7 @@ void quadruplasParaAssembly() {
                 // LY: NOP
                 emitirInstrucao(OP_NOP, sufixoAtual, labelFim, NULL, NULL, NULL, NULL, NULL);
 
+                liberarRegistrador(regTamSO);
                 liberarRegistrador(regBaseMemInstrucoes);
                 liberarRegistrador(regContador);
                 break;
@@ -1115,6 +1121,15 @@ void quadruplasParaAssembly() {
                 liberarRegistrador(dadosLSB);
                 liberarRegistrador(linhaCodigo);
 
+                break;
+            }
+
+            case GCI_EXECUTARSO:
+            {   
+                emitirInstrucao(OP_SWB, sufixoAtual, labelAtual, NULL, NULL, NULL, "0", NULL);
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
                 break;
             }
 

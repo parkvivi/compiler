@@ -8,6 +8,19 @@ int tamanhoArquivo;     /* guarda tamanho de um programa de usuário (fixo) */
 int tamanhoDados;
 int tamanhoDadosSO;     /* guarda tamanho do espaço de endereçamento do SO */
 
+/*
+void isr(void) {
+        desabilitar interrupções
+        salvar contexto
+        RIR0 RX
+            RX == 1 (hwi)? --> restaura contexto e pular para end em RIR2
+            RX == 0 (swi)? 
+                R28 == 0 (fim)? --> restaura contexto e pula para end em RIR2
+                R28 == 1 (in)? --> executa IN R0 e retorna
+                R28 == 2 (out)? --> executa OUT R0 e retorna
+}
+*/
+
 int escolherPrograma(void) {
     int i;
     int programa;
