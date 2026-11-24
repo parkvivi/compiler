@@ -67,6 +67,7 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
         case OP_EOR:    return "EOR";
         case OP_MOV:    return "MOV";
         case OP_CMP:    return "CMP";
+        case OP_MOVT:   return "MOVT";
         case OP_B:      return "B";
         case OP_BX:     return "BX";
         case OP_BL:     return "BL";
@@ -83,7 +84,9 @@ char* operacaoInstrucao(OperacaoInstrucao operacao) {
         case OP_LDHD:   return "LDHD";
         case OP_RIR1:   return "RIR1";
         case OP_WB:     return "WB";
+        case OP_SWB:    return "SWB";
         case OP_QTM:    return "QTM";
+        case OP_STHD:   return "STHD";
         default:        return NULL;
     }
 }
@@ -196,6 +199,7 @@ void imprimirInstrucoes(FILE *arquivo) {
             
             case OP_NOT:
             case OP_MOV:
+            case OP_MOVT:
                 if (instrucao->rm != NULL) {
                     fprintf(arquivo, " %s, %s\n",
                         instrucao->rd,
@@ -307,6 +311,7 @@ void imprimirInstrucoes(FILE *arquivo) {
                 continue;
             
             case OP_LDHD:
+            case OP_STHD:
                 fprintf(arquivo, " %s, %s\n",
                     instrucao->rn,
                     instrucao->rm
@@ -1085,6 +1090,31 @@ void quadruplasParaAssembly() {
                 sufixoAtual = SUFIXO_AL;
 
                 emitirInstrucao(OP_STR, sufixoAtual, labelAtual, NULL, NULL, OSR, NULL, "33");
+                break;
+            }
+
+            case GCI_INPUTPROGRAMA:
+            {
+                char* dadosMSB = reservarRegistrador();
+                char* dadosLSB = reservarRegistrador();
+                char* linhaCodigo = reservarRegistrador();
+
+                emitirInstrucao(OP_IN, sufixoAtual, labelAtual, dadosMSB, NULL, NULL, NULL, NULL);
+
+                labelAtual = NULL;
+                sufixoAtual = SUFIXO_AL;
+
+                emitirInstrucao(OP_NOP, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);
+                emitirInstrucao(OP_MOVT, sufixoAtual, labelAtual, dadosMSB, NULL, dadosMSB, NULL, NULL);
+                emitirInstrucao(OP_IN, sufixoAtual, labelAtual, dadosLSB, NULL, NULL, NULL, NULL);
+                emitirInstrucao(OP_NOP, sufixoAtual, labelAtual, NULL, NULL, NULL, NULL, NULL);
+                emitirInstrucao(OP_ORR, sufixoAtual, labelAtual, linhaCodigo, dadosMSB, dadosLSB, NULL, NULL);
+                emitirInstrucao(OP_STHD, sufixoAtual, labelAtual, NULL, linhaCodigo, RR, NULL, NULL);
+
+                liberarRegistrador(dadosMSB);
+                liberarRegistrador(dadosLSB);
+                liberarRegistrador(linhaCodigo);
+
                 break;
             }
 

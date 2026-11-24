@@ -1,0 +1,23 @@
+	NOP
+	MOV R0, #0
+	MOV R29, #34
+	MOV R30, #34
+	MOV R31, #34
+	B main
+main:
+	MOV R29, R30
+	ADD R30, R30, #1
+	ADD R30, R30, #1
+	IN R0
+	NOP
+	MOV R1, R0
+	STR R1, [R29, #0]
+	IN R0
+	NOP
+	MOV R2, R0
+	STR R2, [R29, #1]
+	ADD R3, R1, R2
+	MOV R0, R3
+	OUT R0
+	NOP
+	HLT

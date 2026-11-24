@@ -1,0 +1,125 @@
+Relatorio de escopos e simbolos
+
+Escopo #2 (nivel 2)
+  (sem simbolos)
+
+Escopo #1 (nivel 1)
+  - var | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #4 (nivel 2)
+  (sem simbolos)
+
+Escopo #3 (nivel 1)
+  - ack | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #6 (nivel 2)
+  (sem simbolos)
+
+Escopo #5 (nivel 1)
+  - ack | categoria=variavel | tipo=int | vetor=nao
+  - var | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #8 (nivel 2)
+  (sem simbolos)
+
+Escopo #7 (nivel 1)
+  - ack | categoria=variavel | tipo=int | vetor=nao
+  - var | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #10 (nivel 2)
+  (sem simbolos)
+
+Escopo #11 (nivel 2)
+  (sem simbolos)
+
+Escopo #9 (nivel 1)
+  - aux | categoria=variavel | tipo=int | vetor=nao
+  - ack | categoria=variavel | tipo=int | vetor=nao
+  - var | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #13 (nivel 2)
+  (sem simbolos)
+
+Escopo #14 (nivel 2)
+  (sem simbolos)
+
+Escopo #15 (nivel 2)
+  (sem simbolos)
+
+Escopo #16 (nivel 2)
+  (sem simbolos)
+
+Escopo #17 (nivel 2)
+  (sem simbolos)
+
+Escopo #12 (nivel 1)
+  - erro | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #19 (nivel 2)
+  (sem simbolos)
+
+Escopo #21 (nivel 3)
+  (sem simbolos)
+
+Escopo #20 (nivel 2)
+  (sem simbolos)
+
+Escopo #23 (nivel 3)
+  (sem simbolos)
+
+Escopo #22 (nivel 2)
+  (sem simbolos)
+
+Escopo #25 (nivel 3)
+  (sem simbolos)
+
+Escopo #24 (nivel 2)
+  (sem simbolos)
+
+Escopo #27 (nivel 3)
+  (sem simbolos)
+
+Escopo #26 (nivel 2)
+  (sem simbolos)
+
+Escopo #18 (nivel 1)
+  - erro | categoria=variavel | tipo=int | vetor=nao
+  - codigoRetorno | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #29 (nivel 2)
+  (sem simbolos)
+
+Escopo #28 (nivel 1)
+  - codigoRetorno | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #0 (nivel 0)
+  - main | categoria=funcao | tipo=void | vetor=nao
+  - testePartida | categoria=funcao | tipo=int | vetor=nao
+  - imprimirErro | categoria=funcao | tipo=void | vetor=nao
+  - testeMEM | categoria=funcao | tipo=int | vetor=nao
+  - testeULA | categoria=funcao | tipo=int | vetor=nao
+  - testeIN | categoria=funcao | tipo=int | vetor=nao
+  - testeOUT | categoria=funcao | tipo=int | vetor=nao
+  - testeLCD | categoria=funcao | tipo=int | vetor=nao
+  - errMEM | categoria=variavel | tipo=int | vetor=nao
+  - errULA | categoria=variavel | tipo=int | vetor=nao
+  - errIN | categoria=variavel | tipo=int | vetor=nao
+  - errOUT | categoria=variavel | tipo=int | vetor=nao
+  - errLCD | categoria=variavel | tipo=int | vetor=nao
+  - ERRO | categoria=variavel | tipo=int | vetor=nao
+  - SUCESSO | categoria=variavel | tipo=int | vetor=nao
+  - inputPrograma | categoria=funcao | tipo=void | vetor=nao
+  - configurarPCInicial | categoria=funcao | tipo=void | vetor=nao
+  - lerStatusFinalizacao | categoria=funcao | tipo=int | vetor=nao
+  - guardarStatusFinalizacao | categoria=funcao | tipo=void | vetor=nao
+  - configurarQuantum | categoria=funcao | tipo=void | vetor=nao
+  - escreverLCD | categoria=funcao | tipo=void | vetor=nao
+  - limparLCD | categoria=funcao | tipo=void | vetor=nao
+  - configurarBase | categoria=funcao | tipo=void | vetor=nao
+  - restaurarContexto | categoria=funcao | tipo=void | vetor=nao
+  - executarPrograma | categoria=funcao | tipo=void | vetor=nao
+  - preservarContexto | categoria=funcao | tipo=void | vetor=nao
+  - carregarPrograma | categoria=funcao | tipo=void | vetor=nao
+  - output | categoria=funcao | tipo=void | vetor=nao
+  - input | categoria=funcao | tipo=int | vetor=nao
+

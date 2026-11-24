@@ -35,6 +35,7 @@ typedef enum {
     OP_EOR,
     OP_MOV,
     OP_CMP,
+    OP_MOVT,
     OP_B,
     OP_BX,
     OP_BL,
@@ -49,9 +50,11 @@ typedef enum {
     OP_WCPSR,
     OP_WLCD,
     OP_LDHD,
+    OP_STHD,
     OP_RIR1,
     OP_WB,
-    OP_QTM
+    OP_QTM,
+    OP_SWB
 } OperacaoInstrucao;
 
 typedef enum {

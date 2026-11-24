@@ -520,8 +520,9 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                                (strcmp(nomeFuncaoChamada, "configurarBase") == 0) || (strcmp(nomeFuncaoChamada, "limparLCD") == 0) ||
                                (strcmp(nomeFuncaoChamada, "escreverLCD") == 0) || (strcmp(nomeFuncaoChamada, "configurarQuantum") == 0) ||
                                (strcmp(nomeFuncaoChamada, "guardarStatusFinalizacao") == 0) || (strcmp(nomeFuncaoChamada, "lerStatusFinalizacao") == 0) ||
-                               (strcmp(nomeFuncaoChamada, "configurarPCInicial") == 0));
-            bool ehFuncaoSOComArgumentos = ((strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) || (strcmp(nomeFuncaoChamada, "configurarBase") == 0));
+                               (strcmp(nomeFuncaoChamada, "configurarPCInicial") == 0) || (strcmp(nomeFuncaoChamada, "inputPrograma") == 0));
+            bool ehFuncaoSOComArgumentos = ((strcmp(nomeFuncaoChamada, "carregarPrograma") == 0) || (strcmp(nomeFuncaoChamada, "configurarBase") == 0) ||
+                                            (strcmp(nomeFuncaoChamada, "inputPrograma") == 0));
             bool mudarContexto = (strcmp(nomeFuncaoChamada, "input") != 0 && ehOutput == false && ehFuncaoSO == false);
 
             if (mudarContexto == true) {
@@ -590,6 +591,8 @@ char* gerarQuadruplas(AST* no, char* nomeFuncaoAtual, bool percorrerIrmaos, int 
                 sprintf(PCInicial, "%d", no->filhos[0]->dado.valor);
 
                 emitirQuadrupla(GCI_CONFIGURARPCINICIAL, NULL, NULL, PCInicial, no->simbolo);
+            } else if (strcmp(nomeFuncaoChamada, "inputPrograma") == 0) {
+                emitirQuadrupla(GCI_INPUTPROGRAMA, NULL, NULL, NULL, no->simbolo);
             } else {
                 emitirQuadrupla(GCI_CALL, nomeFuncaoChamada, quantidadeArgumentos, destinoIntermediario, no->simbolo);
             }

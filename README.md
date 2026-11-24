@@ -45,23 +45,21 @@ make
 
 Esse comando gera o executável do compilador em `build/parser.exe` (Windows) ou `build/parser` (Linux/macOS).
 
-### 2. Rodar os testes principais (`fatorial`, `gcd` e `sort`)
+### 2. Compilar o sistema operacional e o BIOS
 
 ```powershell
 make run
 ```
 
-O alvo `run` executa:
+O alvo `run` executa os dois códigos-fonte:
 
-- `entrada/main/fatorial.txt`
-- `entrada/main/gcd.txt`
-- `entrada/main/sort.txt`
+- `os/os.c`
+- `bios/bios.c`
 
-E salva os artefatos separadamente em:
+Os artefatos gerados são separados em:
 
-- `build/fatorial`
-- `build/gcd`
-- `build/sort`
+- `os/`
+- `bios/`
 
 Cada pasta contém:
 
@@ -71,24 +69,29 @@ Cada pasta contém:
 - `assembly.txt`: código assembly gerado
 - `executavel.txt`: código binário gerado
 
+Para executar apenas um dos códigos:
+
+```powershell
+make run-os
+make run-bios
+```
+
 ### 3. Limpar arquivos gerados
 
 ```powershell
 make clean
 ```
 
-Esse comando remove todo o diretório `build`.
+Esse comando remove o diretório `build` e os artefatos gerados em `os/` e `bios/`.
 
 ## Alvos do Makefile
 
 - `make` ou `make all`: compila o parser
 - `make parser`: compila o parser
-- `make run`: compila (se necessário) e executa `fatorial`, `gcd` e `sort`
-- `make run-fatorial`: executa somente `entrada/main/fatorial.txt`
-- `make run-gcd`: executa somente `entrada/main/gcd.txt`
-- `make run-sort`: executa somente `entrada/main/sort.txt`
-- `make scanner`: compila o scanner em modo standalone
-- `make clean`: remove `build`
+- `make run`: compila (se necessário) e executa o OS e o BIOS
+- `make run-os`: executa somente `os/os.c`
+- `make run-bios`: executa somente `bios/bios.c`
+- `make clean`: remove `build` e os artefatos gerados em `os/` e `bios/`
 
 ## Referências
 

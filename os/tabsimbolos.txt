@@ -94,46 +94,84 @@ Escopo #26 (nivel 1)
 Escopo #30 (nivel 3)
   (sem simbolos)
 
-Escopo #31 (nivel 3)
+Escopo #29 (nivel 2)
   (sem simbolos)
 
-Escopo #32 (nivel 3)
+Escopo #31 (nivel 2)
   (sem simbolos)
 
 Escopo #33 (nivel 3)
   (sem simbolos)
 
-Escopo #34 (nivel 3)
+Escopo #32 (nivel 2)
   (sem simbolos)
 
-Escopo #36 (nivel 4)
+Escopo #34 (nivel 2)
   (sem simbolos)
 
-Escopo #37 (nivel 4)
-  (sem simbolos)
-
-Escopo #38 (nivel 4)
-  (sem simbolos)
-
-Escopo #35 (nivel 3)
-  (sem simbolos)
-
-Escopo #29 (nivel 2)
+Escopo #35 (nivel 2)
   (sem simbolos)
 
 Escopo #28 (nivel 1)
+  - tamanhoPrograma | categoria=variavel | tipo=int | vetor=nao
+  - endereco | categoria=variavel | tipo=int | vetor=nao
+  - indice | categoria=variavel | tipo=int | vetor=nao
+  - nome | categoria=variavel | tipo=int | vetor=nao
+  - i | categoria=variavel | tipo=int | vetor=nao
+
+Escopo #38 (nivel 3)
+  (sem simbolos)
+
+Escopo #39 (nivel 3)
+  (sem simbolos)
+
+Escopo #40 (nivel 3)
+  (sem simbolos)
+
+Escopo #41 (nivel 3)
+  (sem simbolos)
+
+Escopo #42 (nivel 3)
+  (sem simbolos)
+
+Escopo #43 (nivel 3)
+  (sem simbolos)
+
+Escopo #45 (nivel 4)
+  (sem simbolos)
+
+Escopo #46 (nivel 4)
+  (sem simbolos)
+
+Escopo #47 (nivel 4)
+  (sem simbolos)
+
+Escopo #48 (nivel 4)
+  (sem simbolos)
+
+Escopo #49 (nivel 4)
+  (sem simbolos)
+
+Escopo #44 (nivel 3)
+  (sem simbolos)
+
+Escopo #37 (nivel 2)
+  (sem simbolos)
+
+Escopo #36 (nivel 1)
   - codigoRetorno | categoria=variavel | tipo=int | vetor=nao
   - opcao | categoria=variavel | tipo=int | vetor=nao
 
-Escopo #40 (nivel 2)
+Escopo #51 (nivel 2)
   (sem simbolos)
 
-Escopo #39 (nivel 1)
+Escopo #50 (nivel 1)
   - i | categoria=variavel | tipo=int | vetor=nao
 
 Escopo #0 (nivel 0)
   - main | categoria=funcao | tipo=void | vetor=nao
   - shellprompt | categoria=funcao | tipo=void | vetor=nao
+  - criarPrograma | categoria=funcao | tipo=int | vetor=nao
   - deletarPrograma | categoria=funcao | tipo=int | vetor=nao
   - renomearPrograma | categoria=funcao | tipo=int | vetor=nao
   - executarComPreempcao | categoria=funcao | tipo=int | vetor=nao
@@ -147,6 +185,7 @@ Escopo #0 (nivel 0)
   - ocupadoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - posicaoHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
   - programasHD | categoria=variavel | tipo=int | vetor=sim | tamanho=10
+  - inputPrograma | categoria=funcao | tipo=void | vetor=nao
   - configurarPCInicial | categoria=funcao | tipo=void | vetor=nao
   - lerStatusFinalizacao | categoria=funcao | tipo=int | vetor=nao
   - guardarStatusFinalizacao | categoria=funcao | tipo=void | vetor=nao
